@@ -8,6 +8,7 @@ let audioChunks = [];
 const MAIN_DOM = {}; 
 
 document.addEventListener('DOMContentLoaded', () => {
+    // ... (poblar MAIN_DOM como antes) ...
     MAIN_DOM.apiKeyOverlay = document.getElementById('api-key-overlay');
     MAIN_DOM.apiKeyInput = document.getElementById('api-key-input');
     MAIN_DOM.saveApiKeyButton = document.getElementById('save-api-key-button');
@@ -20,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     MAIN_DOM.entityTypeSelector = document.getElementById('entity-type-selector');
     MAIN_DOM.csvFileInput = document.getElementById('csv-file-input');
     MAIN_DOM.importCsvButton = document.getElementById('import-csv-button');
-    
+
     const dbLoadedSuccessfully = loadDbFromStorage(); 
     updateAllDisplayedLists(); 
 
@@ -30,13 +31,14 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         setApiKeyForLlmModule(geminiApiKey); 
         enableChatControls(false); 
-        addMessageToChatLog("¡Bienvenido de nuevo a FarmerChat!", 'ai'); 
+        // No añadir mensaje de bienvenida aquí, esperar a que el usuario interactúe o el LLM salude si es necesario.
     }
     
     if (!dbLoadedSuccessfully && (!db.clients || db.clients.length === 0) && (!db.users || db.users.length === 0)) { 
         addMessageToChatLog("Inicia importando tus datos (Clientes, Usuarios, Campos, etc.) desde CSV o usa comandos de voz/texto.", 'ai');
     }
 
+    // ----- MANEJADORES DE EVENTOS UI -----
     MAIN_DOM.saveApiKeyButton.addEventListener('click', () => {
         const key = MAIN_DOM.apiKeyInput.value.trim();
         if (key) {
@@ -51,11 +53,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // CORRECCIÓN AQUÍ: Pasar el valor del input directamente
-    MAIN_DOM.sendButton.addEventListener('click', () => handleSendUserInput()); // No pasar el evento
+    // CORRECCIÓN AQUÍ:
+    MAIN_DOM.sendButton.addEventListener('click', () => {
+        handleSendUserInput(); // Llama sin argumentos, tomará el valor del input
+    });
     MAIN_DOM.userInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
-            handleSendUserInput(); // No pasar el evento
+            e.preventDefault(); // Prevenir submit de formulario si estuviera en uno
+            handleSendUserInput(); // Llama sin argumentos
         }
     });
     MAIN_DOM.voiceButton.addEventListener('click', toggleAudioRecording); 
@@ -68,17 +73,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 async function handleSendUserInput(textOverride = null) {
-    // Si textOverride es un objeto (como un evento), tomar el valor del input.
-    // Si es null, tomar el valor del input.
-    // Si es una cadena, usarla.
     let textToSend;
     if (typeof textOverride === 'string') {
-        textToSend = textOverride.trim();
+        textToSend = textOverride.trim(); // Usar el override si es string
     } else {
-        textToSend = MAIN_DOM.userInput.value.trim();
+        textToSend = MAIN_DOM.userInput.value.trim(); // Sino, tomar del input
     }
     
-    if (!textToSend || isLLMLoading) return;
+    if (!textToSend || isLLMLoading) {
+        if (!textToSend && textOverride !== null) { // Si textOverride era algo pero se trimeó a vacío
+            console.warn("textOverride resultó en string vacío, no se envía.");
+        }
+        return;
+    }
+
 
     if (!geminiApiKey) {
         addMessageToChatLog("Error: La API Key de Gemini no está configurada.", 'ai', true);
@@ -86,12 +94,17 @@ async function handleSendUserInput(textOverride = null) {
         return;
     }
 
-    // Solo añadir al log si no es un textOverride proveniente de la transcripción de audio,
-    // ya que el audio ya generó sus propios mensajes.
-    if (textOverride === null || typeof textOverride !== 'string' || (typeof textOverride === 'string' && !textOverride.startsWith("Transcripción:"))) {
+    // Solo añadir al log de usuario si NO es un textOverride que ya se mostró (ej. transcripción)
+    // O si es el input directo del usuario.
+    const isFromDirectInput = (textOverride === null || typeof textOverride !== 'string');
+    if (isFromDirectInput) {
          addMessageToChatLog(textToSend, 'user');
     }
-    MAIN_DOM.userInput.value = ''; // Limpiar siempre el input de texto
+    // Siempre limpiar el input de texto si el comando vino de ahí
+    if (isFromDirectInput) {
+        MAIN_DOM.userInput.value = '';
+    }
+    
     isLLMLoading = true;
     enableChatControls(true); 
     const loadingIndicator = addMessageToChatLog("Procesando con IA...", 'ai', false, true);
@@ -101,10 +114,13 @@ async function handleSendUserInput(textOverride = null) {
         removeLoadingIndicator();
         if (aiResultJson) {
             await processLLMResponse(aiResultJson);
+        } else {
+            // Esto no debería pasar si callGeminiApiWithHistory siempre devuelve o tira error.
+            addMessageToChatLog("La IA no devolvió una respuesta procesable.", 'ai', true);
         }
     } catch (error) {
         removeLoadingIndicator();
-        console.error("Error al procesar la entrada del usuario:", error);
+        console.error("Error al procesar la entrada del usuario (desde handleSendUserInput):", error);
         let errorMessage = error.message || "Hubo un problema al contactar la IA.";
         if (error.isApiKeyError) {
             errorMessage = "Error con la API Key de Gemini. Verifica que sea correcta y esté habilitada.";
@@ -119,9 +135,10 @@ async function handleSendUserInput(textOverride = null) {
     }
 }
 
+// ... (toggleAudioRecording como antes) ...
+// ... (processLLMResponse como antes) ...
+// ... (handleSaveDbToFile, handleLoadDbFromFile, handleImportCsv como antes) ...
 async function toggleAudioRecording() {
-    // ... (lógica de toggleAudioRecording como antes, pero asegurándose que...)
-    // ... cuando llama a handleSendUserInput, pasa el texto transcrito correctamente
     if (isLLMLoading || !geminiApiKey) {
         if (!geminiApiKey) showApiKeyModal();
         return;
@@ -131,11 +148,17 @@ async function toggleAudioRecording() {
         mediaRecorder.stop();
         if(MAIN_DOM.voiceButton) MAIN_DOM.voiceButton.textContent = '🎙️'; 
         if(MAIN_DOM.voiceButton) MAIN_DOM.voiceButton.title = "Grabar Voz (Click para Iniciar/Detener)";
-        addMessageToChatLog("Grabación detenida, procesando audio...", 'ai'); // No es isLoadingMessage
+        // No añadir "procesando audio" aquí, se hará en onstop si hay chunks
     } else {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' }); // Especificar mimeType aquí
+            // Intentar especificar codecs si es posible para mejor compatibilidad con Gemini
+            const options = { mimeType: 'audio/webm; codecs=opus' };
+            if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                console.warn(`${options.mimeType} no soportado, usando default.`);
+                delete options.mimeType; // Usar el default del navegador
+            }
+            mediaRecorder = new MediaRecorder(stream, options);
             audioChunks = [];
 
             mediaRecorder.ondataavailable = event => {
@@ -147,48 +170,55 @@ async function toggleAudioRecording() {
                 
                 if (audioChunks.length === 0) {
                     addMessageToChatLog("No se grabó audio o el audio está vacío.", 'ai', true);
-                    if (geminiApiKey) enableChatControls(false); // Rehabilitar si no hay nada que procesar
+                    if (geminiApiKey && !isLLMLoading) enableChatControls(false);
                     return;
                 }
 
-                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                audioChunks = []; // Limpiar para la próxima grabación
+                // Crear el Blob con el mimeType usado por MediaRecorder
+                const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+                audioChunks = []; 
                                 
                 const reader = new FileReader();
                 reader.readAsDataURL(audioBlob);
                 reader.onloadend = async () => {
                     const base64AudioWithPrefix = reader.result;
-                    // Extraer solo la parte base64
                     const base64Audio = base64AudioWithPrefix.substring(base64AudioWithPrefix.indexOf(',') + 1);
                     
-                    addMessageToChatLog("Audio grabado. Transcribiendo...", 'user'); // Mensaje de usuario
+                    addMessageToChatLog("Audio grabado. Transcribiendo...", 'user'); 
                     isLLMLoading = true;
                     enableChatControls(true);
                     const loadingTranscription = addMessageToChatLog("Transcribiendo con IA...", 'ai', false, true);
 
                     try {
-                        const transcription = await transcribeAudioWithGemini(base64Audio, 'audio/webm'); 
+                        const transcription = await transcribeAudioWithGemini(base64Audio, mediaRecorder.mimeType || 'audio/webm'); 
                         removeLoadingIndicator(); 
                         if (transcription && transcription.trim() !== "") {
                             addMessageToChatLog(`Transcripción: "${transcription}"`, 'ai');
-                            await handleSendUserInput(transcription); // Enviar la transcripción
+                            await handleSendUserInput(transcription); 
                         } else {
                             addMessageToChatLog("No se pudo obtener la transcripción del audio o estaba vacía.", 'ai', true);
-                             if (geminiApiKey) enableChatControls(false); // Rehabilitar si la transcripción falla
+                             if (geminiApiKey && !isLLMLoading) enableChatControls(false);
                         }
                     } catch (error) {
                         removeLoadingIndicator();
                         console.error("Error en transcripción de audio:", error);
                         addMessageToChatLog(`Error al transcribir: ${error.message}`, 'ai', true);
-                         if (geminiApiKey) enableChatControls(false); // Rehabilitar en error
+                         if (geminiApiKey && !isLLMLoading) enableChatControls(false);
                     } 
-                    // 'finally' para isLLMLoading y enableChatControls está en handleSendUserInput
                 };
                  reader.onerror = (error) => {
                     console.error("Error leyendo el audioBlob:", error);
                     addMessageToChatLog("Error al procesar el audio grabado.", "ai", true);
-                    if (geminiApiKey) enableChatControls(false);
+                    if (geminiApiKey && !isLLMLoading) enableChatControls(false);
                 };
+            };
+            mediaRecorder.onerror = (event) => {
+                console.error("Error en MediaRecorder:", event.error);
+                addMessageToChatLog(`Error de grabación: ${event.error.name} - ${event.error.message}`, "ai", true);
+                if(MAIN_DOM.voiceButton) MAIN_DOM.voiceButton.textContent = '🎙️';
+                if(MAIN_DOM.voiceButton) MAIN_DOM.voiceButton.title = "Grabar Voz (Click para Iniciar/Detener)";
+                if (geminiApiKey && !isLLMLoading) enableChatControls(false);
+                 stream.getTracks().forEach(track => track.stop()); 
             };
 
             mediaRecorder.start();
@@ -197,18 +227,23 @@ async function toggleAudioRecording() {
             addMessageToChatLog("Grabando audio... Haz clic en 🛑 para detener.", 'ai');
 
         } catch (err) {
-            console.error("Error al acceder al micrófono:", err);
-            addMessageToChatLog("Error al acceder al micrófono. Asegúrate de haber dado permisos y que no esté en uso por otra app.", 'ai', true);
+            console.error("Error al acceder al micrófono o iniciar grabación:", err);
+            let userMessage = "Error al acceder al micrófono. Asegúrate de haber dado permisos.";
+            if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
+                userMessage = "Permiso para acceder al micrófono denegado. Por favor, habilítalo en la configuración de tu navegador.";
+            } else if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError"){
+                userMessage = "No se encontró un dispositivo de micrófono.";
+            } else if (err.name === "NotReadableError" || err.name === "TrackStartError") {
+                userMessage = "El micrófono está siendo usado por otra aplicación o hay un problema con el hardware.";
+            }
+            addMessageToChatLog(userMessage, 'ai', true);
             if(MAIN_DOM.voiceButton) MAIN_DOM.voiceButton.textContent = '🎙️';
             if(MAIN_DOM.voiceButton) MAIN_DOM.voiceButton.title = "Grabar Voz (Click para Iniciar/Detener)";
         }
     }
 }
 
-
 async function processLLMResponse(aiResult) {
-    // ... (Misma función processLLMResponse que antes, ya debería estar bien) ...
-    // (Asegúrate que usa addMessageToChatLog de ui.js y saveDbToStorage/updateAllDisplayedLists de sus respectivos módulos)
     if (typeof aiResult !== 'object' || aiResult === null) {
         addMessageToChatLog("Error: La respuesta de la IA no es un objeto JSON válido.", 'ai', true);
         console.error("Respuesta inválida de IA recibida en processLLMResponse:", aiResult);
@@ -219,13 +254,25 @@ async function processLLMResponse(aiResult) {
     let messageType = 'ai';
     if (aiResult.action === 'CLARIFY') {
         messageType = 'clarification';
+    } else if (aiResult.action === 'NOT_UNDERSTOOD') {
+        // No hacer nada especial, el responseText ya debería ser adecuado.
     }
-    addMessageToChatLog(responseTextForUser, messageType);
+    // Solo añadir el responseText si es diferente del último mensaje de IA (evitar duplicados si el LLM no da buen responseText)
+    const chatLogChildren = UI_DOM.chatLog.children;
+    const lastAiMessage = chatLogChildren.length > 0 ? Array.from(chatLogChildren).reverse().find(el => el.classList.contains('ai-message') || el.classList.contains('clarification-message')) : null;
+    if (!lastAiMessage || lastAiMessage.innerHTML.replace(/<br>/g, '\n') !== responseTextForUser) {
+        addMessageToChatLog(responseTextForUser, messageType);
+    }
 
 
-    if (aiResult.action === 'CLARIFY') return;
+    if (aiResult.action === 'CLARIFY' || aiResult.action === 'GREETING' || aiResult.action === 'NOT_UNDERSTOOD') {
+        // Para GREETING, si el LLM responde con una acción GREETING, no hacemos nada más en la DB.
+        // NOT_UNDERSTOOD tampoco requiere acción en DB.
+        return;
+    }
     if (aiResult.action === 'INFO_EXTERNAL') {
         console.log("INFO_EXTERNAL solicitada, query:", aiResult.externalQuery);
+        // El responseText del LLM ya debería contener la información.
         return;
     }
 
@@ -236,7 +283,7 @@ async function processLLMResponse(aiResult) {
     const collectionName = getCollectionNameForEntity(entity); 
 
     if (!collectionName && (aiResult.action === 'CREATE' || aiResult.action === 'READ' || aiResult.action === 'UPDATE' || aiResult.action === 'DELETE')) {
-        addMessageToChatLog(`Error: Entidad "${entity}" no reconocida o no mapeada a una colección válida.`, 'ai', true);
+        addMessageToChatLog(`Error interno: Entidad "${entity}" no reconocida o no mapeada a una colección válida.`, 'ai', true);
         return;
     }
     
@@ -250,29 +297,62 @@ async function processLLMResponse(aiResult) {
     switch (aiResult.action) {
         case 'CREATE':
             if (!db[collectionName]) {
-                addMessageToChatLog(`Error: Colección "${collectionName}" para entidad "${entity}" no existe.`, 'ai', true); break;
+                addMessageToChatLog(`Error interno: Colección "${collectionName}" para entidad "${entity}" no existe.`, 'ai', true); break;
             }
-            if (entity === 'Lot' && !data.fieldId) {
-                addMessageToChatLog(`Error: Campo "${data.fieldName || 'desconocido'}" no encontrado para crear el Lote "${data.lotName || ''}".`, 'ai', true); break;
+            // Validaciones robustas
+            if (entity === 'Field' && (!data.name || data.name.trim() === '')) {
+                addMessageToChatLog(`Error: Se necesita un nombre para crear un Campo.`, 'ai', true); break;
             }
-            if (entity === 'Parcel' && !data.lotId) {
-                addMessageToChatLog(`Error: Lote "${data.lotName || 'desconocido'}" no encontrado para crear la Parcela "${data.parcelName || ''}".`, 'ai', true); break;
+            if (entity === 'Lot' && (!data.name || !data.fieldId)) {
+                addMessageToChatLog(`Error: Para crear un Lote se necesita un nombre y asociarlo a un Campo existente (ID: ${data.fieldId}, Nombre buscado: "${data.fieldName || ''}").`, 'ai', true); break;
+            }
+            if (entity === 'Parcel' && (!data.name || !data.lotId)) {
+                addMessageToChatLog(`Error: Para crear una Parcela se necesita un nombre y asociarla a un Lote existente (ID: ${data.lotId}, Nombre buscado: "${data.lotName || ''}").`, 'ai', true); break;
             }
             if (entity === 'JobEvent' && (!data.taskId || !data.parcelId || !data.dateTimeScheduled)) {
                 let missing = [];
-                if(!data.taskId) missing.push(`tarea (nombre: "${data.taskName || '?'}")`);
-                if(!data.parcelId) missing.push(`parcela (nombre: "${data.parcelName || '?'}")`);
+                if(!data.taskId) missing.push(`tarea (buscada como: "${data.taskName || '?'}")`);
+                if(!data.parcelId) missing.push(`parcela (buscada como: "${data.parcelName || '?'}")`);
                 if(!data.dateTimeScheduled) missing.push("fecha programada");
-                addMessageToChatLog(`Error: Faltan datos críticos para JobEvent: ${missing.join(', ')}. Asegúrate que las entidades referenciadas existan.`, 'ai', true); break;
+                addMessageToChatLog(`Error: Faltan datos críticos para crear el Trabajo/Evento: ${missing.join(', ')}. Asegúrate que las entidades referenciadas existan y la fecha sea válida.`, 'ai', true); break;
             }
 
             const newItem = { id: generateId(entity.substring(0, 3).toLowerCase() + '_'), ...data };
-            if (['Field', 'Campaign'].includes(entity)) newItem.clientId = db.config.currentClientId;
-            // Para Client y User, el clientId debería venir del LLM o de un contexto superior (ej. registro de nuevo cliente)
-            // Por ahora, si se crea un User sin clientId, se le podría asignar el currentClientId, pero es una suposición.
-            if (entity === 'User' && !newItem.clientId) newItem.clientId = db.config.currentClientId;
+            // Asignar clientId correctamente
+            if (['Field', 'Campaign'].includes(entity)) {
+                 newItem.clientId = db.config.currentClientId;
+            } else if (entity === 'User') {
+                if (!newItem.clientId) { // Si el LLM no lo asignó, es un problema. Debería pedirlo.
+                    addMessageToChatLog(`Error: Para crear un Usuario se necesita especificar a qué Cliente pertenece.`, 'ai', true); break;
+                }
+            } else if (entity === 'Client') {
+                // No necesita clientId
+            } else { // Lotes, Parcelas, JobEvents heredan cliente indirectamente.
+                // Maquinaria, Personal, Productos, Tareas pueden ser generales o del cliente.
+                // Si tienen un campo clientId en el CSV o el LLM lo infiere, se usa.
+                // Si no, y deberían tenerlo (ej. Maquinaria propia), se podría asignar el currentClientId
+                // pero esto depende de la lógica de negocio. Por ahora, si viene, se usa.
+            }
+
 
             if (entity === 'JobEvent' && !newItem.status) newItem.status = 'Scheduled';
+
+            // Verificar si ya existe un item con el mismo nombre en el mismo contexto (si aplica)
+            let alreadyExists = false;
+            if (entity === 'Field' && db.fields.some(f => f.clientId === newItem.clientId && normalizeString(f.name) === normalizeString(newItem.name))) alreadyExists = true;
+            if (entity === 'Lot' && db.lots.some(l => l.fieldId === newItem.fieldId && normalizeString(l.name) === normalizeString(newItem.name))) alreadyExists = true;
+            if (entity === 'Parcel' && db.parcels.some(p => p.lotId === newItem.lotId && normalizeString(p.name) === normalizeString(newItem.name))) alreadyExists = true;
+            // Añadir más chequeos para otras entidades si es necesario (ej. TaskDefinition, ProductInsume por nombre)
+            if (['TaskDefinition', 'ProductInsume', 'Machinery', 'Personnel', 'Campaign'].includes(entity) && 
+                db[collectionName].some(item => normalizeString(item.name) === normalizeString(newItem.name) && ((entity === 'Campaign' && item.clientId === newItem.clientId) || entity !== 'Campaign'))) {
+                alreadyExists = true;
+            }
+
+
+            if (alreadyExists) {
+                addMessageToChatLog(`Error: Ya existe un/a ${entity} con el nombre "${newItem.name}" en el contexto actual. No se creó un duplicado.`, 'ai', true);
+                break;
+            }
 
             db[collectionName].push(newItem);
             operationSuccessful = true;
@@ -280,14 +360,25 @@ async function processLLMResponse(aiResult) {
 
         case 'READ':
             if (!db[collectionName]) {
-                addMessageToChatLog(`Error: Colección "${collectionName}" para entidad "${entity}" no existe.`, 'ai', true); break;
+                addMessageToChatLog(`Error interno: Colección "${collectionName}" para entidad "${entity}" no existe.`, 'ai', true); break;
             }
-            console.log(`Consulta READ para ${entity} con filtros:`, data.filters);
+            console.log(`Solicitud READ para ${entity} con filtros:`, data.filters);
+            // El responseText del LLM debería contener la información. Si queremos mostrar una tabla específica:
+            if (entity === 'Field' && data.filters && Object.keys(data.filters).length === 0) { // "listar los campos"
+                const fieldsOfClient = db.fields.filter(f => f.clientId === db.config.currentClientId);
+                if (fieldsOfClient.length > 0) {
+                    let fieldListMsg = "Campos del cliente actual:\n";
+                    fieldsOfClient.forEach(f => fieldListMsg += `- ${f.name} (ID: ${f.id}, Ubicación: ${f.location || 'N/A'})\n`);
+                    // addMessageToChatLog(fieldListMsg, 'ai'); // El LLM ya debería dar un responseText. Esto es para debug o si el LLM falla.
+                } else {
+                    // addMessageToChatLog("No hay campos registrados para el cliente actual.", 'ai');
+                }
+            }
             break;
 
         case 'UPDATE':
             if (!db[collectionName]) {
-                addMessageToChatLog(`Error: Colección "${collectionName}" para entidad "${entity}" no existe.`, 'ai', true); break;
+                addMessageToChatLog(`Error interno: Colección "${collectionName}" para entidad "${entity}" no existe.`, 'ai', true); break;
             }
             const criteriaToUpdate = data.criteria || { id: data.id, name: data.name }; 
             const newData = data.nuevosDatos;
@@ -297,37 +388,39 @@ async function processLLMResponse(aiResult) {
             }
             
             let itemIndex = -1;
-            // La lógica para encontrar el itemIndex debe ser robusta, usando IDs resueltos si es posible
-            if (criteriaToUpdate.id) { // Idealmente el LLM provee el ID resuelto
+            if (criteriaToUpdate.id) { 
                 itemIndex = db[collectionName].findIndex(item => item.id === criteriaToUpdate.id);
             } else if (criteriaToUpdate.name) { 
                 let potentialMatches = db[collectionName].filter(item => normalizeString(item.name) === normalizeString(criteriaToUpdate.name));
-                // Desambiguar usando contexto si es Lote o Parcela
-                if (entity === 'Lot' && data.fieldId) { // 'data' ya tiene fieldId resuelto si se dio fieldName
+                // Desambiguar usando contexto (IDs resueltos en `data`)
+                if (entity === 'Lot' && data.fieldId) {
                     potentialMatches = potentialMatches.filter(item => item.fieldId === data.fieldId);
-                } else if (entity === 'Parcel' && data.lotId) { // 'data' ya tiene lotId resuelto
+                } else if (entity === 'Parcel' && data.lotId) { 
                     potentialMatches = potentialMatches.filter(item => item.lotId === data.lotId);
+                } else if ((entity === 'Field' || entity === 'Campaign') && db.config.currentClientId) {
+                    // Asegurar que sea del cliente actual si no se especifica ID
+                    potentialMatches = potentialMatches.filter(item => item.clientId === db.config.currentClientId);
                 }
+
                 if (potentialMatches.length === 1) {
                     itemIndex = db[collectionName].indexOf(potentialMatches[0]);
                 } else if (potentialMatches.length > 1) {
-                     addMessageToChatLog(`Error: Múltiples ${entity} con nombre "${criteriaToUpdate.name}" encontrados. Sea más específico (ej. con ID o contexto de campo/lote).`, 'ai', true); break;
+                     addMessageToChatLog(`Error: Múltiples ${entity} con nombre "${criteriaToUpdate.name}" encontrados en el contexto actual. Sea más específico (ej. con ID).`, 'ai', true); break;
                 }
             }
 
             if (itemIndex > -1) {
-                // Antes de actualizar, resolvemos cualquier nombre en newData a IDs
-                const resolvedNewData = resolveEntityNamesToIds(newData, entity); // Asumiendo que newData podría tener nombres
+                const resolvedNewData = resolveEntityNamesToIds(newData, entity); 
                 db[collectionName][itemIndex] = { ...db[collectionName][itemIndex], ...resolvedNewData };
                 operationSuccessful = true;
             } else {
-                addMessageToChatLog(`No se encontró ${entity} con criterios (ID: ${criteriaToUpdate.id}, Nombre: ${criteriaToUpdate.name}) para actualizar.`, 'ai', true);
+                addMessageToChatLog(`No se encontró ${entity} con criterios (ID: ${criteriaToUpdate.id}, Nombre: ${criteriaToUpdate.name}) para actualizar en el contexto actual.`, 'ai', true);
             }
             break;
 
         case 'DELETE':
             if (!db[collectionName]) {
-                addMessageToChatLog(`Error: Colección "${collectionName}" para entidad "${entity}" no existe.`, 'ai', true); break;
+                addMessageToChatLog(`Error interno: Colección "${collectionName}" para entidad "${entity}" no existe.`, 'ai', true); break;
             }
             const criteriaToDelete = data.criteria || { id: data.id, name: data.name };
             let originalLength = db[collectionName].length;
@@ -339,11 +432,10 @@ async function processLLMResponse(aiResult) {
                     shouldDelete = true;
                 } else if (!criteriaToDelete.id && criteriaToDelete.name && normalizeString(item.name) === normalizeString(criteriaToDelete.name)) {
                     let contextMatch = true; 
-                    if (entity === 'Lot' && data.fieldId && item.fieldId !== data.fieldId) { // data.fieldId es el resuelto
-                        contextMatch = false;
-                    } else if (entity === 'Parcel' && data.lotId && item.lotId !== data.lotId) { // data.lotId es el resuelto
-                        contextMatch = false;
-                    }
+                    if (entity === 'Lot' && data.fieldId && item.fieldId !== data.fieldId) contextMatch = false;
+                    else if (entity === 'Parcel' && data.lotId && item.lotId !== data.lotId) contextMatch = false;
+                    else if ((entity === 'Field' || entity === 'Campaign') && item.clientId !== db.config.currentClientId) contextMatch = false; // Solo borrar del cliente actual por nombre
+                    
                     if (contextMatch) shouldDelete = true;
                 }
                 if (shouldDelete) itemsActuallyDeleted++;
@@ -353,11 +445,11 @@ async function processLLMResponse(aiResult) {
             if (itemsActuallyDeleted > 0) {
                 operationSuccessful = true;
             } else if (originalLength > 0) { 
-                 addMessageToChatLog(`No se encontró ${entity} con criterios (ID: ${criteriaToDelete.id}, Nombre: ${criteriaToDelete.name}) para eliminar.`, 'ai', true);
+                 addMessageToChatLog(`No se encontró ${entity} con criterios (ID: ${criteriaToDelete.id}, Nombre: ${criteriaToDelete.name}) para eliminar en el contexto actual.`, 'ai', true);
             }
             break;
         default:
-            addMessageToChatLog(`Acción "${aiResult.action}" no reconocida o no implementada.`, 'ai', true);
+            addMessageToChatLog(`Acción "${aiResult.action || 'desconocida'}" no reconocida o no implementada por el sistema.`, 'ai', true);
     }
 
     if (operationSuccessful) {
@@ -397,14 +489,23 @@ function handleLoadDbFromFile(event) {
     reader.onload = (e) => {
         try {
             const loadedDbData = JSON.parse(e.target.result);
-            if (typeof loadedDbData === 'object' && loadedDbData !== null && loadedDbData.config && loadedDbData.clients && loadedDbData.users) {
+            // Validación más estricta de la estructura
+            if (typeof loadedDbData === 'object' && loadedDbData !== null && 
+                loadedDbData.config && typeof loadedDbData.config === 'object' &&
+                Array.isArray(loadedDbData.clients) && Array.isArray(loadedDbData.users) &&
+                Array.isArray(loadedDbData.fields) && Array.isArray(loadedDbData.lots) &&
+                Array.isArray(loadedDbData.parcels) && Array.isArray(loadedDbData.tasksList) &&
+                Array.isArray(loadedDbData.productsInsumes) && Array.isArray(loadedDbData.machineries) &&
+                Array.isArray(loadedDbData.personnel) && Array.isArray(loadedDbData.campaigns) &&
+                Array.isArray(loadedDbData.jobsEvents)
+            ) {
                 db = loadedDbData; 
                 saveDbToStorage(); 
                 updateAllDisplayedLists();
                 conversationHistoryLLM = []; 
                 addMessageToChatLog("Base de datos cargada desde archivo JSON. El historial de chat ha sido reiniciado.", 'ai');
             } else {
-                throw new Error("El archivo JSON no parece ser una base de datos válida de FarmerChat.");
+                throw new Error("El archivo JSON no tiene la estructura esperada completa de la base de datos FarmerChat.");
             }
         } catch (err) {
             console.error("Error al cargar DB desde archivo:", err);
@@ -450,7 +551,7 @@ function handleImportCsv() {
             if (itemsAdded > 0) {
                 addMessageToChatLog(`${itemsAdded} registros de "${entityNameToImport}" importados desde CSV.`, 'ai');
             } else if (itemsAdded === 0 && csvText.split('\n').filter(line => line.trim() !== '').length > 1) { 
-                addMessageToChatLog(`No se importaron nuevos registros para "${entityNameToImport}". Ver consola.`, 'ai', true);
+                addMessageToChatLog(`No se importaron nuevos registros para "${entityNameToImport}". Ver consola (posibles duplicados o datos incorrectos).`, 'ai', true);
             } else if (csvText.split('\n').filter(line => line.trim() !== '').length <= 1) {
                  addMessageToChatLog(`CSV para "${entityNameToImport}" vacío o solo con encabezados.`, 'ai', true);
             }
