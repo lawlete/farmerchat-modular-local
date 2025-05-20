@@ -1,0 +1,34 @@
+Project: FarmerChat Modular - Asistente Virtual Agrícola (Simulación Local)
+Version: 0.3.0 (Ejemplo)
+Date: [Fecha Actual]
+
+Descripción:
+Aplicación web de simulación para la gestión de registros y tareas en el sector agropecuario,
+utilizando HTML, CSS, JavaScript puro y una API de LLM (Google Gemini) para el procesamiento
+de lenguaje natural.
+
+Tecnologías Principales Utilizadas:
+- HTML5
+- CSS3
+- JavaScript (ES6+)
+
+APIs del Navegador Utilizadas:
+- localStorage API: Para persistencia de datos en el navegador.
+- FileReader API: Para cargar archivos (JSON de base de datos, CSV).
+- MediaRecorder API: Para grabación de audio.
+- Fetch API: Para comunicación con la API del LLM.
+
+Dependencia Externa (Servicio):
+- Google Gemini API: Se requiere una API Key válida.
+
+Ejecución:
+- Abrir `index.html` directamente en un navegador web moderno.
+
+Consideraciones de Seguridad:
+- La API Key de Gemini se almacena en localStorage. Esto es adecuado solo para
+  pruebas locales y privadas. NO desplegar en un entorno público con este método.
+  Se requeriría un backend proxy para el manejo seguro de la API Key en producción.
+
+Formato de Datos para Importación:
+- CSV para entidades (Campos, Lotes, Parcelas, etc.). Ver `README.md` para detalles.
+- JSON para importación/exportación completa de la base de datos simulada.

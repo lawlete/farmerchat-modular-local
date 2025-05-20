@@ -1,0 +1,4 @@
+id,name,fieldId,area
+lot_auto_1,Lote Norte,field_auto_1,150
+lot_auto_2,Lote Sur,field_auto_1,200
+lot_auto_3,Lote Unico,field_auto_2,300

@@ -1,0 +1,16 @@
+# Archivos de configuración específicos del editor/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Archivos de sistema operativo
+.DS_Store
+Thumbs.db
+
+# Archivos de log (si generaras alguno)
+*.log
+
+# Archivos de backup
+*~
+*.bak

@@ -1,0 +1,53 @@
+Pasos para Ejecutar:
+Crea la estructura de carpetas y guarda cada bloque de código en su archivo correspondiente.
+Abre index.html en tu navegador.
+Ingresa tu API Key de Gemini cuando se te solicite.
+Prueba los comandos. Presta atención a la consola del navegador para ver los logs detallados, especialmente si el LLM da respuestas inesperadas o si hay errores de parseo JSON.
+Prueba la carga/guardado de DB y la importación de CSV.
+
+Correcciones y Mejoras Clave en esta Versión:
+Manejo de Errores JSON del LLM:
+En llm.js, la función callGroqApiWithHistory (debería ser callGeminiApi..., renombrada por error en un paso anterior, pero la lógica es para Gemini) ahora intenta leer el cuerpo del error como texto si la respuesta no es ok.
+Se añadió cleanLLMJsonResponse en utils.js y se usa en llm.js para quitar los ```json ... ``` de forma más robusta antes de JSON.parse().
+Si JSON.parse() falla, se muestra un mensaje de error más útil en la UI y se loguea el string problemático en la consola.
+El systemInstructionText en llm.js fue revisado para ser muy explícito sobre requerir JSON válido sin markdown.
+La temperatura del LLM se bajó a 0.1 para respuestas más determinísticas y estructuradas.
+Se añadió un try...catch más específico alrededor de JSON.parse(cleanedJsonString) en llm.js.
+Separación de Archivos: El código está ahora modularizado.
+Carga CSV e Importación:
+csv_importer.js contiene la lógica para parsear CSV (un parser simple que maneja comas dentro de comillas) e importar los datos a la db.
+La UI tiene selectores para el tipo de entidad y el archivo CSV.
+Persistencia y Carga/Guardado de DB:
+db.js ahora maneja la carga desde localStorage al inicio (loadDbFromStorage) y el guardado (saveDbToStorage) después de operaciones CRUD o importaciones.
+Funciones para descargar la db como JSON y cargarla desde un archivo JSON.
+
+Robustez en db.js:
+loadDbFromStorage ahora verifica que las colecciones esperadas existan después de cargar desde localStorage, inicializándolas si es necesario para evitar errores si la DB guardada está incompleta.
+getCollectionNameForEntity centraliza la lógica de mapeo de nombre de entidad a clave de colección en db.
+
+Mejoras en utils.js:
+parseRelativeDate fue ligeramente mejorado para manejar casos como "próximo lunes" cuando hoy es lunes.
+
+UI y UX:
+Los controles de chat se habilitan/deshabilitan correctamente según el estado de la API Key y la carga del LLM.
+El log de la consola en main.js -> processLLMResponse ahora es más detallado para depurar lo que el LLM envió y cómo se resolvió.
+
+Prompt del LLM (systemInstructionText en llm.js):
+Reforzado para pedir JSON válido sin markdown.
+Añadido más contexto sobre entidades existentes para ayudar al LLM a resolver nombres y ambigüedades.
+Instrucciones más claras sobre cómo el LLM debe manejar las diferentes acciones (CREATE, UPDATE, DELETE, QUERY) y los datos esperados para cada una.
+
+Proceso Iterativo:
+Esta es una iteración. Después de probarla:
+Observa la Consola: Es tu mejor amiga para ver qué está respondiendo el LLM y dónde fallan los parseos.
+
+Si el error JSON persiste:
+Identifica el string exacto que el LLM está devolviendo (la consola debería mostrarlo si el JSON.parse falla).
+Analiza por qué no es JSON válido. ¿Es un error de sintaxis del LLM? ¿Es texto extra que no se limpió?
+Si es texto extra, mejora cleanLLMJsonResponse.
+Si es JSON malformado por el LLM, puedes intentar "corregirlo" con JavaScript (arriesgado) o, mejor, ajustar el prompt del LLM para que sea más estricto, o probar con un modelo de LLM diferente si el actual es consistentemente malo con el formato JSON. A veces, pedirle al LLM que "verifique dos veces que la salida sea JSON estrictamente válido" puede ayudar.
+Prueba la lógica CRUD: ¿Se crean bien las entidades? ¿Las relaciones (IDs) se manejan correctamente?
+Prueba la importación CSV: ¿Funciona para las diferentes entidades?
+Prueba la persistencia: ¿Se guardan y cargan los datos correctamente?
+
+Repetiremos el proceso de ajuste del prompt, la lógica de parseo, y la lógica de la aplicación hasta que funcione de manera más confiable. ¡Espero tus resultados de esta nueva prueba!

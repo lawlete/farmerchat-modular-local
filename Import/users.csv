@@ -1,0 +1,15 @@
+id,name,phone,role,clientId
+user_admin_ama,Roberto Carlos,+549351111111,Administrator,client_01
+user_ing_ama,Laura Fernandez,+549351222222,Engineer,client_01
+user_enc_ama,Pedro Gomez,+549351333333,Manager,client_01
+user_trab_ama_1,Luis Paez,+549351444444,Worker,client_01
+user_trab_ama_2,Maria Luna,+549351555555,Worker,client_01
+user_admin_sur,Ana Rodriguez,+549299111111,Administrator,client_02
+user_ing_sur,Juan Martinez,+549299222222,Engineer,client_02
+user_enc_sur,Sofia Diaz,+549299333333,Manager,client_02
+user_trab_sur_1,Carlos Sosa,+549299444444,Worker,client_02
+user_trab_sur_2,Elena Torres,+549299555555,Worker,client_02
+user_admin_vin,Miguel Angel Russo,+549261111111,Administrator,client_03
+user_ing_vin,Carolina Herrera,+549261222222,Engineer,client_03
+user_admin_nor,Jorge Campos,+549387111111,Administrator,client_04
+user_admin_pam,Esteban Quito,+549239111111,Administrator,client_05

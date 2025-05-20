@@ -1,0 +1,16 @@
+id,name,location,clientId,areaTotalHa
+field_ama_01,La Esperanza,Ruta 9 Km 750 - Córdoba,client_01,1250
+field_ama_02,El Retiro,Camino a Jesús María - Córdoba,client_01,800
+field_ama_03,San Isidro,Cerca de Sinsacate - Córdoba,client_01,1500
+field_sur_01,Pampa Linda,Cerca de Neuquén Capital,client_02,2500
+field_sur_02,Valle Fértil,Ruta 22 - Río Negro,client_02,1800
+field_vin_01,Viña Alta,Luján de Cuyo - Mendoza,client_03,150
+field_vin_02,Sol Radiante,Maipú - Mendoza,client_03,200
+field_nor_01,El Tabacal,Orán - Salta,client_04,3000
+field_nor_02,Las Lajitas,Anta - Salta,client_04,5000
+field_pam_01,El Cencerro,Zona Rural Trenque Lauquen,client_05,4500
+field_pam_02,La Posta,Cerca de Pehuajó,client_05,3000
+field_ama_04,La Casualidad,Este de Córdoba,client_01,950
+field_sur_03,El Oasis,Cipolletti,client_02,600
+field_vin_03,Finca Morena,Valle de Uco,client_03,120
+field_nor_03,Quebrachal,Metán,client_04,2200

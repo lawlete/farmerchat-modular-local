@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FarmerChat Modular v3</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="api-key-overlay">
+        <div id="api-key-modal">
+            <h2>Configurar API Key de Gemini</h2>
+            <p>Ingresa tu API Key de Google Generative AI.</p>
+            <input type="password" id="api-key-input" placeholder="Pega tu API Key aquí">
+            <br>
+            <button id="save-api-key-button">Guardar y Continuar</button>
+            <p class="api-key-note">
+                Tu API Key se guardará en el almacenamiento local de tu navegador.<br>
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Obtener API Key</a>.
+            </p>
+        </div>
+    </div>
+
+    <header>
+        <h1>FarmerChat Modular v3</h1>
+        <div class="header-actions">
+            <button id="load-db-button" title="Cargar DB desde JSON">Cargar DB</button>
+            <input type="file" id="load-db-file" accept=".json" style="display:none;">
+            <button id="save-db-button" title="Guardar DB como JSON">Guardar DB</button>
+        </div>
+    </header>
+
+    <main>
+        <div class="chat-container">
+            <div id="chat-log" class="chat-log"></div>
+            <div class="chat-input-area">
+                <input type="text" id="user-input" placeholder="Escribe tu comando o pregunta..." disabled>
+                <button id="send-button" title="Enviar" disabled>➢</button>
+                <button id="voice-button" title="Grabar Voz (Click para Iniciar/Detener)" disabled>🎙️</button> 
+                <!-- Título cambiado para reflejar la nueva funcionalidad -->
+            </div>
+        </div>
+        <div class="data-panel">
+            <div class="data-management">
+                <h2>Gestión de Entidades</h2>
+                <div class="entity-section"><h3>Clientes (<span id="clients-count">0</span>)</h3><ul id="clients-list"></ul></div>
+                <div class="entity-section"><h3>Usuarios (<span id="users-count">0</span>)</h3><ul id="users-list"></ul></div>
+                <div class="entity-section"><h3>Campos (<span id="fields-count">0</span>)</h3><ul id="fields-list"></ul></div>
+                <div class="entity-section"><h3>Lotes (<span id="lots-count">0</span>)</h3><ul id="lots-list"></ul></div>
+                <div class="entity-section"><h3>Parcelas (<span id="parcels-count">0</span>)</h3><ul id="parcels-list"></ul></div>
+                <div class="entity-section"><h3>Trabajos/Eventos (<span id="jobs-count">0</span>)</h3><ul id="jobs-list"></ul></div>
+            </div>
+            <div class="csv-import-section">
+                <h2>Importar Datos desde CSV</h2>
+                <label for="entity-type-selector">Tipo de Entidad:</label>
+                <select id="entity-type-selector">
+                    <option value="clients">Clientes</option> <!-- AÑADIDO -->
+                    <option value="users">Usuarios</option>   <!-- AÑADIDO -->
+                    <option value="fields">Campos</option>
+                    <option value="lots">Lotes</option>
+                    <option value="parcels">Parcelas</option>
+                    <option value="tasksList">Definiciones de Tareas</option>
+                    <option value="productsInsumes">Productos/Insumos</option>
+                    <option value="machineries">Maquinarias</option>
+                    <option value="personnel">Personal</option>
+                    <option value="campaigns">Campañas</option>
+                </select>
+                <input type="file" id="csv-file-input" accept=".csv">
+                <button id="import-csv-button">Importar CSV</button>
+                <p class="csv-format-note">
+                    Asegúrate que el CSV tenga las columnas correctas (ej: id, name para Clientes).
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>FarmerChat Modular v3 - Con Entrada de Voz y Correcciones.</p>
+    </footer>
+
+    <script src="js/utils.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/ui.js"></script>     <!-- ui.js ANTES que main.js -->
+    <script src="js/llm.js"></script>
+    <script src="js/csv_importer.js"></script>
+    <script src="js/main.js"></script>    <!-- main.js DESPUÉS de ui.js y otros -->
+</body>
+</html>
