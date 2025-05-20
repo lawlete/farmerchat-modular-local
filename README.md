@@ -26,5 +26,3 @@ FarmerChat Modular es una aplicación web de simulación diseñada para actuar c
     *   Guarda la base de datos simulada como un archivo JSON.
     *   Carga una base de datos desde un archivo JSON.
 *   **Importación Masiva desde CSV:** Permite poblar la base de datos cargando archivos CSV para diferentes entidades.
-
-## Estructura del Proyecto
