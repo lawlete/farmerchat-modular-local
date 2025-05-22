@@ -168,9 +168,65 @@ function renderEntityList(entityKeyInDb, listUlId, countSpanId) {
     });
 }
 
+function resetDataManagementPanelToDefaultLists() {
+    const dataManagementPanel = document.querySelector('.data-management');
+    if (!dataManagementPanel) {
+        console.error("Data management panel not found for reset.");
+        return;
+    }
+
+    // Clear existing content
+    dataManagementPanel.innerHTML = '';
+
+    // Add the main title
+    const h2 = document.createElement('h2');
+    h2.textContent = 'Gestión de Entidades';
+    dataManagementPanel.appendChild(h2);
+
+    // Define entity sections to create
+    const entities = [
+        { title: 'Clientes', countId: 'clients-count', listId: 'clients-list' },
+        { title: 'Usuarios', countId: 'users-count', listId: 'users-list' },
+        { title: 'Campos', countId: 'fields-count', listId: 'fields-list' },
+        { title: 'Lotes', countId: 'lots-count', listId: 'lots-list' },
+        { title: 'Parcelas', countId: 'parcels-count', listId: 'parcels-list' },
+        { title: 'Trabajos/Eventos', countId: 'jobs-count', listId: 'jobs-list' }
+    ];
+
+    entities.forEach(entity => {
+        const sectionDiv = document.createElement('div');
+        sectionDiv.className = 'entity-section';
+
+        const h3 = document.createElement('h3');
+        h3.innerHTML = `${entity.title} (<span id="${entity.countId}">0</span>)`; // Use innerHTML to create span with ID
+
+        const ul = document.createElement('ul');
+        ul.id = entity.listId;
+
+        sectionDiv.appendChild(h3);
+        sectionDiv.appendChild(ul);
+        dataManagementPanel.appendChild(sectionDiv);
+    });
+
+    // After recreating elements, it's a good practice to re-initialize UI_DOM elements
+    // if they were directly referencing the old elements. However, since renderEntityList
+    // uses getElementById, it should find the new elements as long as IDs are preserved.
+    // For safety, and if other parts of ui.js directly use UI_DOM.clientsList etc.
+    // without re-querying, we might need to update them.
+    // Let's check if UI_DOM needs explicit updates for its list/count elements.
+    // UI_DOM is defined at the top with getElementById. Functions like renderEntityList
+    // also use getElementById. So, direct re-assignment of UI_DOM properties here might
+    // not be strictly necessary as long as IDs are correctly set.
+    // The original UI_DOM object will still hold references to the *old* elements if not updated.
+    // However, functions like updateAllDisplayedLists call renderEntityList, which uses
+    // document.getElementById internally, so those should work on the new elements.
+    // Let's assume for now that direct re-assignment of all UI_DOM properties here is not needed,
+    // as the critical functions (renderEntityList) re-fetch by ID.
+}
+
 function updateAllDisplayedLists() {
-    renderEntityList('clients', 'clients-list', 'clients-count'); // AÑADIDO
-    renderEntityList('users', 'users-list', 'users-count');       // AÑADIDO
+    renderEntityList('clients', 'clients-list', 'clients-count');
+    renderEntityList('users', 'users-list', 'users-count');
     renderEntityList('fields', 'fields-list', 'fields-count');
     renderEntityList('lots', 'lots-list', 'lots-count');
     renderEntityList('parcels', 'parcels-list', 'parcels-count');
@@ -289,3 +345,6 @@ function displayGroupedData(groupedData, entityName, groupByFields) {
         if (span) span.innerHTML = `<small>(${totalItems} items en vista agrupada)</small>`;
     });
 }
+
+// Expose addMessageToChatLog globally for csv_importer.js
+window.addMessageToChatLog = addMessageToChatLog;

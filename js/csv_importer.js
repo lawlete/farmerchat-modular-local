@@ -62,8 +62,14 @@ function importDataFromCSV(csvText, entityNameForIdPrefix, collectionKeyInDb) {
     }
 
     let itemsAdded = 0;
+    let skippedItemsCount = 0; // Initialize counter for skipped items
     if (!db[collectionKeyInDb]) {
-        addMessageToChatLog(`Error: Colección de base de datos "${collectionKeyInDb}" no reconocida para importación de ${entityNameForIdPrefix}.`, 'ai', true);
+        // Assuming addMessageToChatLog is available globally via window
+        if (window.addMessageToChatLog) {
+            window.addMessageToChatLog(`Error: Colección de base de datos "${collectionKeyInDb}" no reconocida para importación de ${entityNameForIdPrefix}.`, 'ai', true);
+        } else {
+            console.error(`Error: Colección de base de datos "${collectionKeyInDb}" no reconocida para importación de ${entityNameForIdPrefix}. (addMessageToChatLog not available)`);
+        }
         return 0;
     }
 
@@ -98,10 +104,18 @@ function importDataFromCSV(csvText, entityNameForIdPrefix, collectionKeyInDb) {
         // Esto puede ser opcional o estricto. Por ahora, lo dejamos más permisivo,
         // asumiendo que el usuario importa en el orden correcto.
         if (collectionKeyInDb === 'lots' && newItem.fieldId && !db.fields.some(f => f.id === newItem.fieldId)) {
-            console.warn(`Lote "${newItem.name}" (ID: ${newItem.id}) del CSV referencia un fieldId "${newItem.fieldId}" que no existe. Se importará, pero la relación estará rota.`);
+            const message = `Lote "${newItem.name || newItem.id}" importado desde CSV, pero su fieldId "${newItem.fieldId}" asociado no fue encontrado en la base de datos. La relación estará rota.`;
+            console.warn(message);
+            if (window.addMessageToChatLog) {
+                window.addMessageToChatLog(message, 'ai', false); // isError = false for warnings
+            }
         }
         if (collectionKeyInDb === 'parcels' && newItem.lotId && !db.lots.some(l => l.id === newItem.lotId)) {
-             console.warn(`Parcela "${newItem.name}" (ID: ${newItem.id}) del CSV referencia un lotId "${newItem.lotId}" que no existe. Se importará, pero la relación estará rota.`);
+            const message = `Parcela "${newItem.name || newItem.id}" importada desde CSV, pero su lotId "${newItem.lotId}" asociado no fue encontrado en la base de datos. La relación estará rota.`;
+            console.warn(message);
+            if (window.addMessageToChatLog) {
+                window.addMessageToChatLog(message, 'ai', false); // isError = false for warnings
+            }
         }
 
 
@@ -110,8 +124,18 @@ function importDataFromCSV(csvText, entityNameForIdPrefix, collectionKeyInDb) {
             itemsAdded++;
         } else {
             console.warn(`Item con ID ${newItem.id} ya existe en ${collectionKeyInDb}, omitiendo del CSV.`);
+            skippedItemsCount++; // Increment counter for skipped items
         }
     });
+
+    if (skippedItemsCount > 0) {
+        const message = `${skippedItemsCount} item(s) del archivo CSV fueron omitidos porque sus IDs ya existen en la base de datos.`;
+        if (window.addMessageToChatLog) {
+            window.addMessageToChatLog(message, 'ai', false); // isError = false
+        } else {
+            console.log(message); // Fallback if chat log not available
+        }
+    }
 
     if (itemsAdded > 0) {
         saveDbToStorage(); 

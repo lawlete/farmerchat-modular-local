@@ -5,21 +5,22 @@ let isLLMLoading = false;
 let mediaRecorder;
 let audioChunks = [];
 
-const MAIN_DOM = {}; 
+const MAIN_DOM = {}; // Will be empty after refactor, but kept for structure if needed later for main.js specific elements.
 
 document.addEventListener('DOMContentLoaded', () => {
-    MAIN_DOM.apiKeyOverlay = document.getElementById('api-key-overlay');
-    MAIN_DOM.apiKeyInput = document.getElementById('api-key-input');
-    MAIN_DOM.saveApiKeyButton = document.getElementById('save-api-key-button');
-    MAIN_DOM.userInput = document.getElementById('user-input');
-    MAIN_DOM.sendButton = document.getElementById('send-button');
-    MAIN_DOM.voiceButton = document.getElementById('voice-button');
-    MAIN_DOM.loadDbButton = document.getElementById('load-db-button');
-    MAIN_DOM.loadDbFile = document.getElementById('load-db-file');
-    MAIN_DOM.saveDbButton = document.getElementById('save-db-button');
-    MAIN_DOM.entityTypeSelector = document.getElementById('entity-type-selector');
-    MAIN_DOM.csvFileInput = document.getElementById('csv-file-input');
-    MAIN_DOM.importCsvButton = document.getElementById('import-csv-button');
+    // Selections moved to UI_DOM in ui.js for shared elements.
+    // MAIN_DOM.apiKeyOverlay = document.getElementById('api-key-overlay');
+    // MAIN_DOM.apiKeyInput = document.getElementById('api-key-input');
+    // MAIN_DOM.saveApiKeyButton = document.getElementById('save-api-key-button');
+    // MAIN_DOM.userInput = document.getElementById('user-input');
+    // MAIN_DOM.sendButton = document.getElementById('send-button');
+    // MAIN_DOM.voiceButton = document.getElementById('voice-button');
+    // MAIN_DOM.loadDbButton = document.getElementById('load-db-button');
+    // MAIN_DOM.loadDbFile = document.getElementById('load-db-file');
+    // MAIN_DOM.saveDbButton = document.getElementById('save-db-button');
+    // MAIN_DOM.entityTypeSelector = document.getElementById('entity-type-selector');
+    // MAIN_DOM.csvFileInput = document.getElementById('csv-file-input');
+    // MAIN_DOM.importCsvButton = document.getElementById('import-csv-button');
     
     const dbLoadedSuccessfully = loadDbFromStorage(); 
     updateAllDisplayedLists(); 
@@ -37,8 +38,9 @@ document.addEventListener('DOMContentLoaded', () => {
         addMessageToChatLog("Inicia importando tus datos (Clientes, Usuarios, Campos, etc.) desde CSV o usa comandos de voz/texto.", 'ai');
     }
 
-    MAIN_DOM.saveApiKeyButton.addEventListener('click', () => {
-        const key = MAIN_DOM.apiKeyInput.value.trim();
+    // Use UI_DOM for elements previously in MAIN_DOM
+    UI_DOM.saveApiKeyButton.addEventListener('click', () => {
+        const key = UI_DOM.apiKeyInput.value.trim();
         if (key) {
             geminiApiKey = key;
             localStorage.setItem('farmerChatApiKey', key);
@@ -51,19 +53,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    MAIN_DOM.sendButton.addEventListener('click', () => handleSendUserInput());
-    MAIN_DOM.userInput.addEventListener('keypress', (e) => {
+    UI_DOM.sendButton.addEventListener('click', () => handleSendUserInput());
+    UI_DOM.userInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault(); 
             handleSendUserInput(); 
         }
     });
-    MAIN_DOM.voiceButton.addEventListener('click', toggleAudioRecording); 
+    UI_DOM.voiceButton.addEventListener('click', toggleAudioRecording); 
 
-    MAIN_DOM.saveDbButton.addEventListener('click', handleSaveDbToFile);
-    MAIN_DOM.loadDbButton.addEventListener('click', () => MAIN_DOM.loadDbFile.click());
-    MAIN_DOM.loadDbFile.addEventListener('change', handleLoadDbFromFile);
-    MAIN_DOM.importCsvButton.addEventListener('click', handleImportCsv);
+    UI_DOM.saveDbButton.addEventListener('click', handleSaveDbToFile);
+    UI_DOM.loadDbButton.addEventListener('click', () => UI_DOM.loadDbFile.click()); // Corrected: UI_DOM.loadDbFile
+    UI_DOM.loadDbFile.addEventListener('change', handleLoadDbFromFile);
+    UI_DOM.importCsvButton.addEventListener('click', handleImportCsv);
 });
 
 
@@ -72,7 +74,7 @@ async function handleSendUserInput(textOverride = null) {
     if (typeof textOverride === 'string') {
         textToSend = textOverride.trim();
     } else {
-        textToSend = MAIN_DOM.userInput.value.trim();
+        textToSend = UI_DOM.userInput.value.trim(); // Corrected: UI_DOM.userInput
     }
     
     if (!textToSend || isLLMLoading) {
@@ -92,7 +94,7 @@ async function handleSendUserInput(textOverride = null) {
     if (isFromDirectKeyInput) {
          addMessageToChatLog(textToSend, 'user');
     }
-    MAIN_DOM.userInput.value = ''; 
+    UI_DOM.userInput.value = ''; // Corrected: UI_DOM.userInput
     
     isLLMLoading = true;
     enableChatControls(true); 
@@ -150,8 +152,8 @@ async function toggleAudioRecording() {
 
             mediaRecorder.onstop = async () => {
                 // Indicar que la grabación paró y los controles se pueden rehabilitar momentáneamente
-                if(MAIN_DOM.voiceButton) MAIN_DOM.voiceButton.textContent = '🎙️'; 
-                if(MAIN_DOM.voiceButton) MAIN_DOM.voiceButton.title = "Grabar Voz (Click para Iniciar/Detener)";
+                if(UI_DOM.voiceButton) UI_DOM.voiceButton.textContent = '🎙️'; // Corrected: UI_DOM.voiceButton
+                if(UI_DOM.voiceButton) UI_DOM.voiceButton.title = "Grabar Voz (Click para Iniciar/Detener)"; // Corrected: UI_DOM.voiceButton
                 if (geminiApiKey && !isLLMLoading) enableChatControls(false); // Habilitar mientras procesa audio
                 
                 stream.getTracks().forEach(track => track.stop()); 
@@ -208,8 +210,8 @@ async function toggleAudioRecording() {
             mediaRecorder.onerror = (event) => {
                 console.error("Error en MediaRecorder:", event.error);
                 addMessageToChatLog(`Error de grabación: ${event.error.name}`, "ai", true);
-                if(MAIN_DOM.voiceButton) MAIN_DOM.voiceButton.textContent = '🎙️';
-                if(MAIN_DOM.voiceButton) MAIN_DOM.voiceButton.title = "Grabar Voz (Click para Iniciar/Detener)";
+                if(UI_DOM.voiceButton) UI_DOM.voiceButton.textContent = '🎙️'; // Corrected: UI_DOM.voiceButton
+                if(UI_DOM.voiceButton) UI_DOM.voiceButton.title = "Grabar Voz (Click para Iniciar/Detener)"; // Corrected: UI_DOM.voiceButton
                 removeLoadingIndicator(); // Ensure loading indicator is removed on error
                 isLLMLoading = false;
                 if (geminiApiKey) enableChatControls(false);
@@ -219,8 +221,8 @@ async function toggleAudioRecording() {
             };
 
             mediaRecorder.start();
-            if(MAIN_DOM.voiceButton) MAIN_DOM.voiceButton.textContent = '🛑'; 
-            if(MAIN_DOM.voiceButton) MAIN_DOM.voiceButton.title = "Detener Grabación";
+            if(UI_DOM.voiceButton) UI_DOM.voiceButton.textContent = '🛑'; // Corrected: UI_DOM.voiceButton
+            if(UI_DOM.voiceButton) UI_DOM.voiceButton.title = "Detener Grabación"; // Corrected: UI_DOM.voiceButton
             addMessageToChatLog("Grabando audio... Haz clic en 🛑 para detener.", 'ai');
             // No deshabilitar controles aquí, solo el botón de voz cambia de estado.
             // El usuario puede seguir escribiendo si quiere.
@@ -236,8 +238,8 @@ async function toggleAudioRecording() {
                 userMessage = "El micrófono está siendo usado por otra aplicación, hay un problema con el hardware/configuración, o la solicitud fue abortada.";
             }
             addMessageToChatLog(userMessage, 'ai', true);
-            if(MAIN_DOM.voiceButton) MAIN_DOM.voiceButton.textContent = '🎙️';
-            if(MAIN_DOM.voiceButton) MAIN_DOM.voiceButton.title = "Grabar Voz (Click para Iniciar/Detener)";
+            if(UI_DOM.voiceButton) UI_DOM.voiceButton.textContent = '🎙️'; // Corrected: UI_DOM.voiceButton
+            if(UI_DOM.voiceButton) UI_DOM.voiceButton.title = "Grabar Voz (Click para Iniciar/Detener)"; // Corrected: UI_DOM.voiceButton
             // Asegurar que los controles se habilitan y el estado de carga se resetea si falla getUserMedia
             isLLMLoading = false;
             if (geminiApiKey) enableChatControls(false);
@@ -426,21 +428,8 @@ async function processLLMResponse(aiResult) {
             } else if (results.length > 0) {
                 // Si no hay datos agrupados, pero sí resultados planos, limpiamos el panel de gestión
                 // para asegurar que no queden vistas agrupadas anteriores y mostramos las listas normales.
-                const dataManagementPanel = document.querySelector('.data-management');
-                if (dataManagementPanel) {
-                    // Restaurar la estructura original de las listas de entidades
-                    dataManagementPanel.innerHTML = ` 
-                        <div class="entity-section"><h3>Clientes (<span id="clients-count">0</span>)</h3><ul id="clients-list"></ul></div>
-                        <div class="entity-section"><h3>Usuarios (<span id="users-count">0</span>)</h3><ul id="users-list"></ul></div>
-                        <div class="entity-section"><h3>Campos (<span id="fields-count">0</span>)</h3><ul id="fields-list"></ul></div>
-                        <div class="entity-section"><h3>Lotes (<span id="lots-count">0</span>)</h3><ul id="lots-list"></ul></div>
-                        <div class="entity-section"><h3>Parcelas (<span id="parcels-count">0</span>)</h3><ul id="parcels-list"></ul></div>
-                        <div class="entity-section"><h3>Trabajos/Eventos (<span id="jobs-count">0</span>)</h3><ul id="jobs-list"></ul></div>
-                    `;
-                    // Es crucial re-asignar las referencias UI_DOM si se regeneran los elementos.
-                    // O, mejor aún, la función updateAllDisplayedLists debería ser capaz de encontrar los elementos por ID siempre.
-                    // Por ahora, asumimos que updateAllDisplayedLists puede encontrar los elementos por ID.
-                }
+                // Llamamos a la función de ui.js para regenerar el panel.
+                resetDataManagementPanelToDefaultLists(); // de ui.js
                 updateAllDisplayedLists(); // Mostrar las listas normales si no hay agrupación
 
                 additionalMessage = `Encontrados ${results.length} ${entity}(s):\n`;
@@ -607,7 +596,7 @@ function handleLoadDbFromFile(event) {
             console.error("Error al cargar DB desde archivo:", err);
             addMessageToChatLog(`Error al cargar el archivo: ${err.message}`, 'ai', true);
         } finally {
-            if (MAIN_DOM.loadDbFile) MAIN_DOM.loadDbFile.value = ''; 
+            if (UI_DOM.loadDbFile) UI_DOM.loadDbFile.value = ''; // Corrected: UI_DOM.loadDbFile
         }
     };
     reader.readAsText(file);
@@ -615,7 +604,7 @@ function handleLoadDbFromFile(event) {
 
 function handleImportCsv() {
     // ... (como antes) ...
-    const selectedCollectionKey = MAIN_DOM.entityTypeSelector.value; 
+    const selectedCollectionKey = UI_DOM.entityTypeSelector.value; // Corrected: UI_DOM.entityTypeSelector
     let entityNameToImport; 
     
     switch (selectedCollectionKey) {
@@ -634,7 +623,7 @@ function handleImportCsv() {
             return;
     }
 
-    const file = MAIN_DOM.csvFileInput.files[0];
+    const file = UI_DOM.csvFileInput.files[0]; // Corrected: UI_DOM.csvFileInput
     if (!file) {
         addMessageToChatLog("Por favor, selecciona un archivo CSV para importar.", 'ai', true);
         return;
@@ -656,7 +645,7 @@ function handleImportCsv() {
             console.error("Error al importar CSV:", e);
             addMessageToChatLog(`Error al procesar CSV: ${e.message}`, 'ai', true);
         } finally {
-            if (MAIN_DOM.csvFileInput) MAIN_DOM.csvFileInput.value = ''; 
+            if (UI_DOM.csvFileInput) UI_DOM.csvFileInput.value = ''; // Corrected: UI_DOM.csvFileInput
         }
     };
     reader.readAsText(file);
