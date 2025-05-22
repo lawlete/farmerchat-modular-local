@@ -1,17 +1,22 @@
 body {
     font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
+    padding: 0; /* Margin is already 0 by default for body in most browsers */
     background-color: #f4f4f4;
     color: #333;
     display: flex;
     flex-direction: column;
-    height: 100vh; /* Ensure body takes full viewport height */
-    overflow: hidden; /* Prevent body scroll when panels have their own */
+    min-height: 100%; /* Use min-height for body with flex */
+    margin: 0; /* Explicitly set margin to 0 */
+    box-sizing: border-box;
 }
 
 html {
     height: 100%; /* Ensure html also takes full viewport height */
+    box-sizing: border-box;
+}
+
+*, *::before, *::after {
+    box-sizing: inherit; /* Universal box-sizing inheritance */
 }
 
 .main-container {
@@ -29,6 +34,7 @@ html {
     overflow-y: auto; 
     max-height: 25vh; /* Ensures top-panel doesn't take excessive height */
     position: relative; /* For absolute positioning of header-actions */
+    flex-shrink: 0; /* Prevent top-panel from shrinking */
 }
 
 .top-panel h1 {
@@ -40,26 +46,29 @@ html {
     display: flex;
     flex-direction: row;
     flex-grow: 1;
-    /* overflow: hidden; */ /* Removed as per suggestion, children will manage overflow */
+    overflow: hidden; /* Important for independent scrolling of children */
     gap: 20px;
     padding: 20px; /* Add padding around chat and right panels */
     background-color: #f4f4f4; /* Match body background */
+    min-height: 0; /* For nested flex contexts */
 }
 
 .chat-panel {
-    flex: 2; /* Takes more space */
+    flex: 2; /* Takes more space (flex-grow: 2, flex-shrink: 1, flex-basis: 0%) */
     display: flex;
     flex-direction: column;
     background-color: white;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     border-radius: 5px;
-    /* overflow: hidden; */ /* Removed as per suggestion */
+    overflow: hidden; /* To contain chat-log scroll */
+    min-height: 0; /* For nested flex contexts */
 }
 
 .chat-container {
-    flex: 1; /* chat-container takes available space */
     display: flex;
     flex-direction: column;
+    flex-grow: 1; /* Allow chat-container to grow */
+    min-height: 0; /* Essential for scroll within flex child */
     overflow: hidden; /* This is important to contain the chat-log scroll */
 }
 
@@ -135,7 +144,7 @@ html {
 }
 
 .right-panel {
-    flex: 1; /* Takes less space */
+    flex: 1; /* Takes less space (flex-grow: 1, flex-shrink: 1, flex-basis: 0%) */
     background-color: white;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     border-radius: 5px;
@@ -143,6 +152,7 @@ html {
     overflow-y: auto; /* Independent scroll for the right panel */
     display: flex; /* To allow data-panel to fill height if needed */
     flex-direction: column;
+    min-height: 0; /* For nested flex contexts */
 }
 
 .data-panel { /* Now directly inside right-panel */
