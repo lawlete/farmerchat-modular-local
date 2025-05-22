@@ -1,31 +1,31 @@
-id,name,type,brand,unit
-prod_glifo_max,Glifosato Max Power,Herbicide,Monsanto,litro
-prod_24d,2,4-D Amina,Herbicide,Dow AgroSciences,litro
-prod_atrazina,Atrazina 90%,Herbicide,Syngenta,kg
-prod_sem_maiz_dk7210,Semilla Maíz DK 72-10 VT3P,Seed,Dekalb,bolsa
-prod_sem_soja_dm4600,Semilla Soja DM 46R18 STS,Seed,DonMario,bolsa
-prod_sem_trigo_bag,Semilla Trigo Baguette 620,Seed,Nidera,bolsa
-prod_urea_g,Urea Granulada,Fertilizer,Profertil,kg
-prod_fosfato_d,Fosfato Diamónico (DAP),Fertilizer,Bunge,kg
-prod_clorpirifos,Clorpirifos 48%,Insecticide,Genérico,litro
-prod_cipermetrina,Cipermetrina 25%,Insecticide,ChemChina,litro
-prod_tebuconazole,Tebuconazole Plus,Fungicide,Bayer,litro
-prod_gasoil,Gasoil Grado 2,Fuel,YPF,litro
-prod_aceite_motor,Aceite Motor 15W40,Lubricant,Shell,litro
-prod_grasa_litio,Grasa de Litio Multipropósito,Lubricant,Total,kg
-prod_alambre_alta,Alambre Alta Resistencia 17/15,Wire,Acindar,rollo
-prod_varilla_euca,Varilla Eucalipto 2.2m,Post,Forestal,unidad
-prod_sem_girasol_adv,Semilla Girasol Advanta P65,Seed,Advanta,bolsa
-prod_sem_alfalfa_cuf,Semilla Alfalfa CUF 101,Seed,Gentron,bolsa
-prod_ivermectina,Ivermectina 3.15%,Veterinary,Zoetis,frasco
-prod_vacuna_aftosa,Vacuna Antiaftosa,Veterinary,Biogénesis Bagó,dosis
-prod_sem_avena,Semilla Avena Strigosa,Seed,Forrajeras S.A.,kg
-prod_sem_cebada,Semilla Cebada Andreia,Seed,Criadero Buck,kg
-prod_paraquat,Paraquat Gramoxone,Herbicide,Syngenta,litro
-prod_sulfato_amonio,Sulfato de Amonio,Fertilizer,Yara,kg
-prod_potasio_cloruro,Cloruro de Potasio,Fertilizer,Mosaic,kg
-prod_sem_sorgo_g,Semilla Sorgo Granífero Adv G120,Seed,Advanta,bolsa
-prod_sem_centeno,Semilla Centeno Don Enrique,Seed,Klein,kg
-prod_metalaxil,Metalaxil + Mancozeb,Fungicide,BASF,kg
-prod_deltametrina,Deltametrina,Insecticide,FMC,litro
-prod_caldo_bordeles,Caldo Bordelés,Fungicide,Orgánico,kg
+id,name,type,unit
+prod_glifo_max,Glifosato Max Power,Herbicide,litro
+prod_24d,2,4-D Amina,Herbicide,litro
+prod_atrazina,Atrazina 90%,Herbicide,kg
+prod_sem_maiz_dk7210,Semilla Maíz DK 72-10 VT3P,Seed,bolsa
+prod_sem_soja_dm4600,Semilla Soja DM 46R18 STS,Seed,bolsa
+prod_sem_trigo_bag,Semilla Trigo Baguette 620,Seed,bolsa
+prod_urea_g,Urea Granulada,Fertilizer,kg
+prod_fosfato_d,Fosfato Diamónico (DAP),Fertilizer,kg
+prod_clorpirifos,Clorpirifos 48%,Insecticide,litro
+prod_cipermetrina,Cipermetrina 25%,Insecticide,litro
+prod_tebuconazole,Tebuconazole Plus,Fungicide,litro
+prod_gasoil,Gasoil Grado 2,Fuel,litro
+prod_aceite_motor,Aceite Motor 15W40,Lubricant,litro
+prod_grasa_litio,Grasa de Litio Multipropósito,Lubricant,kg
+prod_alambre_alta,Alambre Alta Resistencia 17/15,Wire,rollo
+prod_varilla_euca,Varilla Eucalipto 2.2m,Post,unidad
+prod_sem_girasol_adv,Semilla Girasol Advanta P65,Seed,bolsa
+prod_sem_alfalfa_cuf,Semilla Alfalfa CUF 101,Seed,bolsa
+prod_ivermectina,Ivermectina 3.15%,Veterinary,frasco
+prod_vacuna_aftosa,Vacuna Antiaftosa,Veterinary,dosis
+prod_sem_avena,Semilla Avena Strigosa,Seed,kg
+prod_sem_cebada,Semilla Cebada Andreia,Seed,kg
+prod_paraquat,Paraquat Gramoxone,Herbicide,litro
+prod_sulfato_amonio,Sulfato de Amonio,Fertilizer,kg
+prod_potasio_cloruro,Cloruro de Potasio,Fertilizer,kg
+prod_sem_sorgo_g,Semilla Sorgo Granífero Adv G120,Seed,bolsa
+prod_sem_centeno,Semilla Centeno Don Enrique,Seed,kg
+prod_metalaxil,Metalaxil + Mancozeb,Fungicide,kg
+prod_deltametrina,Deltametrina,Insecticide,litro
+prod_caldo_bordeles,Caldo Bordelés,Fungicide,kg

@@ -1,31 +1,31 @@
-id,name,role,type,clientId,contact
-pers_ing_lopez,Ing. Ricardo Lopez,Engineer,Own,client_01,+549351600001
-pers_op_gimenez,Raul Gimenez,Operator,Own,client_01,+549351600002
-pers_enc_diaz,Marta Diaz,Manager,Own,client_01,+549351600003
-pers_cont_silva,Contratista Silva Hnos.,ContractorFirm,Contracted,,+54911700001
-pers_op_vega,Lucia Vega,Operator,Own,client_02,+549299600001
-pers_vet_arias,Dr. Esteban Arias,Veterinarian,Contracted,,+549239700002
-pers_ing_rios,Ing. Sofia Rios,Engineer,Own,client_02,+549299600002
-pers_op_molina,Alberto Molina,Operator,Own,client_03,+549261600001
-pers_capataz_vides,Capataz Vides,Manager,Own,client_03,+549261600002
-pers_agron_cruz,Agrónomo Cruz,Consultant,Contracted,,+549387700003
-pers_op_flores,Carmen Flores,Operator,Own,client_04,+549387600001
-pers_tec_ruiz,Técnico Ruiz,Mechanic,Own,client_04,+549387600002
-pers_op_castro,José Castro,Operator,Own,client_05,+549239600001
-pers_admin_pena,Administración Peña,AdminStaff,Own,client_05,+549239600002
-pers_fumigador_x,Fumigaciones Aéreas X,ContractorPilot,Contracted,,+54911700004
-pers_op_sanchez,Manuel Sanchez,Operator,Own,client_01,+549351600004
-pers_op_benitez,Laura Benitez,Operator,Own,client_01,+549351600005
-pers_ing_torres,Ing. Martin Torres,Engineer,Contracted,,+54911700005
-pers_enc_romero,Encargado Romero,Manager,Own,client_02,+549299600003
-pers_op_navarro,Diego Navarro,Operator,Own,client_02,+549299600004
-pers_op_ferrari,Franco Ferrari,Operator,Own,client_03,+549261600003
-pers_op_blanco,Isabel Blanco,Operator,Own,client_04,+549387600003
-pers_op_mendez,Roberto Mendez,Operator,Own,client_05,+549239600003
-pers_cosechadora_team,Equipo Cosecha Sur,ContractorTeam,Contracted,,+549291700006
-pers_op_quiroga,Estela Quiroga,Operator,Own,client_01,+549351600006
-pers_mecanico_perez,Mecánico Pérez Taller,Mechanic,Contracted,,+549358700007
-pers_op_acuna,Oscar Acuña,Operator,Own,client_02,+549299600005
-pers_enologo_sala,Enólogo Ricardo Sala,Consultant,Contracted,client_03,+549261700008
-pers_op_vera,Patricia Vera,Operator,Own,client_04,+549387600004
-pers_alambrador_cacho,Cacho Alambrados,Wireman,Contracted,,+549234700009
+id,name,role,phone
+pers_ing_lopez,Ing. Ricardo Lopez,Engineer,+549351600001
+pers_op_gimenez,Raul Gimenez,Operator,+549351600002
+pers_enc_diaz,Marta Diaz,Manager,+549351600003
+pers_cont_silva,Contratista Silva Hnos.,ContractorFirm,+54911700001
+pers_op_vega,Lucia Vega,Operator,+549299600001
+pers_vet_arias,Dr. Esteban Arias,Veterinarian,+549239700002
+pers_ing_rios,Ing. Sofia Rios,Engineer,+549299600002
+pers_op_molina,Alberto Molina,Operator,+549261600001
+pers_capataz_vides,Capataz Vides,Manager,+549261600002
+pers_agron_cruz,Agrónomo Cruz,Consultant,+549387700003
+pers_op_flores,Carmen Flores,Operator,+549387600001
+pers_tec_ruiz,Técnico Ruiz,Mechanic,+549387600002
+pers_op_castro,José Castro,Operator,+549239600001
+pers_admin_pena,Administración Peña,AdminStaff,+549239600002
+pers_fumigador_x,Fumigaciones Aéreas X,ContractorPilot,+54911700004
+pers_op_sanchez,Manuel Sanchez,Operator,+549351600004
+pers_op_benitez,Laura Benitez,Operator,+549351600005
+pers_ing_torres,Ing. Martin Torres,Engineer,+54911700005
+pers_enc_romero,Encargado Romero,Manager,+549299600003
+pers_op_navarro,Diego Navarro,Operator,+549299600004
+pers_op_ferrari,Franco Ferrari,Operator,+549261600003
+pers_op_blanco,Isabel Blanco,Operator,+549387600003
+pers_op_mendez,Roberto Mendez,Operator,+549239600003
+pers_cosechadora_team,Equipo Cosecha Sur,ContractorTeam,+549291700006
+pers_op_quiroga,Estela Quiroga,Operator,+549351600006
+pers_mecanico_perez,Mecánico Pérez Taller,Mechanic,+549358700007
+pers_op_acuna,Oscar Acuña,Operator,+549299600005
+pers_enologo_sala,Enólogo Ricardo Sala,Consultant,+549261700008
+pers_op_vera,Patricia Vera,Operator,+549387600004
+pers_alambrador_cacho,Cacho Alambrados,Wireman,+549234700009

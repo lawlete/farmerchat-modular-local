@@ -1,4 +1,4 @@
-id,name,location,clientId,areaTotalHa
+id,name,location,clientId,area
 field_ama_01,La Esperanza,Ruta 9 Km 750 - Córdoba,client_01,1250
 field_ama_02,El Retiro,Camino a Jesús María - Córdoba,client_01,800
 field_ama_03,San Isidro,Cerca de Sinsacate - Córdoba,client_01,1500

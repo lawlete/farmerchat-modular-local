@@ -171,8 +171,10 @@ async function toggleAudioRecording() {
                     const base64Audio = base64AudioWithPrefix.substring(base64AudioWithPrefix.indexOf(',') + 1);
                     
                     addMessageToChatLog("Audio grabado. Transcribiendo...", 'user'); 
-                    isLLMLoading = true; // Marcar como cargando ANTES de la llamada al LLM
-                    enableChatControls(true); // Deshabilitar controles
+                    
+                    // Moved isLLMLoading and enableChatControls before the async call
+                    isLLMLoading = true; 
+                    enableChatControls(true); 
                     const loadingTranscription = addMessageToChatLog("Transcribiendo con IA...", 'ai', false, true);
 
                     try {
@@ -180,24 +182,25 @@ async function toggleAudioRecording() {
                         removeLoadingIndicator(); 
                         if (transcription && transcription.trim() !== "") {
                             addMessageToChatLog(`Transcripción: "${transcription}"`, 'ai');
-                            // El finally de handleSendUserInput se encargará de isLLMLoading y enableChatControls
+                            // handleSendUserInput will manage isLLMLoading and enableChatControls upon its completion/failure.
                             await handleSendUserInput(transcription); 
                         } else {
                             addMessageToChatLog("No se pudo obtener la transcripción del audio o estaba vacía.", 'ai', true);
-                            isLLMLoading = false; // Resetear si la transcripción falla aquí
+                            isLLMLoading = false; 
                             if (geminiApiKey) enableChatControls(false);
                         }
                     } catch (error) {
                         removeLoadingIndicator();
                         console.error("Error en transcripción de audio (desde toggleAudioRecording):", error);
                         addMessageToChatLog(`Error al transcribir: ${error.message}`, 'ai', true);
-                        isLLMLoading = false; // Resetear en error de transcripción
+                        isLLMLoading = false; 
                         if (geminiApiKey) enableChatControls(false);
                     } 
                 };
-                 reader.onerror = (error) => {
+                reader.onerror = (error) => {
                     console.error("Error leyendo el audioBlob:", error);
                     addMessageToChatLog("Error al procesar el audio grabado.", "ai", true);
+                    removeLoadingIndicator(); // Ensure loading indicator is removed on error
                     isLLMLoading = false; 
                     if (geminiApiKey) enableChatControls(false);
                 };
@@ -207,9 +210,12 @@ async function toggleAudioRecording() {
                 addMessageToChatLog(`Error de grabación: ${event.error.name}`, "ai", true);
                 if(MAIN_DOM.voiceButton) MAIN_DOM.voiceButton.textContent = '🎙️';
                 if(MAIN_DOM.voiceButton) MAIN_DOM.voiceButton.title = "Grabar Voz (Click para Iniciar/Detener)";
+                removeLoadingIndicator(); // Ensure loading indicator is removed on error
                 isLLMLoading = false;
                 if (geminiApiKey) enableChatControls(false);
-                stream.getTracks().forEach(track => track.stop()); 
+                if (stream && typeof stream.getTracks === 'function') { // Check if stream exists and has getTracks
+                    stream.getTracks().forEach(track => track.stop()); 
+                }
             };
 
             mediaRecorder.start();
@@ -221,18 +227,20 @@ async function toggleAudioRecording() {
 
         } catch (err) {
             console.error("Error al acceder al micrófono o iniciar grabación:", err);
-            // ... (manejo de errores de micrófono como antes) ...
             let userMessage = "Error al acceder al micrófono. Asegúrate de haber dado permisos.";
             if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
                 userMessage = "Permiso para acceder al micrófono denegado. Por favor, habilítalo en la configuración de tu navegador.";
             } else if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError"){
                 userMessage = "No se encontró un dispositivo de micrófono.";
-            } else if (err.name === "NotReadableError" || err.name === "TrackStartError" || err.name === "OverconstrainedError") {
-                userMessage = "El micrófono está siendo usado por otra aplicación o hay un problema con el hardware/configuración.";
+            } else if (err.name === "NotReadableError" || err.name === "TrackStartError" || err.name === "OverconstrainedError" || err.name === "AbortError") {
+                userMessage = "El micrófono está siendo usado por otra aplicación, hay un problema con el hardware/configuración, o la solicitud fue abortada.";
             }
             addMessageToChatLog(userMessage, 'ai', true);
             if(MAIN_DOM.voiceButton) MAIN_DOM.voiceButton.textContent = '🎙️';
             if(MAIN_DOM.voiceButton) MAIN_DOM.voiceButton.title = "Grabar Voz (Click para Iniciar/Detener)";
+            // Asegurar que los controles se habilitan y el estado de carga se resetea si falla getUserMedia
+            isLLMLoading = false;
+            if (geminiApiKey) enableChatControls(false);
         }
     }
 }
@@ -252,11 +260,16 @@ async function processLLMResponse(aiResult) {
     addMessageToChatLog(responseTextForUser, messageType);
 
     // Acciones que no modifican la DB o no necesitan más procesamiento aquí
-    if (['CLARIFY', 'GREETING', 'NOT_UNDERSTOOD', 'INFO_EXTERNAL'].includes(aiResult.action)) {
+    if (['CLARIFY', 'GREETING', 'NOT_UNDERSTOOD', 'INFO_EXTERNAL', 'HELP_COMMAND'].includes(aiResult.action)) {
         if (aiResult.action === 'INFO_EXTERNAL') {
             console.log("INFO_EXTERNAL solicitada, query:", aiResult.externalQuery);
         }
-        return;
+        // Para HELP_COMMAND, el responseText ya fue añadido al log por el bloque anterior.
+        // Y no necesita más procesamiento.
+        if (aiResult.action === 'HELP_COMMAND') {
+            console.log("Comando de AYUDA procesado, info:", aiResult.data || "Ayuda general");
+        }
+        return; // Importante: Detener el procesamiento para estas acciones
     }
 
     const entity = aiResult.entity;
@@ -400,7 +413,36 @@ async function processLLMResponse(aiResult) {
                 });
             }
 
-            if (results.length > 0) {
+            // Comprobar si hay datos agrupados para mostrar
+            if (aiResult.data && aiResult.data.grouping && aiResult.data.grouping.groupedData && aiResult.data.grouping.groupBy) {
+                // Llamada a la nueva función displayGroupedData de ui.js
+                displayGroupedData(aiResult.data.grouping.groupedData, entity, aiResult.data.grouping.groupBy);
+                
+                // El mensaje de additionalMessage ahora podría ser redundante si displayGroupedData es claro,
+                // pero lo mantenemos por ahora para consistencia con el responseText del LLM.
+                // El responseText del LLM ya debería indicar que los datos agrupados están listos.
+                // additionalMessage = `Los datos agrupados de ${entity} por '${aiResult.data.grouping.groupBy.join(', ')}' se muestran en el panel lateral.`;
+                // No se llama a updateAllDisplayedLists() aquí para no sobrescribir la vista agrupada.
+            } else if (results.length > 0) {
+                // Si no hay datos agrupados, pero sí resultados planos, limpiamos el panel de gestión
+                // para asegurar que no queden vistas agrupadas anteriores y mostramos las listas normales.
+                const dataManagementPanel = document.querySelector('.data-management');
+                if (dataManagementPanel) {
+                    // Restaurar la estructura original de las listas de entidades
+                    dataManagementPanel.innerHTML = ` 
+                        <div class="entity-section"><h3>Clientes (<span id="clients-count">0</span>)</h3><ul id="clients-list"></ul></div>
+                        <div class="entity-section"><h3>Usuarios (<span id="users-count">0</span>)</h3><ul id="users-list"></ul></div>
+                        <div class="entity-section"><h3>Campos (<span id="fields-count">0</span>)</h3><ul id="fields-list"></ul></div>
+                        <div class="entity-section"><h3>Lotes (<span id="lots-count">0</span>)</h3><ul id="lots-list"></ul></div>
+                        <div class="entity-section"><h3>Parcelas (<span id="parcels-count">0</span>)</h3><ul id="parcels-list"></ul></div>
+                        <div class="entity-section"><h3>Trabajos/Eventos (<span id="jobs-count">0</span>)</h3><ul id="jobs-list"></ul></div>
+                    `;
+                    // Es crucial re-asignar las referencias UI_DOM si se regeneran los elementos.
+                    // O, mejor aún, la función updateAllDisplayedLists debería ser capaz de encontrar los elementos por ID siempre.
+                    // Por ahora, asumimos que updateAllDisplayedLists puede encontrar los elementos por ID.
+                }
+                updateAllDisplayedLists(); // Mostrar las listas normales si no hay agrupación
+
                 additionalMessage = `Encontrados ${results.length} ${entity}(s):\n`;
                 results.slice(0, 15).forEach(item => { // Mostrar máximo 15 para no saturar el chat
                     let displayName = item.name || item.taskName || item.id;

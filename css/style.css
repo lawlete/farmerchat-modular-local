@@ -7,39 +7,71 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    overflow: hidden; /* Prevent body scroll when panels have their own */
 }
-header {
-    background-color: #38761D;
-    color: white;
-    padding: 1em 0;
-    text-align: center;
-}
-main {
-    flex-grow: 1;
-    max-width: 1200px;
-    margin: 20px auto;
-    padding: 20px;
-    background-color: white;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    display: flex;
-    gap: 20px;
-}
-.chat-container {
-    flex: 2;
+
+.main-container {
     display: flex;
     flex-direction: column;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    overflow: hidden;
+    flex-grow: 1;
+    overflow: hidden; /* Manage overflow for child panels */
 }
+
+.top-panel {
+    background-color: #38761D;
+    color: white;
+    padding: 1em; /* Adjusted padding */
+    text-align: center;
+    /* Allow content to determine height, add scroll if needed */
+    overflow-y: auto; 
+    /* Consider a max-height if content can be very large */
+    /* max-height: 200px; */ 
+    position: relative; /* For absolute positioning of header-actions */
+}
+
+.top-panel h1 {
+    margin-top: 0;
+    margin-bottom: 0.5em;
+}
+
+.content-area {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 1;
+    overflow: hidden; /* Important for independent scrolling of children */
+    gap: 20px;
+    padding: 20px; /* Add padding around chat and right panels */
+    background-color: #f4f4f4; /* Match body background */
+}
+
+.chat-panel {
+    flex: 2; /* Takes more space */
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    overflow: hidden; /* Manage overflow for chat-log and input area */
+}
+
+.chat-container {
+    flex: 1; /* Renamed from main to .chat-panel, chat-container handles internal flex */
+    display: flex;
+    flex-direction: column;
+    /* border: 1px solid #ddd; */ /* Border now on chat-panel */
+    /* border-radius: 5px; */
+    overflow: hidden; /* Ensures chat-log scrolls within chat-container */
+}
+
 .chat-log {
     flex-grow: 1;
     padding: 10px;
     overflow-y: auto;
     background-color: #e9ecef;
-    min-height: 300px;
+    /* min-height: 300px; */ /* No longer needed as flex-grow handles height */
     border-bottom: 1px solid #ddd;
 }
+
 .chat-message {
     margin-bottom: 10px;
     padding: 8px 12px;
@@ -100,15 +132,36 @@ main {
     background-color: #ccc;
     cursor: not-allowed;
 }
-.data-management {
-    flex: 1;
+
+.right-panel {
+    flex: 1; /* Takes less space */
+    background-color: white;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
     padding: 15px;
+    overflow-y: auto; /* Independent scroll for the right panel */
+    display: flex; /* To allow data-panel to fill height if needed */
+    flex-direction: column;
+}
+
+.data-panel { /* Now directly inside right-panel */
+    flex-grow: 1; /* Allow it to take available space if needed */
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Retain gap if multiple sections were here */
+    /* overflow-y: auto; */ /* Scroll is on right-panel now */
+}
+
+.data-management {
+    /* flex: 1; */ /* No longer needed, right-panel handles flex distribution */
+    padding: 0; /* Padding is on right-panel now */
     background-color: #f9f9f9;
     border: 1px solid #eee;
     border-radius: 5px;
-    max-height: 500px;
-    overflow-y: auto;
+    /* max-height: 500px; */ /* Scroll handled by right-panel */
+    overflow-y: auto; /* If data-management itself needs to scroll within data-panel */
 }
+
 .entity-section h3 {
     margin-top: 0;
     border-bottom: 1px solid #ddd;
@@ -143,8 +196,8 @@ footer {
 
 .header-actions {
     position: absolute;
-    top: 15px;
-    right: 20px;
+    top: 1em; /* Adjusted to match top-panel padding */
+    right: 1em; /* Adjusted to match top-panel padding */
 }
 .header-actions button {
     background-color: #4CAF50;
@@ -160,22 +213,25 @@ footer {
 }
 
 .data-panel { /* Contenedor para data-management y csv-import */
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+    /* flex: 1; */ /* No longer needed as it's part of top-panel flow */
+    /* display: flex; */ /* Not needed */
+    /* flex-direction: column; */ /* Not needed */
+    /* gap: 20px; */ /* Not needed */
+    margin-top: 1em; /* Add some space above CSV import if it's in top-panel */
 }
 
 .csv-import-section {
     padding: 15px;
-    background-color: #ffffff;
+    background-color: #e0e0e0; /* Slightly different background for distinction */
     border: 1px solid #ccd0d5;
     border-radius: 8px;
+    margin: 1em auto; /* Center it if width is constrained */
+    max-width: 500px; /* Optional: constrain width */
 }
 .csv-import-section h2 {
     margin-top: 0;
-    color: #0084ff;
-    border-bottom: 1px solid #e4e6eb;
+    color: #333; /* Adjusted color */
+    border-bottom: 1px solid #bbb; /* Adjusted border */
     padding-bottom: 8px;
     font-size: 1.2em;
 }
@@ -192,9 +248,10 @@ footer {
     padding: 8px;
     border: 1px solid #ccd0d5;
     border-radius: 4px;
+    background-color: #fff; /* Ensure form fields are white */
 }
 .csv-import-section button {
-    background-color: #2d88ff;
+    background-color: #1C3A6F; /* Match other buttons */
     color: white;
     padding: 10px;
     border: none;
@@ -202,15 +259,49 @@ footer {
     cursor: pointer;
 }
 .csv-import-section button:hover {
-    background-color: #1a73e8;
+    background-color: #122b50; /* Match other buttons hover */
 }
 .csv-format-note {
     font-size: 0.85em;
-    color: #606770;
+    color: #333; /* Adjusted color */
     margin-top: 5px;
 }
 .api-key-note { /* Estilo para el texto debajo del botón de guardar API key */
     font-size:0.8em; 
     color:grey; 
     margin-top:15px;
+}
+
+/* Responsive adjustments (example) */
+@media (max-width: 768px) {
+    .content-area {
+        flex-direction: column;
+        padding: 10px; /* Reduce padding on smaller screens */
+    }
+
+    .chat-panel, .right-panel {
+        flex-basis: auto; /* Reset flex-basis */
+        margin-bottom: 10px; /* Add margin between stacked panels */
+    }
+
+    .right-panel {
+        max-height: 40vh; /* Example: limit height when stacked */
+    }
+
+    .header-actions {
+        position: static; /* Stack buttons in header on small screens */
+        text-align: center;
+        margin-top: 10px;
+    }
+    .header-actions button {
+        margin-left: 5px;
+        margin-right: 5px;
+    }
+    .top-panel {
+        padding: 0.5em;
+    }
+    .csv-import-section {
+        margin-left: 10px;
+        margin-right: 10px;
+    }
 }

@@ -108,20 +108,35 @@ El JSON de respuesta DEBE tener la siguiente estructura:
 {
   "action": "STRING_ACCION",
   "entity": "STRING_ENTIDAD_OPCIONAL",
-  "data": {}, // OBJETO_DATOS_OPCIONAL
+  "data": { // OBJETO_DATOS_OPCIONAL
+    "filters": {}, // (Opcional) Filtros para READ, UPDATE, DELETE
+    "grouping": { // (Opcional, solo para READ) Especificación de agrupación
+      "groupBy": ["STRING_CAMPO1", "STRING_CAMPO2"], // Campos por los que agrupar
+      "groupedData": [] // Array de datos agrupados (estructura anidada si groupBy tiene múltiples campos)
+    },
+    "criteria": {}, // (Opcional) Criterios para UPDATE, DELETE
+    "nuevosDatos": {} // (Opcional) Nuevos datos para UPDATE
+    // ...otros campos según la acción y entidad
+  },
   "clarificationQuestion": "STRING_PREGUNTA_OPCIONAL",
   "responseText": "STRING_RESPUESTA_PARA_USUARIO",
   "externalQuery": "STRING_CONSULTA_EXTERNA_OPCIONAL"
 }
 
 Valores posibles para "action":
-- "CREATE": Para crear una nueva entidad. "entity" y "data" son requeridos. "data" contiene los campos y valores.
-- "READ": Para consultar/listar entidades. "entity" es requerido. "data.filters" (opcional) contiene los filtros.
+- "CREATE": Para crear una nueva entidad. "entity" y "data" (con campos y valores) son requeridos.
+- "READ": Para consultar/listar entidades. "entity" es requerido.
+    - "data.filters" (opcional) contiene los filtros.
+    - Si el usuario pide agrupar (ej. "listar X agrupados por Y"), incluye "data.grouping".
+      - "data.grouping.groupBy": Array de strings con los nombres de los campos por los cuales se agrupa (ej., ["fieldName", "lotName"]).
+      - "data.grouping.groupedData": Array de objetos. Cada objeto es un grupo con "groupName" (valor del grupo) e "items" (array de sub-grupos o items finales).
+    - Si no puedes realizar la agrupación solicitada o la entidad no se presta para ello, omite "data.grouping" y explícalo en "responseText".
 - "UPDATE": Para modificar una entidad. "entity" y "data" son requeridos. "data.criteria" identifica el registro y "data.nuevosDatos" tiene los cambios.
 - "DELETE": Para eliminar una entidad. "entity" y "data.criteria" son requeridos.
 - "CLARIFY": Si necesitas más información. "clarificationQuestion" y "responseText" son requeridos.
 - "INFO_EXTERNAL": Para búsquedas externas (clima, precios). "externalQuery" y "responseText" son requeridos.
 - "GREETING": Para saludos. "responseText" es requerido.
+- "HELP_COMMAND": Si el usuario pide ayuda sobre un comando o ayuda general. "responseText" es requerido. "entity" y "data" (con detalles del comando) son opcionales pero recomendados.
 - "NOT_UNDERSTOOD": Si no entiendes la petición o no puedes mapearla a una acción. "responseText" es requerido.
 
 Entidades que gestionas (para el campo "entity"): Field, Lot, Parcel, TaskDefinition, ProductInsume, Machinery, Personnel, Campaign, JobEvent, Client, User.
@@ -174,6 +189,54 @@ Respuesta JSON Esperada:
   "entity": "JobEvent",
   "data": { "filters": { "fieldName": "San Isidro" } },
   "responseText": "Buscando tareas para el campo San Isidro... (El backend mostrará los resultados)"
+}
+
+Petición Usuario: "listar trabajos para el cliente 'Agro SRL' agrupados por campo y luego por lote"
+Respuesta JSON Esperada:
+{
+  "action": "READ",
+  "entity": "JobEvent",
+  "data": {
+    "filters": { "clientName": "Agro SRL" },
+    "grouping": {
+      "groupBy": ["fieldName", "lotName"],
+      "groupedData": [
+        {
+          "groupName": "Campo La Esperanza",
+          "items": [
+            {
+              "groupName": "Lote 1A",
+              "items": [
+                { "id": "job_001", "taskName": "Siembra Maíz", "status": "Completed", "parcelName":"Parcela Norte" },
+                { "id": "job_005", "taskName": "Cosecha Soja", "status": "Scheduled", "parcelName":"Parcela Sur" }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "responseText": "Aquí están los trabajos para 'Agro SRL' agrupados por campo y lote. Los resultados se mostrarán en el panel lateral."
+}
+(El LLM NO debe generar los datos agrupados en sí, solo la estructura de "grouping" y los filtros. El backend hará la agrupación real. Si el LLM no puede determinar los campos para "groupBy" o considera que la agrupación no es viable, omitirá el objeto "grouping" y lo explicará en "responseText".)
+
+Petición Usuario: "ayuda para crear un nuevo campo"
+Respuesta JSON Esperada:
+{
+  "action": "HELP_COMMAND",
+  "entity": "Field",
+  "data": {
+    "commandName": "Crear Campo",
+    "description": "Registra un nuevo campo en el sistema.",
+    "usage": "crear campo [nombre] en [ubicación] de [hectáreas] hectáreas",
+    "parameters": [
+      { "name": "nombre", "required": true, "description": "Nombre del campo." },
+      { "name": "ubicación", "required": false, "description": "Dónde está el campo." },
+      { "name": "hectáreas", "required": false, "description": "Superficie en hectáreas." }
+    ],
+    "examples": ["crear campo La Margarita en Pergamino de 300 hectáreas"]
+  },
+  "responseText": "Ayuda para 'Crear Campo':\nDescripción: Registra un nuevo campo en el sistema.\nUso: crear campo [nombre] en [ubicación] de [hectáreas] hectáreas\nParámetros:\n- nombre (obligatorio): Nombre del campo.\n- ubicación (opcional): Dónde está el campo.\n- hectáreas (opcional): Superficie en hectáreas.\nEjemplo: crear campo La Margarita en Pergamino de 300 hectáreas"
 }
 
 Petición Usuario: "borrar el lote Lote Experimental del campo La Esperanza"

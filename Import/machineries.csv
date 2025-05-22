@@ -1,31 +1,31 @@
-id,name,type,owner,clientId,status
-mach_jd_7200,Tractor John Deere 7200,Tractor,Own,client_01,Available
-mach_case_2388,Cosechadora Case 2388 Axial,Cosechadora,Own,client_01,InUse
-mach_agrometal_tx,Sembradora Agrometal TX Mega 10m,Sembradora,Own,client_01,Maintenance
-mach_pla_map3,Pulverizadora PLA MAP II 3000,Pulverizadora,Own,client_01,Available
-mach_mf_4290,Tractor Massey Ferguson 4290,Tractor,Own,client_02,Available
-mach_nh_tc57,Cosechadora New Holland TC57,Cosechadora,Own,client_02,Available
-mach_bertini_21000,Sembradora Bertini 21000 Air Drill,Sembradora,Own,client_02,InUse
-mach_jacto_2000,Pulverizadora Jacto Uniport 2000,Pulverizadora,Contracted,,Available
-mach_valtra_a990,Tractor Valtra A990,Tractor,Own,client_03,Available
-mach_jd_s670,Cosechadora John Deere S670,Cosechadora,Contracted,,Maintenance
-mach_crucianelli_gringa,Sembradora Crucianelli Gringa V,Sembradora,Own,client_04,Available
-mach_metalfor_3200,Pulverizadora Metalfor Futur 3200,Pulverizadora,Own,client_04,InUse
-mach_pauny_500,Tractor Pauny 500 Evo,Tractor,Own,client_05,Available
-mach_jd_6150,Tractor John Deere 6150J,Tractor,Own,client_01,Available
-mach_case_puma180,Tractor Case Puma 180,Tractor,Own,client_02,InUse
-mach_vassalli_1550,Cosechadora Vassalli AX 7510 Lider,Cosechadora,Contracted,,Available
-mach_gimetal_airplanter,Sembradora Gimetal Air Planter G600,Sembradora,Own,client_01,Maintenance
-mach_caiman_spt300,Pulverizadora Caimán SP Hidro 3000,Pulverizadora,Own,client_05,Available
-mach_zanello_460,Tractor Zanello 460 Articulado,Tractor,Own,client_04,Available
-mach_deutz_ax100,Tractor Deutz-Fahr AX 100,Tractor,Own,client_03,InUse
-mach_cele_axion850,Cosechadora Claas Axion 850,Cosechadora,Contracted,,Available
-mach_apache_54000,Sembradora Apache 54000,Sembradora,Own,client_02,Available
-mach_favot_fv3000,Pulverizadora Favot Turbina FV3000,Pulverizadora,Own,client_03,Maintenance
-mach_fiat_780,Tractor Fiat 780,Tractor,Own,client_01,Available
-mach_jd_1175,Cosechadora John Deere 1175,Cosechadora,Own,client_05,InUse
-mach_tanzi_4300,Sembradora Tanzi 4300 Air Drill,Sembradora,Contracted,,Available
-mach_ombu_ar3000,Pulverizadora Ombú AR3000,Pulverizadora,Own,client_02,Available
-mach_someca_m45,Tractor Someca M45 Viñatero,Tractor,Own,client_03,Available
-mach_donroque_150,Cosechadora Don Roque RV 150 M,Cosechadora,Own,client_04,Maintenance
-mach_roland_h01,Rastra de discos Roland H01,Implement,Own,client_01,Available
+id,name,type,model,year
+mach_jd_7200,Tractor John Deere 7200,Tractor,,
+mach_case_2388,Cosechadora Case 2388 Axial,Cosechadora,,
+mach_agrometal_tx,Sembradora Agrometal TX Mega 10m,Sembradora,,
+mach_pla_map3,Pulverizadora PLA MAP II 3000,Pulverizadora,,
+mach_mf_4290,Tractor Massey Ferguson 4290,Tractor,,
+mach_nh_tc57,Cosechadora New Holland TC57,Cosechadora,,
+mach_bertini_21000,Sembradora Bertini 21000 Air Drill,Sembradora,,
+mach_jacto_2000,Pulverizadora Jacto Uniport 2000,Pulverizadora,,
+mach_valtra_a990,Tractor Valtra A990,Tractor,,
+mach_jd_s670,Cosechadora John Deere S670,Cosechadora,,
+mach_crucianelli_gringa,Sembradora Crucianelli Gringa V,Sembradora,,
+mach_metalfor_3200,Pulverizadora Metalfor Futur 3200,Pulverizadora,,
+mach_pauny_500,Tractor Pauny 500 Evo,Tractor,,
+mach_jd_6150,Tractor John Deere 6150J,Tractor,,
+mach_case_puma180,Tractor Case Puma 180,Tractor,,
+mach_vassalli_1550,Cosechadora Vassalli AX 7510 Lider,Cosechadora,,
+mach_gimetal_airplanter,Sembradora Gimetal Air Planter G600,Sembradora,,
+mach_caiman_spt300,Pulverizadora Caimán SP Hidro 3000,Pulverizadora,,
+mach_zanello_460,Tractor Zanello 460 Articulado,Tractor,,
+mach_deutz_ax100,Tractor Deutz-Fahr AX 100,Tractor,,
+mach_cele_axion850,Cosechadora Claas Axion 850,Cosechadora,,
+mach_apache_54000,Sembradora Apache 54000,Sembradora,,
+mach_favot_fv3000,Pulverizadora Favot Turbina FV3000,Pulverizadora,,
+mach_fiat_780,Tractor Fiat 780,Tractor,,
+mach_jd_1175,Cosechadora John Deere 1175,Cosechadora,,
+mach_tanzi_4300,Sembradora Tanzi 4300 Air Drill,Sembradora,,
+mach_ombu_ar3000,Pulverizadora Ombú AR3000,Pulverizadora,,
+mach_someca_m45,Tractor Someca M45 Viñatero,Tractor,,
+mach_donroque_150,Cosechadora Don Roque RV 150 M,Cosechadora,,
+mach_roland_h01,Rastra de discos Roland H01,Implement,,
