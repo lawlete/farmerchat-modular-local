@@ -1,4 +1,4 @@
-id,name,fieldId,areaHa
+id,name,fieldId,area
 lot_ama_e_01,Lote 1 Maíz,field_ama_01,120
 lot_ama_e_02,Lote 2 Soja,field_ama_01,150
 lot_ama_e_03,Lote 3 Trigo,field_ama_01,100

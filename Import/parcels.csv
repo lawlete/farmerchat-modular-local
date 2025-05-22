@@ -1,31 +1,31 @@
-id,name,lotId
-parcel_ama_e01_01,Parcela 1A,lot_ama_e_01
-parcel_ama_e01_02,Parcela 1B,lot_ama_e_01
-parcel_ama_e02_01,Parcela 2A,lot_ama_e_02
-parcel_ama_e02_02,Parcela 2B,lot_ama_e_02
-parcel_ama_e03_01,Parcela 3 Unica,lot_ama_e_03
-parcel_ama_e04_01,Parcela 4 Este,lot_ama_e_04
-parcel_ama_e04_02,Parcela 4 Oeste,lot_ama_e_04
-parcel_ama_e05_01,Parcela 5 Unica,lot_ama_e_05
-parcel_ama_r01_01,Cuadro A1,lot_ama_r_01
-parcel_ama_r01_02,Cuadro A2,lot_ama_r_01
-parcel_ama_r02_01,Ensayo 1,lot_ama_r_02
-parcel_ama_i01_01,Tabla N1,lot_ama_i_01
-parcel_ama_i01_02,Tabla N2,lot_ama_i_01
-parcel_ama_i02_01,Tabla S1,lot_ama_i_02
-parcel_ama_c01_01,Parcela Descanso 1,lot_ama_c_01
-parcel_sur_pl01_01,Fila 1-10 Pera,lot_sur_pl_01
-parcel_sur_pl02_01,Fila 1-12 Manzana,lot_sur_pl_02
-parcel_sur_pl03_01,Fila 1-8 Durazno,lot_sur_pl_03
-parcel_sur_vf01_01,Parcela Forraje A,lot_sur_vf_01
-parcel_sur_vf02_01,Potrerillo Cría 1,lot_sur_vf_02
-parcel_sur_o01_01,Cantero Tomate,lot_sur_o_01
-parcel_vin_va01_01,Bloque Malbec Sur,lot_vin_va_01
-parcel_vin_va02_01,Bloque Cab. Norte,lot_vin_va_02
-parcel_vin_sr01_01,Hilera Bonarda Larga,lot_vin_sr_01
-parcel_vin_fm01_01,Cuadro Syrah Chico,lot_vin_fm_01
-parcel_nor_t01_01,Sector Caña A,lot_nor_t_01
-parcel_nor_ll01_01,Tabla Soja 1,lot_nor_ll_01
-parcel_pam_c01_01,División Vacas 1A,lot_pam_c_01
-parcel_pam_p01_01,Tabla Maíz A,lot_pam_p_01
-parcel_ama_e06_01,Test Plot 1,lot_ama_e_06
+id,name,lotId,area,crop
+parcel_ama_e01_01,Parcela 1A,lot_ama_e_01,,
+parcel_ama_e01_02,Parcela 1B,lot_ama_e_01,,
+parcel_ama_e02_01,Parcela 2A,lot_ama_e_02,,
+parcel_ama_e02_02,Parcela 2B,lot_ama_e_02,,
+parcel_ama_e03_01,Parcela 3 Unica,lot_ama_e_03,,
+parcel_ama_e04_01,Parcela 4 Este,lot_ama_e_04,,
+parcel_ama_e04_02,Parcela 4 Oeste,lot_ama_e_04,,
+parcel_ama_e05_01,Parcela 5 Unica,lot_ama_e_05,,
+parcel_ama_r01_01,Cuadro A1,lot_ama_r_01,,
+parcel_ama_r01_02,Cuadro A2,lot_ama_r_01,,
+parcel_ama_r02_01,Ensayo 1,lot_ama_r_02,,
+parcel_ama_i01_01,Tabla N1,lot_ama_i_01,,
+parcel_ama_i01_02,Tabla N2,lot_ama_i_01,,
+parcel_ama_i02_01,Tabla S1,lot_ama_i_02,,
+parcel_ama_c01_01,Parcela Descanso 1,lot_ama_c_01,,
+parcel_sur_pl01_01,Fila 1-10 Pera,lot_sur_pl_01,,
+parcel_sur_pl02_01,Fila 1-12 Manzana,lot_sur_pl_02,,
+parcel_sur_pl03_01,Fila 1-8 Durazno,lot_sur_pl_03,,
+parcel_sur_vf01_01,Parcela Forraje A,lot_sur_vf_01,,
+parcel_sur_vf02_01,Potrerillo Cría 1,lot_sur_vf_02,,
+parcel_sur_o01_01,Cantero Tomate,lot_sur_o_01,,
+parcel_vin_va01_01,Bloque Malbec Sur,lot_vin_va_01,,
+parcel_vin_va02_01,Bloque Cab. Norte,lot_vin_va_02,,
+parcel_vin_sr01_01,Hilera Bonarda Larga,lot_vin_sr_01,,
+parcel_vin_fm01_01,Cuadro Syrah Chico,lot_vin_fm_01,,
+parcel_nor_t01_01,Sector Caña A,lot_nor_t_01,,
+parcel_nor_ll01_01,Tabla Soja 1,lot_nor_ll_01,,
+parcel_pam_c01_01,División Vacas 1A,lot_pam_c_01,,
+parcel_pam_p01_01,Tabla Maíz A,lot_pam_p_01,,
+parcel_ama_e06_01,Test Plot 1,lot_ama_e_06,,

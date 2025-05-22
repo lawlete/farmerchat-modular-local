@@ -176,3 +176,116 @@ function updateAllDisplayedLists() {
     renderEntityList('parcels', 'parcels-list', 'parcels-count');
     renderEntityList('jobsEvents', 'jobs-list', 'jobs-count');
 }
+
+function _formatSingleEntityItem(item, entityName) {
+    // Helper function to format a single entity item for display.
+    // This can be expanded based on how renderEntityList formats items.
+    let displayText = item.name || item.taskName || `ID: ${item.id}`;
+    if (entityName === 'JobEvent') {
+        const task = db.tasksList.find(t => t.id === item.taskId);
+        const parcel = db.parcels.find(p => p.id === item.parcelId);
+        const lot = parcel ? db.lots.find(l => l.id === parcel.lotId) : null;
+        const field = lot ? db.fields.find(f => f.id === lot.fieldId) : null;
+        
+        let locationString = "";
+        if (parcel) locationString += `Parcela: ${parcel.name}`;
+        if (lot) locationString += ` (Lote: ${lot.name})`;
+        if (field) locationString += ` (Campo: ${field.name})`;
+        if (!locationString && item.parcelId) locationString = `ID Parcela: ${item.parcelId}`;
+        if (!locationString) locationString = '(Ubicación Desconocida)';
+
+        displayText = `${task ? task.taskName : '(Tarea Desconocida)'} en ${locationString} - ${item.status || 'N/D'}`;
+        if(item.dateTimeScheduled) {
+            try {
+                displayText += ` (Prog: ${new Date(item.dateTimeScheduled).toLocaleDateString()})`;
+            } catch (e) { /* ignorar fecha inválida */ }
+        }
+    } else if (entityName === 'Lot') {
+        const field = db.fields.find(f => f.id === item.fieldId);
+        displayText = `${item.name} (Campo: ${field ? field.name : 'ID ' + item.fieldId})`;
+    } else if (entityName === 'Parcel') {
+        const lot = db.lots.find(l => l.id === item.lotId);
+        displayText = `${item.name} (Lote: ${lot ? lot.name : 'ID ' + item.lotId})`;
+    } else if (item.id) { // Fallback for other entities
+        displayText = `${item.name || item.taskName || 'Item'} (ID: ${item.id.substring(0,6)}...)`;
+    }
+    return displayText;
+}
+
+function _createGroupElement(group, entityName, currentLevel, maxLevel) {
+    const details = document.createElement('details');
+    details.open = true; // Open by default
+
+    const summary = document.createElement('summary');
+    summary.textContent = `${group.groupName || 'Grupo sin nombre'} (${group.items.length} items)`;
+    summary.style.fontWeight = 'bold';
+    summary.style.fontSize = `${Math.max(1, 1.2 - (0.1 * currentLevel))}em`;
+    summary.style.marginLeft = `${currentLevel * 15}px`;
+    details.appendChild(summary);
+
+    const ul = document.createElement('ul');
+    ul.style.marginLeft = `${currentLevel * 15}px`;
+
+    group.items.forEach(item => {
+        if (item.groupName && item.items) { // It's a subgroup
+            ul.appendChild(_createGroupElement(item, entityName, currentLevel + 1, maxLevel));
+        } else { // It's an entity item
+            const li = document.createElement('li');
+            li.textContent = _formatSingleEntityItem(item, entityName);
+            ul.appendChild(li);
+        }
+    });
+    details.appendChild(ul);
+    return details;
+}
+
+function displayGroupedData(groupedData, entityName, groupByFields) {
+    const dataManagementPanel = document.querySelector('.data-management');
+    if (!dataManagementPanel) {
+        console.error("Panel de gestión de datos no encontrado.");
+        return;
+    }
+    dataManagementPanel.innerHTML = ''; // Clear previous content (lists, other grouped data)
+
+    const container = document.createElement('div');
+    container.className = 'grouped-results-container';
+
+    const title = document.createElement('h2');
+    title.textContent = `Resultados Agrupados para: ${entityName}`;
+    if (groupByFields && groupByFields.length > 0) {
+        title.textContent += ` por ${groupByFields.join(', ')}`;
+    }
+    container.appendChild(title);
+
+    if (!groupedData || groupedData.length === 0) {
+        const p = document.createElement('p');
+        p.textContent = "No hay datos para mostrar en esta agrupación.";
+        container.appendChild(p);
+    } else {
+        groupedData.forEach(group => {
+            container.appendChild(_createGroupElement(group, entityName, 0, groupByFields.length));
+        });
+    }
+    dataManagementPanel.appendChild(container);
+
+    // Update counts to indicate grouped view
+    const countSpans = [
+        UI_DOM.clientsCount, UI_DOM.usersCount, UI_DOM.fieldsCount, 
+        UI_DOM.lotsCount, UI_DOM.parcelsCount, UI_DOM.jobsCount
+    ];
+    let totalItems = 0;
+    const countItemsRecursively = (items) => {
+        items.forEach(item => {
+            if (item.groupName && item.items) {
+                countItemsRecursively(item.items);
+            } else {
+                totalItems++;
+            }
+        });
+    };
+    countItemsRecursively(groupedData);
+
+    countSpans.forEach(span => {
+        if (span) span.innerHTML = `<small>(${totalItems} items en vista agrupada)</small>`;
+    });
+}
