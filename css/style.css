@@ -46,7 +46,7 @@ html {
     display: flex;
     flex-direction: row;
     flex-grow: 1;
-    overflow: hidden; /* Important for independent scrolling of children */
+    /* overflow: hidden; */ /* Removed as per instruction */
     gap: 20px;
     padding: 20px; /* Add padding around chat and right panels */
     background-color: #f4f4f4; /* Match body background */
@@ -60,7 +60,7 @@ html {
     background-color: white;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     border-radius: 5px;
-    overflow: hidden; /* To contain chat-log scroll */
+    /* overflow: hidden; */ /* Removed as per instruction */
     min-height: 0; /* For nested flex contexts */
 }
 
