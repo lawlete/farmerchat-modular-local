@@ -6,8 +6,12 @@ body {
     color: #333;
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    height: 100vh; /* Ensure body takes full viewport height */
     overflow: hidden; /* Prevent body scroll when panels have their own */
+}
+
+html {
+    height: 100%; /* Ensure html also takes full viewport height */
 }
 
 .main-container {
@@ -22,10 +26,8 @@ body {
     color: white;
     padding: 1em; /* Adjusted padding */
     text-align: center;
-    /* Allow content to determine height, add scroll if needed */
     overflow-y: auto; 
-    /* Consider a max-height if content can be very large */
-    /* max-height: 200px; */ 
+    max-height: 25vh; /* Ensures top-panel doesn't take excessive height */
     position: relative; /* For absolute positioning of header-actions */
 }
 
@@ -38,7 +40,7 @@ body {
     display: flex;
     flex-direction: row;
     flex-grow: 1;
-    overflow: hidden; /* Important for independent scrolling of children */
+    /* overflow: hidden; */ /* Removed as per suggestion, children will manage overflow */
     gap: 20px;
     padding: 20px; /* Add padding around chat and right panels */
     background-color: #f4f4f4; /* Match body background */
@@ -51,25 +53,23 @@ body {
     background-color: white;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     border-radius: 5px;
-    overflow: hidden; /* Manage overflow for chat-log and input area */
+    /* overflow: hidden; */ /* Removed as per suggestion */
 }
 
 .chat-container {
-    flex: 1; /* Renamed from main to .chat-panel, chat-container handles internal flex */
+    flex: 1; /* chat-container takes available space */
     display: flex;
     flex-direction: column;
-    /* border: 1px solid #ddd; */ /* Border now on chat-panel */
-    /* border-radius: 5px; */
-    overflow: hidden; /* Ensures chat-log scrolls within chat-container */
+    overflow: hidden; /* This is important to contain the chat-log scroll */
 }
 
 .chat-log {
-    flex-grow: 1;
+    flex-grow: 1; /* chat-log takes available space within chat-container */
     padding: 10px;
-    overflow-y: auto;
+    overflow-y: auto; /* Enables vertical scrollbar only for chat-log */
     background-color: #e9ecef;
-    /* min-height: 300px; */ /* No longer needed as flex-grow handles height */
     border-bottom: 1px solid #ddd;
+    min-height: 0; /* Crucial for flex item with overflow */
 }
 
 .chat-message {
@@ -109,6 +109,7 @@ body {
     display: flex;
     padding: 10px;
     background-color: #f8f9fa;
+    flex-shrink: 0; /* Prevent chat-input-area from shrinking */
 }
 #user-input {
     flex-grow: 1;
