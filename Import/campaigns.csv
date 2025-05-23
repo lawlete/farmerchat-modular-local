@@ -1,0 +1,31 @@
+id,name,startDate,endDate,clientId,description
+camp_soja2324_ama,Soja 23/24 El Amanecer,2023-10-15,2024-04-30,client_01,Siembra de primera
+camp_maiz2324_ama,Maíz Tardío 23/24 El Amanecer,2023-12-01,2024-06-15,client_01,Para silo y grano
+camp_trigo24_ama,Trigo Fino Invierno 2024,2024-05-10,2024-11-20,client_01,
+camp_girasol24_ama,Girasol Verano 2024,2024-09-01,2025-02-28,client_01,Alto oleico
+camp_pasturas24_ama,Implantación Pasturas 2024,2024-03-01,2024-12-31,client_01,Consociada
+camp_peras24_sur,Cosecha Peras Williams 2024,2024-01-15,2024-03-10,client_02,Exportación
+camp_manzanas24_sur,Cosecha Manzanas Red Delicious 2024,2024-02-20,2024-04-15,client_02,
+camp_forraje24_sur,Verdeo Invierno 2024,2024-04-01,2024-09-30,client_02,Para pastoreo directo
+camp_malbec24_vin,Vendimia Malbec 2024,2024-03-05,2024-04-05,client_03,Alta gama
+camp_cabernet24_vin,Vendimia Cabernet Sauvignon 2024,2024-03-20,2024-04-20,client_03,
+camp_cana24_nor,Zafra Caña de Azúcar 2024,2024-05-01,2024-10-31,client_04,
+camp_soja24_nor,Soja Verano 24/25 Norte,2024-11-01,2025-05-15,client_04,
+camp_poroto24_nor,Poroto Negro Cosecha 2024,2024-02-10,2024-05-20,client_04,
+camp_invernada24_pam,Invernada Larga 2024,2024-03-01,2024-11-30,client_05,Engorde a corral
+camp_siembragruesa24_pam,Siembra Gruesa 24/25 Pampa,2024-10-01,2025-04-30,client_05,
+camp_alfalfa23_ama,Alfalfa Producción 2023/24,2023-09-01,2024-05-31,client_01,Para fardos
+camp_duraznos24_sur,Cosecha Duraznos Industria 2024,2023-12-10,2024-01-30,client_02,
+camp_bonarda24_vin,Vendimia Bonarda 2024,2024-04-01,2024-04-25,client_03,
+camp_maiztemprano24_nor,Maíz Temprano 24/25,2024-09-15,2025-03-15,client_04,
+camp_cria24_pam,Servicio Primavera 2024 Cría,2024-09-01,2024-12-15,client_05,Para entore
+camp_sorgo24_ama,Sorgo Granífero 2024,2024-10-20,2025-03-30,client_01,
+camp_hortalizas_prim24_sur,Hortalizas Primavera/Verano 24,2024-09-01,2025-02-28,client_02,
+camp_syrah24_vin,Vendimia Syrah 2024,2024-03-10,2024-04-10,client_03,
+camp_legumbresinv24_nor,Legumbres de Invierno 2024,2024-05-15,2024-10-15,client_04,
+camp_recria24_pam,Recría Otoño/Invierno 2024,2024-04-01,2024-08-31,client_05,
+camp_trigo24_pam,Trigo/Cebada Invierno 2024 Pampa,2024-06-01,2024-12-10,client_05,
+camp_ajo24_vin,Ajo Cosecha 2024,2024-10-01,2024-12-15,client_03,
+camp_citricos24_nor,Cítricos Campaña 2024,2024-04-01,2024-09-30,client_04,
+camp_olivos24_vin,Aceitunas Cosecha 2024,2024-05-01,2024-07-31,client_03,
+camp_feedlot24_ama,Engorde Feedlot Ciclo Corto,2024-07-01,2024-10-31,client_01,

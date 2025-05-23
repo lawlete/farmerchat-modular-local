@@ -1,0 +1,6 @@
+id,name,phone,email,contactPerson,address
+client_01,Agropecuaria El Amanecer S.A.,+549351000001,contacto@elamanecer.com,,
+client_02,Estancia La Sureña,+549299000002,admin@lasurena.net,,
+client_03,Finca Los Viñedos del Sol,+549261000003,info@vinedosdelsol.com.ar,,
+client_04,Productores del Norte Asociados,+549387000004,norteagro@email.com,,
+client_05,Ganadera Pampeana SRL,+549239000005,gpampeana@server.com,,
