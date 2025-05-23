@@ -1,0 +1,9 @@
+1. screens for the FarmerChat Modular application. Here's a summary of the designs: Configuration Tab: This tab features a user-friendly interface for managing the Google Gemini API Key, ensuring a straightforward setup process. Data Management Tab: It offers a robust hub for efficient farm data management, including import, export, and viewing functionalities, with support for lists and grouped data views. Chatbot Tab: The design focuses on creating an engaging chat experience for interacting with the AI, incorporating a chat log, input field, and voice recording capabilities.
+2. Se pide un modo claro/oscuro, que se cambia con un botón por arriba a la derecha.
+3. Se pide una opción para Borrar/Reemplazar/Adicionar (verificando NO iguales) de tablas desde files .csv.
+4. Se pide un control de acceso de usuarios, asociados a clientes, campos, lotes, parcelas. El acceso puede ser tanto por email como por numero de celular. Crear admin/admin, como usuario administrador, con función total, y crear usuario normal Alfredo/Lawler, perteneciente a un cliente/campo/lotes/parcelas.
+5. Agregar un costo de unidades por hora para cada tarea
+
+
+
+

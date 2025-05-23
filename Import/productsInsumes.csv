@@ -1,9 +1,9 @@
 id,name,type,unit
 prod_glifo_max,Glifosato Max Power,Herbicide,litro
-prod_24d,2,4-D Amina,Herbicide,litro
+prod_24d,"2,4-D Amina",Herbicide,litro
 prod_atrazina,Atrazina 90%,Herbicide,kg
-prod_sem_maiz_dk7210,Semilla Maíz DK 72-10 VT3P,Seed,bolsa
-prod_sem_soja_dm4600,Semilla Soja DM 46R18 STS,Seed,bolsa
+prod_sem_maiz_dk7210,"Semilla Maíz DK 72-10 VT3P",Seed,bolsa
+prod_sem_soja_dm4600,"Semilla Soja DM 46R18 STS",Seed,bolsa
 prod_sem_trigo_bag,Semilla Trigo Baguette 620,Seed,bolsa
 prod_urea_g,Urea Granulada,Fertilizer,kg
 prod_fosfato_d,Fosfato Diamónico (DAP),Fertilizer,kg
@@ -24,8 +24,8 @@ prod_sem_cebada,Semilla Cebada Andreia,Seed,kg
 prod_paraquat,Paraquat Gramoxone,Herbicide,litro
 prod_sulfato_amonio,Sulfato de Amonio,Fertilizer,kg
 prod_potasio_cloruro,Cloruro de Potasio,Fertilizer,kg
-prod_sem_sorgo_g,Semilla Sorgo Granífero Adv G120,Seed,bolsa
+prod_sem_sorgo_g,"Semilla Sorgo Granífero Adv G120",Seed,bolsa
 prod_sem_centeno,Semilla Centeno Don Enrique,Seed,kg
-prod_metalaxil,Metalaxil + Mancozeb,Fungicide,kg
+prod_metalaxil,"Metalaxil + Mancozeb",Fungicide,kg
 prod_deltametrina,Deltametrina,Insecticide,litro
 prod_caldo_bordeles,Caldo Bordelés,Fungicide,kg
