@@ -33,12 +33,46 @@ const UI_DOM = {
     jobsList: document.getElementById('jobs-list'),
 };
 
+function initializeTabs() {
+    const tabButtons = document.querySelectorAll('.tab-nav li[data-tab]');
+    const tabPanels = document.querySelectorAll('.tab-panel');
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const targetPanelId = button.getAttribute('data-tab');
+            
+            // Deactivate all tabs and panels
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabPanels.forEach(panel => panel.classList.remove('active'));
+
+            // Activate clicked tab and corresponding panel
+            button.classList.add('active');
+            const targetPanel = document.getElementById(targetPanelId);
+            if (targetPanel) {
+                targetPanel.classList.add('active');
+            } else {
+                console.error(`Tab panel with ID ${targetPanelId} not found.`);
+            }
+        });
+    });
+}
+
 function showApiKeyModal() {
-    if (UI_DOM.apiKeyOverlay) UI_DOM.apiKeyOverlay.style.display = 'flex';
+    // Now, instead of showing a modal, we ensure the 'Configuración' tab is active
+    // and the api-key section within it is visible.
+    const configTabButton = document.querySelector('.tab-nav li[data-tab="tab-panel-config"]');
+    if (configTabButton) {
+        configTabButton.click(); // Simulate a click to activate the tab
+    }
+    // The #api-key-overlay div is always part of the 'tab-panel-config'
+    // Its visibility is controlled by the tab panel being active.
 }
 
 function hideApiKeyModal() {
-    if (UI_DOM.apiKeyOverlay) UI_DOM.apiKeyOverlay.style.display = 'none';
+    // This function is less relevant now. If an API key is saved,
+    // the user is typically allowed to proceed, maybe to the Chatbot tab.
+    // We don't need to hide the #api-key-overlay div itself if it's part of a static tab.
+    // If we wanted to switch to a default tab after saving the key, that logic would be in main.js.
 }
 
 function enableChatControls(isLoading = false) {
@@ -70,6 +104,25 @@ function addMessageToChatLog(text, sender, isError = false, isLoadingMessage = f
     messageDiv.innerHTML = text.replace(/\n/g, '<br>');
     UI_DOM.chatLog.appendChild(messageDiv);
     UI_DOM.chatLog.scrollTop = UI_DOM.chatLog.scrollHeight;
+
+    // TTS Logic
+    if (window.isTtsEnabled && (sender === 'ai' || sender === 'error' || sender === 'clarification') && !isLoadingMessage) {
+        if (speechSynthesis.speaking) {
+            speechSynthesis.cancel(); // Stop any currently speaking utterance before speaking the new one
+        }
+        // Sanitize text for speech: remove potential HTML tags if any were inadvertently included.
+        // The current text.replace(/\n/g, '<br>') is for HTML display, speech needs plain text.
+        // For speech, we should use the original 'text' before replacing newlines with <br>.
+        // However, since 'text' might already contain markdown-like newlines, we'll just use it.
+        // More advanced sanitization might be needed if complex HTML or markdown is expected in 'text'.
+        const textToSpeak = text; // Use original text which might have newlines for natural pauses
+        const utterance = new SpeechSynthesisUtterance(textToSpeak);
+        utterance.lang = 'es-ES'; // Set language for better pronunciation
+        // utterance.rate = 1; // Default rate
+        // utterance.pitch = 1; // Default pitch
+        speechSynthesis.speak(utterance);
+    }
+
     return dynamicId ? document.getElementById(dynamicId) : messageDiv;
 }
 
@@ -168,9 +221,65 @@ function renderEntityList(entityKeyInDb, listUlId, countSpanId) {
     });
 }
 
+function resetDataManagementPanelToDefaultLists() {
+    const dataManagementPanel = document.querySelector('.data-management');
+    if (!dataManagementPanel) {
+        console.error("Data management panel not found for reset.");
+        return;
+    }
+
+    // Clear existing content
+    dataManagementPanel.innerHTML = '';
+
+    // Add the main title
+    const h2 = document.createElement('h2');
+    h2.textContent = 'Gestión de Entidades';
+    dataManagementPanel.appendChild(h2);
+
+    // Define entity sections to create
+    const entities = [
+        { title: 'Clientes', countId: 'clients-count', listId: 'clients-list' },
+        { title: 'Usuarios', countId: 'users-count', listId: 'users-list' },
+        { title: 'Campos', countId: 'fields-count', listId: 'fields-list' },
+        { title: 'Lotes', countId: 'lots-count', listId: 'lots-list' },
+        { title: 'Parcelas', countId: 'parcels-count', listId: 'parcels-list' },
+        { title: 'Trabajos/Eventos', countId: 'jobs-count', listId: 'jobs-list' }
+    ];
+
+    entities.forEach(entity => {
+        const sectionDiv = document.createElement('div');
+        sectionDiv.className = 'entity-section';
+
+        const h3 = document.createElement('h3');
+        h3.innerHTML = `${entity.title} (<span id="${entity.countId}">0</span>)`; // Use innerHTML to create span with ID
+
+        const ul = document.createElement('ul');
+        ul.id = entity.listId;
+
+        sectionDiv.appendChild(h3);
+        sectionDiv.appendChild(ul);
+        dataManagementPanel.appendChild(sectionDiv);
+    });
+
+    // After recreating elements, it's a good practice to re-initialize UI_DOM elements
+    // if they were directly referencing the old elements. However, since renderEntityList
+    // uses getElementById, it should find the new elements as long as IDs are preserved.
+    // For safety, and if other parts of ui.js directly use UI_DOM.clientsList etc.
+    // without re-querying, we might need to update them.
+    // Let's check if UI_DOM needs explicit updates for its list/count elements.
+    // UI_DOM is defined at the top with getElementById. Functions like renderEntityList
+    // also use getElementById. So, direct re-assignment of UI_DOM properties here might
+    // not be strictly necessary as long as IDs are correctly set.
+    // The original UI_DOM object will still hold references to the *old* elements if not updated.
+    // However, functions like updateAllDisplayedLists call renderEntityList, which uses
+    // document.getElementById internally, so those should work on the new elements.
+    // Let's assume for now that direct re-assignment of all UI_DOM properties here is not needed,
+    // as the critical functions (renderEntityList) re-fetch by ID.
+}
+
 function updateAllDisplayedLists() {
-    renderEntityList('clients', 'clients-list', 'clients-count'); // AÑADIDO
-    renderEntityList('users', 'users-list', 'users-count');       // AÑADIDO
+    renderEntityList('clients', 'clients-list', 'clients-count');
+    renderEntityList('users', 'users-list', 'users-count');
     renderEntityList('fields', 'fields-list', 'fields-count');
     renderEntityList('lots', 'lots-list', 'lots-count');
     renderEntityList('parcels', 'parcels-list', 'parcels-count');
@@ -217,20 +326,25 @@ function _createGroupElement(group, entityName, currentLevel, maxLevel) {
     details.open = true; // Open by default
 
     const summary = document.createElement('summary');
+    summary.classList.add('grouped-data-summary'); // Added class
     summary.textContent = `${group.groupName || 'Grupo sin nombre'} (${group.items.length} items)`;
-    summary.style.fontWeight = 'bold';
-    summary.style.fontSize = `${Math.max(1, 1.2 - (0.1 * currentLevel))}em`;
-    summary.style.marginLeft = `${currentLevel * 15}px`;
+    // Removed inline styles for summary, will be handled by CSS
+    // summary.style.fontWeight = 'bold';
+    // summary.style.fontSize = `${Math.max(1, 1.2 - (0.1 * currentLevel))}em`;
+    // summary.style.marginLeft = `${currentLevel * 15}px`; 
     details.appendChild(summary);
 
     const ul = document.createElement('ul');
-    ul.style.marginLeft = `${currentLevel * 15}px`;
+    ul.classList.add('grouped-data-list'); // Added class
+    // Removed inline style for ul, will be handled by CSS
+    // ul.style.marginLeft = `${currentLevel * 15}px`;
 
     group.items.forEach(item => {
         if (item.groupName && item.items) { // It's a subgroup
             ul.appendChild(_createGroupElement(item, entityName, currentLevel + 1, maxLevel));
         } else { // It's an entity item
             const li = document.createElement('li');
+            li.classList.add('grouped-data-item'); // Added class
             li.textContent = _formatSingleEntityItem(item, entityName);
             ul.appendChild(li);
         }
@@ -289,3 +403,6 @@ function displayGroupedData(groupedData, entityName, groupByFields) {
         if (span) span.innerHTML = `<small>(${totalItems} items en vista agrupada)</small>`;
     });
 }
+
+// Expose addMessageToChatLog globally for csv_importer.js
+window.addMessageToChatLog = addMessageToChatLog;

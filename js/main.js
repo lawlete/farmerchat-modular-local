@@ -5,22 +5,26 @@ let isLLMLoading = false;
 let mediaRecorder;
 let audioChunks = [];
 
-const MAIN_DOM = {}; 
+window.isTtsEnabled = false; // Global state for TTS
+
+const MAIN_DOM = {}; // Will be empty after refactor, but kept for structure if needed later for main.js specific elements.
 
 document.addEventListener('DOMContentLoaded', () => {
-    MAIN_DOM.apiKeyOverlay = document.getElementById('api-key-overlay');
-    MAIN_DOM.apiKeyInput = document.getElementById('api-key-input');
-    MAIN_DOM.saveApiKeyButton = document.getElementById('save-api-key-button');
-    MAIN_DOM.userInput = document.getElementById('user-input');
-    MAIN_DOM.sendButton = document.getElementById('send-button');
-    MAIN_DOM.voiceButton = document.getElementById('voice-button');
-    MAIN_DOM.loadDbButton = document.getElementById('load-db-button');
-    MAIN_DOM.loadDbFile = document.getElementById('load-db-file');
-    MAIN_DOM.saveDbButton = document.getElementById('save-db-button');
-    MAIN_DOM.entityTypeSelector = document.getElementById('entity-type-selector');
-    MAIN_DOM.csvFileInput = document.getElementById('csv-file-input');
-    MAIN_DOM.importCsvButton = document.getElementById('import-csv-button');
+    // Selections moved to UI_DOM in ui.js for shared elements.
+    // MAIN_DOM.apiKeyOverlay = document.getElementById('api-key-overlay');
+    // MAIN_DOM.apiKeyInput = document.getElementById('api-key-input');
+    // MAIN_DOM.saveApiKeyButton = document.getElementById('save-api-key-button');
+    // MAIN_DOM.userInput = document.getElementById('user-input');
+    // MAIN_DOM.sendButton = document.getElementById('send-button');
+    // MAIN_DOM.voiceButton = document.getElementById('voice-button');
+    // MAIN_DOM.loadDbButton = document.getElementById('load-db-button');
+    // MAIN_DOM.loadDbFile = document.getElementById('load-db-file');
+    // MAIN_DOM.saveDbButton = document.getElementById('save-db-button');
+    // MAIN_DOM.entityTypeSelector = document.getElementById('entity-type-selector');
+    // MAIN_DOM.csvFileInput = document.getElementById('csv-file-input');
+    // MAIN_DOM.importCsvButton = document.getElementById('import-csv-button');
     
+    initializeTabs(); // Initialize tab switching logic from ui.js
     const dbLoadedSuccessfully = loadDbFromStorage(); 
     updateAllDisplayedLists(); 
 
@@ -37,42 +41,89 @@ document.addEventListener('DOMContentLoaded', () => {
         addMessageToChatLog("Inicia importando tus datos (Clientes, Usuarios, Campos, etc.) desde CSV o usa comandos de voz/texto.", 'ai');
     }
 
-    MAIN_DOM.saveApiKeyButton.addEventListener('click', () => {
-        const key = MAIN_DOM.apiKeyInput.value.trim();
+    // Use UI_DOM for elements previously in MAIN_DOM
+    // Use UI_DOM for elements previously in MAIN_DOM
+    UI_DOM.saveApiKeyButton.addEventListener('click', () => {
+        const key = UI_DOM.apiKeyInput.value.trim();
+        const feedbackSpan = document.getElementById('api-key-feedback'); // Get feedback span
+
+        // Clear previous feedback
+        feedbackSpan.textContent = '';
+        feedbackSpan.classList.remove('feedback-success', 'feedback-alert');
+
         if (key) {
             geminiApiKey = key;
             localStorage.setItem('farmerChatApiKey', key);
             setApiKeyForLlmModule(geminiApiKey);
-            hideApiKeyModal();
+            hideApiKeyModal(); // This is now a no-op for hiding, but fine to call.
             enableChatControls(false);
             addMessageToChatLog("API Key guardada. ¡Hola! Soy FarmerChat. ¿En qué puedo ayudarte?", 'ai');
+            
+            // Display success feedback
+            feedbackSpan.textContent = '✓ Guardada';
+            feedbackSpan.classList.add('feedback-success');
+            
+            // Switch to Chatbot tab after saving API key
+            const chatTabButton = document.querySelector('.tab-nav li[data-tab="tab-panel-chat"]');
+            if (chatTabButton) {
+                chatTabButton.click();
+            }
         } else {
-            alert("Por favor, ingresa una API Key válida.");
+            // Display alert feedback
+            feedbackSpan.textContent = 'Por favor, ingresa una clave.';
+            feedbackSpan.classList.add('feedback-alert');
+            alert("Por favor, ingresa una API Key válida."); // Original alert can remain or be removed
         }
+
+        // Clear feedback after a few seconds
+        setTimeout(() => {
+            feedbackSpan.textContent = '';
+            feedbackSpan.classList.remove('feedback-success', 'feedback-alert');
+        }, 3000); // Clear after 3 seconds
     });
 
-    MAIN_DOM.sendButton.addEventListener('click', () => handleSendUserInput());
-    MAIN_DOM.userInput.addEventListener('keypress', (e) => {
+    UI_DOM.sendButton.addEventListener('click', () => handleSendUserInput());
+    UI_DOM.userInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault(); 
             handleSendUserInput(); 
         }
     });
-    MAIN_DOM.voiceButton.addEventListener('click', toggleAudioRecording); 
+    UI_DOM.voiceButton.addEventListener('click', toggleAudioRecording); 
 
-    MAIN_DOM.saveDbButton.addEventListener('click', handleSaveDbToFile);
-    MAIN_DOM.loadDbButton.addEventListener('click', () => MAIN_DOM.loadDbFile.click());
-    MAIN_DOM.loadDbFile.addEventListener('change', handleLoadDbFromFile);
-    MAIN_DOM.importCsvButton.addEventListener('click', handleImportCsv);
+    UI_DOM.saveDbButton.addEventListener('click', handleSaveDbToFile);
+    UI_DOM.loadDbButton.addEventListener('click', () => UI_DOM.loadDbFile.click()); // Corrected: UI_DOM.loadDbFile
+    UI_DOM.loadDbFile.addEventListener('change', handleLoadDbFromFile);
+    UI_DOM.importCsvButton.addEventListener('click', handleImportCsv);
+
+    // TTS Toggle Button Event Listener
+    const ttsButton = document.getElementById('toggle-tts-button');
+    if (ttsButton) {
+        ttsButton.addEventListener('click', () => {
+            window.isTtsEnabled = !window.isTtsEnabled;
+            ttsButton.textContent = window.isTtsEnabled ? 'Modo Audio: Activado' : 'Modo Audio: Desactivado';
+            if (!window.isTtsEnabled && speechSynthesis.speaking) {
+                speechSynthesis.cancel(); // Stop any current speech if TTS is turned off
+            }
+            console.log("TTS Estatus:", window.isTtsEnabled);
+        });
+    } else {
+        console.warn("Botón TTS no encontrado en el DOM.");
+    }
 });
 
 
 async function handleSendUserInput(textOverride = null) {
+    console.log("handleSendUserInput called. textOverride:", textOverride, "isLLMLoading:", isLLMLoading);
+    if (textOverride !== null) {
+        console.log("HSU called with transcribed text:", textOverride);
+    }
+
     let textToSend;
     if (typeof textOverride === 'string') {
         textToSend = textOverride.trim();
     } else {
-        textToSend = MAIN_DOM.userInput.value.trim();
+        textToSend = UI_DOM.userInput.value.trim(); // Corrected: UI_DOM.userInput
     }
     
     if (!textToSend || isLLMLoading) {
@@ -92,23 +143,48 @@ async function handleSendUserInput(textOverride = null) {
     if (isFromDirectKeyInput) {
          addMessageToChatLog(textToSend, 'user');
     }
-    MAIN_DOM.userInput.value = ''; 
+    UI_DOM.userInput.value = ''; // Corrected: UI_DOM.userInput
     
     isLLMLoading = true;
     enableChatControls(true); 
-    const loadingIndicator = addMessageToChatLog("Procesando con IA...", 'ai', false, true);
+    
+    let currentLoadingIndicatorId = null;
+    if (isFromDirectKeyInput) { // Only show "pensando" if it's a typed message. Transcription has its own.
+        // If a "Transcribiendo..." message exists, remove it before showing "pensando..."
+        const existingTranscriptionIndicator = document.querySelector('.loading-indicator');
+        if (existingTranscriptionIndicator && existingTranscriptionIndicator.textContent.includes("Transcribiendo")) {
+            removeLoadingIndicator(); // Remove specific transcription indicator
+        }
+        currentLoadingIndicatorId = addMessageToChatLog("FarmerChat está pensando...", 'ai', false, true);
+    } else { // For voice input, the "Transcribiendo..." was already shown. This is now the main processing.
+        currentLoadingIndicatorId = addMessageToChatLog("Procesando con IA...", 'ai', false, true);
+    }
 
     try {
         console.log(`Enviando a LLM: "${textToSend}"`); // Log para ver qué se envía
         const aiResultJson = await callGeminiApiWithHistory(textToSend); 
-        removeLoadingIndicator();
+        
+        // Remove the specific loading indicator ("pensando" or "procesando")
+        if (currentLoadingIndicatorId) {
+            const elToRemove = document.getElementById(currentLoadingIndicatorId);
+            if (elToRemove) elToRemove.remove();
+        } else { // Fallback if ID wasn't captured, remove any generic one
+            removeLoadingIndicator();
+        }
+        
         if (aiResultJson) {
             await processLLMResponse(aiResultJson);
         } else {
             addMessageToChatLog("La IA no devolvió una respuesta procesable (resultado nulo o indefinido).", 'ai', true);
         }
     } catch (error) {
-        removeLoadingIndicator();
+        // Ensure loading indicator is removed on error too
+        if (currentLoadingIndicatorId) {
+            const elToRemove = document.getElementById(currentLoadingIndicatorId);
+            if (elToRemove) elToRemove.remove();
+        } else {
+            removeLoadingIndicator();
+        }
         console.error("Error al procesar la entrada del usuario (desde handleSendUserInput):", error);
         let errorMessage = error.message || "Hubo un problema al contactar la IA.";
         if (error.isApiKeyError) { // Flag que podríamos setear en llm.js
@@ -150,8 +226,8 @@ async function toggleAudioRecording() {
 
             mediaRecorder.onstop = async () => {
                 // Indicar que la grabación paró y los controles se pueden rehabilitar momentáneamente
-                if(MAIN_DOM.voiceButton) MAIN_DOM.voiceButton.textContent = '🎙️'; 
-                if(MAIN_DOM.voiceButton) MAIN_DOM.voiceButton.title = "Grabar Voz (Click para Iniciar/Detener)";
+                if(UI_DOM.voiceButton) UI_DOM.voiceButton.textContent = '🎙️'; // Corrected: UI_DOM.voiceButton
+                if(UI_DOM.voiceButton) UI_DOM.voiceButton.title = "Grabar Voz (Click para Iniciar/Detener)"; // Corrected: UI_DOM.voiceButton
                 if (geminiApiKey && !isLLMLoading) enableChatControls(false); // Habilitar mientras procesa audio
                 
                 stream.getTracks().forEach(track => track.stop()); 
@@ -179,22 +255,34 @@ async function toggleAudioRecording() {
 
                     try {
                         const transcription = await transcribeAudioWithGemini(base64Audio, mediaRecorder.mimeType); 
-                        removeLoadingIndicator(); 
+                        removeLoadingIndicator(); // Remove "Transcribiendo..."
                         if (transcription && transcription.trim() !== "") {
                             addMessageToChatLog(`Transcripción: "${transcription}"`, 'ai');
+                            
+                            // FIX: Reset loading state from transcription phase
+                            isLLMLoading = false;
+                            if (geminiApiKey) enableChatControls(false); 
+                            // End of FIX
+
+                            console.log("Attempting to send transcribed text to LLM (after successful transcription):", transcription);
+                            console.log("isLLMLoading state just before calling HSU with transcription:", isLLMLoading);
                             // handleSendUserInput will manage isLLMLoading and enableChatControls upon its completion/failure.
                             await handleSendUserInput(transcription); 
+                            console.log("Call to HSU for transcription completed.");
+                            console.log("Current isLLMLoading state AFTER HSU for transcription completed:", isLLMLoading);
                         } else {
+                            console.log("Transcription was empty or failed, not sending to HSU.");
                             addMessageToChatLog("No se pudo obtener la transcripción del audio o estaba vacía.", 'ai', true);
-                            isLLMLoading = false; 
-                            if (geminiApiKey) enableChatControls(false);
+                            isLLMLoading = false; // Reset here as HSU won't be called
+                            if (geminiApiKey) enableChatControls(false); // Re-enable controls if appropriate
                         }
                     } catch (error) {
-                        removeLoadingIndicator();
+                        removeLoadingIndicator(); // Remove "Transcribiendo..." if error during transcription step
+                        console.log("Error during transcription process, not sending to HSU:", error);
                         console.error("Error en transcripción de audio (desde toggleAudioRecording):", error);
                         addMessageToChatLog(`Error al transcribir: ${error.message}`, 'ai', true);
-                        isLLMLoading = false; 
-                        if (geminiApiKey) enableChatControls(false);
+                        isLLMLoading = false; // Reset here
+                        if (geminiApiKey) enableChatControls(false); // Re-enable controls
                     } 
                 };
                 reader.onerror = (error) => {
@@ -208,8 +296,8 @@ async function toggleAudioRecording() {
             mediaRecorder.onerror = (event) => {
                 console.error("Error en MediaRecorder:", event.error);
                 addMessageToChatLog(`Error de grabación: ${event.error.name}`, "ai", true);
-                if(MAIN_DOM.voiceButton) MAIN_DOM.voiceButton.textContent = '🎙️';
-                if(MAIN_DOM.voiceButton) MAIN_DOM.voiceButton.title = "Grabar Voz (Click para Iniciar/Detener)";
+                if(UI_DOM.voiceButton) UI_DOM.voiceButton.textContent = '🎙️'; // Corrected: UI_DOM.voiceButton
+                if(UI_DOM.voiceButton) UI_DOM.voiceButton.title = "Grabar Voz (Click para Iniciar/Detener)"; // Corrected: UI_DOM.voiceButton
                 removeLoadingIndicator(); // Ensure loading indicator is removed on error
                 isLLMLoading = false;
                 if (geminiApiKey) enableChatControls(false);
@@ -219,8 +307,8 @@ async function toggleAudioRecording() {
             };
 
             mediaRecorder.start();
-            if(MAIN_DOM.voiceButton) MAIN_DOM.voiceButton.textContent = '🛑'; 
-            if(MAIN_DOM.voiceButton) MAIN_DOM.voiceButton.title = "Detener Grabación";
+            if(UI_DOM.voiceButton) UI_DOM.voiceButton.textContent = '🛑'; // Corrected: UI_DOM.voiceButton
+            if(UI_DOM.voiceButton) UI_DOM.voiceButton.title = "Detener Grabación"; // Corrected: UI_DOM.voiceButton
             addMessageToChatLog("Grabando audio... Haz clic en 🛑 para detener.", 'ai');
             // No deshabilitar controles aquí, solo el botón de voz cambia de estado.
             // El usuario puede seguir escribiendo si quiere.
@@ -236,8 +324,8 @@ async function toggleAudioRecording() {
                 userMessage = "El micrófono está siendo usado por otra aplicación, hay un problema con el hardware/configuración, o la solicitud fue abortada.";
             }
             addMessageToChatLog(userMessage, 'ai', true);
-            if(MAIN_DOM.voiceButton) MAIN_DOM.voiceButton.textContent = '🎙️';
-            if(MAIN_DOM.voiceButton) MAIN_DOM.voiceButton.title = "Grabar Voz (Click para Iniciar/Detener)";
+            if(UI_DOM.voiceButton) UI_DOM.voiceButton.textContent = '🎙️'; // Corrected: UI_DOM.voiceButton
+            if(UI_DOM.voiceButton) UI_DOM.voiceButton.title = "Grabar Voz (Click para Iniciar/Detener)"; // Corrected: UI_DOM.voiceButton
             // Asegurar que los controles se habilitan y el estado de carga se resetea si falla getUserMedia
             isLLMLoading = false;
             if (geminiApiKey) enableChatControls(false);
@@ -414,33 +502,28 @@ async function processLLMResponse(aiResult) {
             }
 
             // Comprobar si hay datos agrupados para mostrar
-            if (aiResult.data && aiResult.data.grouping && aiResult.data.grouping.groupedData && aiResult.data.grouping.groupBy) {
-                // Llamada a la nueva función displayGroupedData de ui.js
-                displayGroupedData(aiResult.data.grouping.groupedData, entity, aiResult.data.grouping.groupBy);
-                
-                // El mensaje de additionalMessage ahora podría ser redundante si displayGroupedData es claro,
-                // pero lo mantenemos por ahora para consistencia con el responseText del LLM.
-                // El responseText del LLM ya debería indicar que los datos agrupados están listos.
-                // additionalMessage = `Los datos agrupados de ${entity} por '${aiResult.data.grouping.groupBy.join(', ')}' se muestran en el panel lateral.`;
-                // No se llama a updateAllDisplayedLists() aquí para no sobrescribir la vista agrupada.
+            if (aiResult.data && aiResult.data.grouping && aiResult.data.grouping.groupBy && aiResult.data.grouping.groupBy.length > 0) {
+                const groupByFields = aiResult.data.grouping.groupBy;
+                try {
+                    console.log(`Client-side grouping by: ${groupByFields.join(', ')} for ${results.length} items.`);
+                    const groupedClientData = performClientSideGrouping(results, groupByFields, entity); // Pass entity for context
+                    displayGroupedData(groupedClientData, entity, groupByFields);
+                    // For grouped data, additionalMessage is usually not needed as responseText from LLM should suffice.
+                    // And displayGroupedData updates the UI directly.
+                    additionalMessage = ""; // Clear any previous listing message
+                } catch (groupingError) {
+                    console.error("Error during client-side grouping:", groupingError);
+                    addMessageToChatLog(`Error al intentar agrupar los datos: ${groupingError.message}`, 'ai', true);
+                    // Fallback to showing non-grouped results if grouping fails
+                    resetDataManagementPanelToDefaultLists();
+                    updateAllDisplayedLists();
+                    additionalMessage = `Se encontraron ${results.length} ${entity}(s) pero ocurrió un error al agruparlos. Mostrando lista sin agrupar.`;
+                }
             } else if (results.length > 0) {
                 // Si no hay datos agrupados, pero sí resultados planos, limpiamos el panel de gestión
                 // para asegurar que no queden vistas agrupadas anteriores y mostramos las listas normales.
-                const dataManagementPanel = document.querySelector('.data-management');
-                if (dataManagementPanel) {
-                    // Restaurar la estructura original de las listas de entidades
-                    dataManagementPanel.innerHTML = ` 
-                        <div class="entity-section"><h3>Clientes (<span id="clients-count">0</span>)</h3><ul id="clients-list"></ul></div>
-                        <div class="entity-section"><h3>Usuarios (<span id="users-count">0</span>)</h3><ul id="users-list"></ul></div>
-                        <div class="entity-section"><h3>Campos (<span id="fields-count">0</span>)</h3><ul id="fields-list"></ul></div>
-                        <div class="entity-section"><h3>Lotes (<span id="lots-count">0</span>)</h3><ul id="lots-list"></ul></div>
-                        <div class="entity-section"><h3>Parcelas (<span id="parcels-count">0</span>)</h3><ul id="parcels-list"></ul></div>
-                        <div class="entity-section"><h3>Trabajos/Eventos (<span id="jobs-count">0</span>)</h3><ul id="jobs-list"></ul></div>
-                    `;
-                    // Es crucial re-asignar las referencias UI_DOM si se regeneran los elementos.
-                    // O, mejor aún, la función updateAllDisplayedLists debería ser capaz de encontrar los elementos por ID siempre.
-                    // Por ahora, asumimos que updateAllDisplayedLists puede encontrar los elementos por ID.
-                }
+                // Llamamos a la función de ui.js para regenerar el panel.
+                resetDataManagementPanelToDefaultLists(); // de ui.js
                 updateAllDisplayedLists(); // Mostrar las listas normales si no hay agrupación
 
                 additionalMessage = `Encontrados ${results.length} ${entity}(s):\n`;
@@ -467,7 +550,10 @@ async function processLLMResponse(aiResult) {
             } else {
                 additionalMessage = `No se encontraron ${entity} que coincidan con los criterios.`;
             }
-            addMessageToChatLog(additionalMessage, 'ai');
+            // Only add 'additionalMessage' if it contains something meaningful
+            if (additionalMessage && additionalMessage.trim() !== "") {
+                addMessageToChatLog(additionalMessage, 'ai');
+            }
             break;
 
         case 'UPDATE':
@@ -551,8 +637,109 @@ async function processLLMResponse(aiResult) {
     if (operationSuccessful) {
         saveDbToStorage();
     }
-    updateAllDisplayedLists();
+    // updateAllDisplayedLists is called here, but for READ with grouping, it might be redundant
+    // if displayGroupedData already took over the panel.
+    // However, if grouping failed and we fell back, or for other actions, it's needed.
+    // For READ actions without grouping, or if grouping failed, it's essential.
+    if (!(aiResult.action === 'READ' && aiResult.data && aiResult.data.grouping && aiResult.data.grouping.groupBy && aiResult.data.grouping.groupBy.length > 0 && additionalMessage === "")) {
+        updateAllDisplayedLists();
+    }
 }
+
+
+function getResolvedName(value, fieldName) {
+    // Helper to resolve IDs to names for grouping
+    if (!value) return value || "N/A"; // Return "N/A" if value is null/undefined
+
+    switch (fieldName) {
+        case 'clientId':
+            return db.clients.find(c => c.id === value)?.name || value;
+        case 'fieldId':
+            return db.fields.find(f => f.id === value)?.name || value;
+        case 'lotId':
+            const lot = db.lots.find(l => l.id === value);
+            if (lot) {
+                const field = db.fields.find(f => f.id === lot.fieldId);
+                return `${lot.name} (Campo: ${field?.name || lot.fieldId})`;
+            }
+            return value;
+        case 'parcelId':
+            const parcel = db.parcels.find(p => p.id === value);
+            if (parcel) {
+                const lot = db.lots.find(l => l.id === parcel.lotId);
+                const field = lot ? db.fields.find(f => f.id === lot.fieldId) : null;
+                return `${parcel.name} (Lote: ${lot?.name || parcel.lotId}, Campo: ${field?.name || lot?.fieldId})`;
+            }
+            return value;
+        case 'taskId':
+            return db.tasksList.find(t => t.id === value)?.taskName || value;
+        case 'campaignId':
+            return db.campaigns.find(c => c.id === value)?.name || value;
+        // Add other ID to Name resolutions as needed (e.g., machineryId, personnelId)
+        default:
+            return value;
+    }
+}
+
+
+function performClientSideGrouping(items, groupByFields, entityContext = null) {
+    if (!groupByFields || groupByFields.length === 0) {
+        return items; // Base case: no fields to group by, or actual items for the lowest level
+    }
+
+    const currentField = groupByFields[0];
+    const remainingFields = groupByFields.slice(1);
+    
+    // Special handling for JobEvent fieldName, lotName, parcelName as they are not direct properties
+    let getGroupValue;
+    if (entityContext === 'JobEvent') {
+        if (currentField === 'fieldName') {
+            getGroupValue = (item) => {
+                const parcel = db.parcels.find(p => p.id === item.parcelId);
+                const lot = parcel ? db.lots.find(l => l.id === parcel.lotId) : null;
+                const field = lot ? db.fields.find(f => f.id === lot.fieldId) : null;
+                return field ? field.name : "Campo Desconocido";
+            };
+        } else if (currentField === 'lotName') {
+             getGroupValue = (item) => {
+                const parcel = db.parcels.find(p => p.id === item.parcelId);
+                const lot = parcel ? db.lots.find(l => l.id === parcel.lotId) : null;
+                return lot ? lot.name : "Lote Desconocido";
+            };
+        } else if (currentField === 'parcelName') {
+            getGroupValue = (item) => db.parcels.find(p => p.id === item.parcelId)?.name || "Parcela Desconocida";
+        } else {
+             getGroupValue = (item) => item[currentField]; // Standard property access
+        }
+    } else {
+        getGroupValue = (item) => item[currentField]; // Standard property access
+    }
+
+
+    const grouped = items.reduce((acc, item) => {
+        let value = getGroupValue(item);
+        
+        // Resolve ID to name for groupName if currentField is an ID field
+        // For JobEvent context, if grouping by fieldName, lotName, parcelName, value is already name.
+        let groupNameDisplay = value;
+        if (entityContext !== 'JobEvent' || !['fieldName', 'lotName', 'parcelName'].includes(currentField)) {
+             groupNameDisplay = getResolvedName(value, currentField);
+        }
+        groupNameDisplay = groupNameDisplay || "N/A";
+
+
+        (acc[groupNameDisplay] = acc[groupNameDisplay] || []).push(item);
+        return acc;
+    }, {});
+
+    return Object.entries(grouped).map(([groupName, groupItems]) => {
+        return {
+            groupName: groupName,
+            items: performClientSideGrouping(groupItems, remainingFields, entityContext) // Recursive call
+        };
+    }).sort((a, b) => a.groupName.localeCompare(b.groupName)); // Sort groups by name
+}
+
 
 // ----- FUNCIONES DE MANEJO DE ARCHIVOS -----
 function handleSaveDbToFile() {
@@ -607,7 +794,7 @@ function handleLoadDbFromFile(event) {
             console.error("Error al cargar DB desde archivo:", err);
             addMessageToChatLog(`Error al cargar el archivo: ${err.message}`, 'ai', true);
         } finally {
-            if (MAIN_DOM.loadDbFile) MAIN_DOM.loadDbFile.value = ''; 
+            if (UI_DOM.loadDbFile) UI_DOM.loadDbFile.value = ''; // Corrected: UI_DOM.loadDbFile
         }
     };
     reader.readAsText(file);
@@ -615,7 +802,7 @@ function handleLoadDbFromFile(event) {
 
 function handleImportCsv() {
     // ... (como antes) ...
-    const selectedCollectionKey = MAIN_DOM.entityTypeSelector.value; 
+    const selectedCollectionKey = UI_DOM.entityTypeSelector.value; // Corrected: UI_DOM.entityTypeSelector
     let entityNameToImport; 
     
     switch (selectedCollectionKey) {
@@ -634,7 +821,7 @@ function handleImportCsv() {
             return;
     }
 
-    const file = MAIN_DOM.csvFileInput.files[0];
+    const file = UI_DOM.csvFileInput.files[0]; // Corrected: UI_DOM.csvFileInput
     if (!file) {
         addMessageToChatLog("Por favor, selecciona un archivo CSV para importar.", 'ai', true);
         return;
@@ -656,7 +843,7 @@ function handleImportCsv() {
             console.error("Error al importar CSV:", e);
             addMessageToChatLog(`Error al procesar CSV: ${e.message}`, 'ai', true);
         } finally {
-            if (MAIN_DOM.csvFileInput) MAIN_DOM.csvFileInput.value = ''; 
+            if (UI_DOM.csvFileInput) UI_DOM.csvFileInput.value = ''; // Corrected: UI_DOM.csvFileInput
         }
     };
     reader.readAsText(file);

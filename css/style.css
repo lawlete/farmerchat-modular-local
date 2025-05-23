@@ -1,86 +1,388 @@
 body {
+/* General Reset & Body */
+body {
     font-family: Arial, sans-serif;
-    padding: 0; /* Margin is already 0 by default for body in most browsers */
     background-color: #f4f4f4;
     color: #333;
     display: flex;
     flex-direction: column;
-    min-height: 100%; /* Use min-height for body with flex */
-    margin: 0; /* Explicitly set margin to 0 */
+    height: 100vh; /* Full viewport height */
+    margin: 0; 
     box-sizing: border-box;
 }
 
 html {
-    height: 100%; /* Ensure html also takes full viewport height */
+    height: 100%;
     box-sizing: border-box;
 }
 
 *, *::before, *::after {
-    box-sizing: inherit; /* Universal box-sizing inheritance */
+    box-sizing: inherit;
 }
 
-.main-container {
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-    overflow: hidden; /* Manage overflow for child panels */
-}
-
-.top-panel {
+/* Page Header (H1 Title) */
+.page-header {
     background-color: #38761D;
     color: white;
-    padding: 1em; /* Adjusted padding */
+    padding: 0.75em 1em; /* Reduced padding slightly */
     text-align: center;
-    overflow-y: auto; 
-    max-height: 25vh; /* Ensures top-panel doesn't take excessive height */
-    position: relative; /* For absolute positioning of header-actions */
-    flex-shrink: 0; /* Prevent top-panel from shrinking */
+    flex-shrink: 0; /* Prevent shrinking */
 }
 
-.top-panel h1 {
-    margin-top: 0;
-    margin-bottom: 0.5em;
+.page-header h1 {
+    margin: 0;
+    font-size: 1.8em;
 }
 
-.content-area {
+/* Tab Navigation */
+.tab-nav {
+    background-color: #fff; /* Changed to white for sticky header look */
+    color: #333; /* Text color adjusted for white background */
+    padding: 0 10px;
+    flex-shrink: 0; /* Prevent shrinking */
+    border-bottom: 1px solid #ddd; /* Lighter border for white background */
+    
+    position: sticky;
+    top: 0; /* Stick to the top of the viewport */
+    z-index: 1000; /* Ensure it's above other content */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Add shadow for separation */
+}
+
+.tab-nav ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
     display: flex;
     flex-direction: row;
+}
+
+.tab-nav li {
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s; /* Added color transition */
+    border-right: 1px solid #eee; /* Lighter separator for white background */
+    color: #555; /* Default tab text color */
+}
+
+.tab-nav li:hover {
+    background-color: #f0f0f0; /* Light grey hover for white background */
+    color: #000; /* Darker text on hover */
+}
+
+.tab-nav li.active {
+    background-color: #F97316; /* Active tab background */
+    color: white; /* Text color for active tab */
+    font-weight: bold;
+    border-bottom: 2px solid #F97316; /* Reinforce active state if needed, or remove if border-bottom on .tab-nav is enough */
+    margin-bottom: -1px; /* Align with bottom border of .tab-nav if using a border */
+}
+
+/* Tab Content Area Wrapper */
+.tab-content-wrapper {
     flex-grow: 1;
-    /* overflow: hidden; */ /* Removed as per instruction */
-    gap: 20px;
-    padding: 20px; /* Add padding around chat and right panels */
-    background-color: #f4f4f4; /* Match body background */
-    min-height: 0; /* For nested flex contexts */
+    position: relative; /* For absolute positioning of panels if desired, or just overflow management */
+    overflow: hidden; /* Ensures panels don't break layout */
+    display: flex; /* To make panels fill height */
 }
 
-.chat-panel {
-    flex: 2; /* Takes more space (flex-grow: 2, flex-shrink: 1, flex-basis: 0%) */
-    display: flex;
-    flex-direction: column;
-    background-color: white;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+/* Tab Panels */
+.tab-panel {
+    display: none; /* Hidden by default */
+    padding: 20px;
+    background-color: #fff; /* Default background for tab content */
+    flex-grow: 1;
+    overflow-y: auto; /* Enable vertical scrolling for the panel */
+    height: 100%; /* Fill the .tab-content-wrapper */
+    flex-direction: column; /* Allow children to use flex layout */
+}
+
+.tab-panel.active {
+    display: flex; /* Show active panel, use flex for internal layout */
+}
+
+/* Configuration Tab Specifics */
+#tab-panel-config {
+    /* Styles for the API key section if it's not a modal anymore */
+}
+
+#api-key-overlay {
+    /* No longer an overlay, but a section within the config tab */
+    /* display: none; remove if always visible in this tab */
+    /* position: fixed; remove */
+    /* top: 0; left: 0; width: 100%; height: 100%; remove */
+    /* background-color: rgba(0,0,0,0.5); remove */
+    /* align-items: center; justify-content: center; remove */
+    /* For now, let it be a simple div, its child #api-key-modal will be styled */
+}
+
+#api-key-modal {
+    background-color: #fff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    text-align: center;
+    max-width: 500px;
+    margin: 20px auto; /* Center it like a content block */
+}
+
+#api-key-modal h2 {
+    margin-top: 0;
+    color: #333;
+}
+
+#api-key-input {
+    width: calc(100% - 22px);
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#save-api-key-button {
+    background-color: #1C3A6F;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+#save-api-key-button:hover {
+    background-color: #122b50;
+}
+.api-key-note {
+    font-size:0.8em; 
+    color:grey; 
+    margin-top:15px;
+}
+
+#api-key-feedback {
+    display: inline-block;
+    margin-left: 10px;
+    font-weight: bold;
+}
+
+.feedback-success {
+    color: green;
+}
+
+.feedback-alert {
+    color: red;
+}
+
+/* Data Tab Specifics */
+#tab-panel-data {
+    gap: 20px; /* Space between sections within data tab */
+}
+.data-tab-section { /* This class is used by control-group as well */
+    background-color: #f9f9f9;
+    padding: 15px;
     border-radius: 5px;
-    /* overflow: hidden; */ /* Removed as per instruction */
-    min-height: 0; /* For nested flex contexts */
+    border: 1px solid #e0e0e0;
+}
+.data-tab-section h3, .data-tab-section h4 { /* Apply to h4 as well */
+    margin-top: 0;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    color: #38761D; /* Match header color for section titles */
 }
 
+/* Styling for .control-group */
+.control-group {
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin-bottom: 20px; /* Already specified by #tab-panel-data gap, but good for explicitness */
+    border-radius: 5px;
+    background-color: #fdfdfd; /* Slightly different from data-tab-section if needed, or can be same */
+}
+.control-group h4 {
+    font-size: 1.1em; /* Slightly smaller than h3 if used elsewhere */
+    color: #38761D;
+}
+
+
+/* DB Operations & CSV Import (now inside #tab-panel-data) */
+.header-actions { /* Was for DB buttons */
+    /* position: absolute; remove */
+    /* top: 1em; right: 1em; remove */
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+.header-actions button { /* General style for buttons in this section */
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.header-actions button:hover {
+    background-color: #45a049;
+}
+
+.csv-import-section {
+    /* padding: 15px; */ /* Handled by .data-tab-section */
+    /* background-color: #e0e0e0; */ /* Handled by .data-tab-section */
+    /* border: 1px solid #ccd0d5; */ /* Handled by .data-tab-section */
+    /* border-radius: 8px; */ /* Handled by .data-tab-section */
+    /* margin: 1em auto; */ /* No longer centered like this */
+    max-width: none; /* Allow it to fill available space */
+}
+.csv-import-section h2, .csv-import-section h3 { /* h2 was there, h3 added for consistency */
+    margin-top: 0;
+    color: #333;
+    border-bottom: 1px solid #bbb;
+    padding-bottom: 8px;
+    font-size: 1.2em;
+}
+.csv-import-section label, 
+.csv-import-section select, 
+.csv-import-section input[type="file"], 
+.csv-import-section button {
+    display: block;
+    margin-bottom: 10px;
+    width: 100%; /* Full width within its container */
+}
+.csv-import-section select,
+.csv-import-section input[type="file"] {
+    padding: 8px;
+    border: 1px solid #ccd0d5;
+    border-radius: 4px;
+    background-color: #fff;
+}
+.csv-import-section button {
+    background-color: #1C3A6F;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.csv-import-section button:hover {
+    background-color: #122b50;
+}
+.csv-format-note {
+    font-size: 0.85em;
+    color: #333;
+    margin-top: 5px;
+}
+
+/* Data Management (Entity Lists - now inside #tab-panel-data) */
+.data-management {
+    /* padding: 0; */ /* Handled by .data-tab-section */
+    /* background-color: #f9f9f9; */ /* Handled by .data-tab-section */
+    /* border: 1px solid #eee; */ /* Handled by .data-tab-section */
+    /* border-radius: 5px; */ /* Handled by .data-tab-section */
+    /* max-height: 500px; */ /* Let the tab panel handle overall scroll */
+    overflow-y: auto; /* Scroll for its own content if needed */
+    flex-grow: 1; /* If it's the main content of the data tab */
+    min-height: 200px; /* Ensure it has some minimum height to show content */
+}
+.entity-section h3 {
+    margin-top: 0;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 5px;
+    font-size: 1.1em;
+}
+.entity-section ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+.entity-section li {
+    padding: 5px 0;
+    border-bottom: 1px dashed #eee;
+    font-size: 0.9em;
+    transition: background-color 0.2s; /* For hover effect */
+}
+.entity-section li:hover {
+    background-color: #f0f0f0;
+    cursor: default;
+}
+.entity-section li:last-child {
+    border-bottom: none;
+}
+
+
+/* Styling for client-side grouped data display */
+.grouped-data-summary {
+    font-weight: bold;
+    background-color: #e9e9e9;
+    padding: 8px 12px; /* Increased padding */
+    border: 1px solid #ddd;
+    margin-top: 10px; /* Increased margin-top */
+    cursor: pointer;
+    border-radius: 4px; /* Added border-radius */
+    transition: background-color 0.2s;
+}
+.grouped-data-summary:hover {
+    background-color: #dcdcdc;
+}
+
+.grouped-data-list {
+    margin-left: 20px;
+    border-left: 2px dashed #ccc; /* Made border more prominent */
+    padding-left: 15px; /* Increased padding */
+    list-style-type: none; /* Ensure no bullets */
+}
+
+.grouped-data-item {
+    padding: 6px 0; /* Increased padding */
+    font-size: 0.95em; /* Slightly larger font for items */
+    border-bottom: 1px solid #f0f0f0; /* Lighter border for items */
+    transition: background-color 0.2s; /* For hover effect */
+}
+.grouped-data-item:last-child {
+    border-bottom: none;
+}
+.grouped-data-item:hover {
+    background-color: #e8f4e8; /* Light green hover for grouped items */
+    cursor: default;
+}
+
+
+/* Chat Tab Specifics */
+#tab-panel-chat {
+    padding: 0; /* Chat panel might manage its own padding */
+}
 .chat-container {
     display: flex;
     flex-direction: column;
-    flex-grow: 1; /* Allow chat-container to grow */
-    min-height: 0; /* Essential for scroll within flex child */
-    overflow: hidden; /* This is important to contain the chat-log scroll */
+    flex-grow: 1; 
+    min-height: 0; 
+    overflow: hidden; /* Important for chat-log scroll */
+    height: 100%; /* Fill the tab panel */
 }
+
+.chat-controls-extra {
+    padding: 5px 10px;
+    background-color: #f8f9fa; /* Match input area background */
+    border-bottom: 1px solid #ddd;
+    text-align: right; /* Align button to the right */
+}
+
+#toggle-tts-button {
+    padding: 6px 12px;
+    font-size: 0.9em;
+    background-color: #6c757d; /* Bootstrap secondary-like color */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+#toggle-tts-button:hover {
+    background-color: #5a6268;
+}
+
 
 .chat-log {
-    flex-grow: 1; /* chat-log takes available space within chat-container */
+    flex-grow: 1; 
     padding: 10px;
-    overflow-y: auto; /* Enables vertical scrollbar only for chat-log */
+    overflow-y: auto; 
     background-color: #e9ecef;
     border-bottom: 1px solid #ddd;
-    min-height: 0; /* Crucial for flex item with overflow */
+    min-height: 0; 
 }
-
 .chat-message {
     margin-bottom: 10px;
     padding: 8px 12px;
@@ -89,36 +391,73 @@ html {
     word-wrap: break-word;
     line-height: 1.4;
 }
+
 .user-message {
-    background-color: #A0522D;
-    color: white;
+    background-color: #e1f5fe; /* Light blue */
+    color: #333; /* Darker text for readability */
     margin-left: auto;
-    border-bottom-right-radius: 5px;
+    margin-right: 10px;
+    max-width: 70%;
+    text-align: right;
+    border-radius: 15px 15px 5px 15px; /* Rounded corners, with one less rounded for "tail" */
+    padding: 10px 15px; /* Adjusted padding */
 }
+
 .ai-message {
-    background-color: #F97316;
-    color: white;
-    margin-right: auto;
-    border-bottom-left-radius: 5px;
-}
-.clarification-message {
-    background-color: #FACC15;
+    background-color: #f0f0f0; /* Light grey */
     color: #333;
     margin-right: auto;
-    border-bottom-left-radius: 5px;
+    margin-left: 10px;
+    max-width: 70%;
+    text-align: left;
+    border-radius: 15px 15px 15px 5px; /* Rounded corners, with one less rounded for "tail" */
+    padding: 10px 15px; /* Adjusted padding */
+}
+
+.clarification-message {
+    background-color: #f0f0f0; /* Similar to AI message */
+    color: #333;
+    margin-right: auto;
+    margin-left: 10px;
+    max-width: 70%;
+    text-align: left;
+    border-radius: 15px 15px 15px 5px;
+    padding: 10px 15px;
+    border-left: 4px solid #ffc107; /* Amber border for distinction */
     font-style: italic;
 }
+
 .error-message {
-    background-color: #dc3545;
-    color: white;
-    margin-right: auto;
-    border-bottom-left-radius: 5px;
+    background-color: #ffebee; /* Light pink/red */
+    color: #c62828; /* Dark red text */
+    margin-right: auto; /* Typically from AI/system */
+    margin-left: 10px;
+    max-width: 70%;
+    text-align: left;
+    border-radius: 15px 15px 15px 5px;
+    padding: 10px 15px;
+    border: 1px solid #ef9a9a; /* Lighter red border */
+    /* Optional: Error icon 
+    position: relative; 
+    padding-left: 35px; 
+    */
 }
+/* Optional: Error icon using pseudo-element
+.error-message::before {
+    content: "⚠️";
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2em;
+}
+*/
+
 .chat-input-area {
     display: flex;
     padding: 10px;
     background-color: #f8f9fa;
-    flex-shrink: 0; /* Prevent chat-input-area from shrinking */
+    flex-shrink: 0; 
 }
 #user-input {
     flex-grow: 1;
@@ -142,177 +481,76 @@ html {
     background-color: #ccc;
     cursor: not-allowed;
 }
-
-.right-panel {
-    flex: 1; /* Takes less space (flex-grow: 1, flex-shrink: 1, flex-basis: 0%) */
-    background-color: white;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    border-radius: 5px;
-    padding: 15px;
-    overflow-y: auto; /* Independent scroll for the right panel */
-    display: flex; /* To allow data-panel to fill height if needed */
-    flex-direction: column;
-    min-height: 0; /* For nested flex contexts */
+.loading-indicator {
+    font-style: italic;
+    color: #777; /* Slightly lighter grey */
+    background-color: #f9f9f9; /* Subtle background */
+    margin-right: auto;
+    margin-left: 10px;
+    max-width: 70%;
+    text-align: left;
+    border-radius: 15px 15px 15px 5px;
+    padding: 8px 12px; /* Adjusted padding */
+    border: 1px dashed #ddd; /* Dashed border to indicate temporary nature */
 }
 
-.data-panel { /* Now directly inside right-panel */
-    flex-grow: 1; /* Allow it to take available space if needed */
-    display: flex;
-    flex-direction: column;
-    gap: 20px; /* Retain gap if multiple sections were here */
-    /* overflow-y: auto; */ /* Scroll is on right-panel now */
-}
-
-.data-management {
-    /* flex: 1; */ /* No longer needed, right-panel handles flex distribution */
-    padding: 0; /* Padding is on right-panel now */
-    background-color: #f9f9f9;
-    border: 1px solid #eee;
-    border-radius: 5px;
-    /* max-height: 500px; */ /* Scroll handled by right-panel */
-    overflow-y: auto; /* If data-management itself needs to scroll within data-panel */
-}
-
-.entity-section h3 {
-    margin-top: 0;
-    border-bottom: 1px solid #ddd;
-    padding-bottom: 5px;
-    font-size: 1.1em;
-}
-.entity-section ul {
-    list-style-type: none;
-    padding-left: 0;
-}
-.entity-section li {
-    padding: 5px 0;
-    border-bottom: 1px dashed #eee;
-    font-size: 0.9em;
-}
-.entity-section li:last-child {
-    border-bottom: none;
-}
+/* Footer */
 footer {
     text-align: center;
     padding: 1em 0;
     background-color: #333;
     color: white;
     font-size: 0.9em;
-}
-.loading-indicator {
-    font-style: italic;
-    color: #555;
-    padding: 5px 10px;
+    flex-shrink: 0; /* Prevent shrinking */
 }
 
-
-.header-actions {
-    position: absolute;
-    top: 1em; /* Adjusted to match top-panel padding */
-    right: 1em; /* Adjusted to match top-panel padding */
-}
-.header-actions button {
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    margin-left: 10px;
-    border-radius: 4px;
-    cursor: pointer;
-}
-.header-actions button:hover {
-    background-color: #45a049;
-}
-
-.data-panel { /* Contenedor para data-management y csv-import */
-    /* flex: 1; */ /* No longer needed as it's part of top-panel flow */
-    /* display: flex; */ /* Not needed */
-    /* flex-direction: column; */ /* Not needed */
-    /* gap: 20px; */ /* Not needed */
-    margin-top: 1em; /* Add some space above CSV import if it's in top-panel */
-}
-
-.csv-import-section {
-    padding: 15px;
-    background-color: #e0e0e0; /* Slightly different background for distinction */
-    border: 1px solid #ccd0d5;
-    border-radius: 8px;
-    margin: 1em auto; /* Center it if width is constrained */
-    max-width: 500px; /* Optional: constrain width */
-}
-.csv-import-section h2 {
-    margin-top: 0;
-    color: #333; /* Adjusted color */
-    border-bottom: 1px solid #bbb; /* Adjusted border */
-    padding-bottom: 8px;
-    font-size: 1.2em;
-}
-.csv-import-section label, 
-.csv-import-section select, 
-.csv-import-section input[type="file"], 
-.csv-import-section button {
-    display: block;
-    margin-bottom: 10px;
-    width: calc(100% - 22px); /* Ajuste para padding/border */
-}
-.csv-import-section select,
-.csv-import-section input[type="file"] {
-    padding: 8px;
-    border: 1px solid #ccd0d5;
-    border-radius: 4px;
-    background-color: #fff; /* Ensure form fields are white */
-}
-.csv-import-section button {
-    background-color: #1C3A6F; /* Match other buttons */
-    color: white;
+/* Grouped results display (from ui.js, ensure it fits) */
+.grouped-results-container {
     padding: 10px;
-    border: none;
+    border: 1px solid #ddd;
+    margin-top: 10px;
     border-radius: 4px;
-    cursor: pointer;
 }
-.csv-import-section button:hover {
-    background-color: #122b50; /* Match other buttons hover */
+.grouped-results-container h2 {
+    font-size: 1.3em;
+    margin-top: 0;
+    color: #38761D; /* Consistent heading color */
 }
-.csv-format-note {
-    font-size: 0.85em;
-    color: #333; /* Adjusted color */
-    margin-top: 5px;
-}
-.api-key-note { /* Estilo para el texto debajo del botón de guardar API key */
-    font-size:0.8em; 
-    color:grey; 
-    margin-top:15px;
-}
+/* .grouped-results-container details summary - Now styled by .grouped-data-summary */
+/* .grouped-results-container ul - Now styled by .grouped-data-list */
+/* .grouped-results-container li - Now styled by .grouped-data-item */
+
+
+/* REMOVED/ADAPTED OLD LAYOUT STYLES */
+/* .main-container - Replaced by body flex */
+/* .top-panel - Replaced by .page-header and specific sections in data tab */
+/* .content-area - Replaced by .tab-content-wrapper and .tab-panel */
+/* .chat-panel (as flex item) - .chat-container now fills #tab-panel-chat */
+/* .right-panel - .data-management now part of #tab-panel-data */
+/* .data-panel (as general container) - Specific sections like .data-management are styled directly or via .data-tab-section */
+
 
 /* Responsive adjustments (example) */
 @media (max-width: 768px) {
-    .content-area {
-        flex-direction: column;
-        padding: 10px; /* Reduce padding on smaller screens */
+    .tab-nav ul {
+        flex-direction: column; /* Stack tabs vertically on small screens */
+    }
+    .tab-nav li {
+        border-right: none; /* Remove side border */
+        border-bottom: 1px solid #555; /* Add bottom border */
+    }
+    .tab-nav li:last-child {
+        border-bottom: none;
     }
 
-    .chat-panel, .right-panel {
-        flex-basis: auto; /* Reset flex-basis */
-        margin-bottom: 10px; /* Add margin between stacked panels */
+    .tab-panel {
+        padding: 10px; /* Reduce padding */
     }
 
-    .right-panel {
-        max-height: 40vh; /* Example: limit height when stacked */
+    #api-key-modal {
+        padding: 15px;
     }
-
-    .header-actions {
-        position: static; /* Stack buttons in header on small screens */
-        text-align: center;
-        margin-top: 10px;
-    }
-    .header-actions button {
-        margin-left: 5px;
-        margin-right: 5px;
-    }
-    .top-panel {
-        padding: 0.5em;
-    }
-    .csv-import-section {
-        margin-left: 10px;
-        margin-right: 10px;
+    .data-tab-section {
+        padding: 10px;
     }
 }
