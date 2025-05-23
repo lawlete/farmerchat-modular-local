@@ -423,15 +423,23 @@ async function processLLMResponse(aiResult) {
             }
 
             // Comprobar si hay datos agrupados para mostrar
-            if (aiResult.data && aiResult.data.grouping && aiResult.data.grouping.groupedData && aiResult.data.grouping.groupBy) {
-                // Llamada a la nueva función displayGroupedData de ui.js
-                displayGroupedData(aiResult.data.grouping.groupedData, entity, aiResult.data.grouping.groupBy);
-                
-                // El mensaje de additionalMessage ahora podría ser redundante si displayGroupedData es claro,
-                // pero lo mantenemos por ahora para consistencia con el responseText del LLM.
-                // El responseText del LLM ya debería indicar que los datos agrupados están listos.
-                // additionalMessage = `Los datos agrupados de ${entity} por '${aiResult.data.grouping.groupBy.join(', ')}' se muestran en el panel lateral.`;
-                // No se llama a updateAllDisplayedLists() aquí para no sobrescribir la vista agrupada.
+            if (aiResult.data && aiResult.data.grouping && aiResult.data.grouping.groupBy && aiResult.data.grouping.groupBy.length > 0) {
+                const groupByFields = aiResult.data.grouping.groupBy;
+                try {
+                    console.log(`Client-side grouping by: ${groupByFields.join(', ')} for ${results.length} items.`);
+                    const groupedClientData = performClientSideGrouping(results, groupByFields, entity); // Pass entity for context
+                    displayGroupedData(groupedClientData, entity, groupByFields);
+                    // For grouped data, additionalMessage is usually not needed as responseText from LLM should suffice.
+                    // And displayGroupedData updates the UI directly.
+                    additionalMessage = ""; // Clear any previous listing message
+                } catch (groupingError) {
+                    console.error("Error during client-side grouping:", groupingError);
+                    addMessageToChatLog(`Error al intentar agrupar los datos: ${groupingError.message}`, 'ai', true);
+                    // Fallback to showing non-grouped results if grouping fails
+                    resetDataManagementPanelToDefaultLists();
+                    updateAllDisplayedLists();
+                    additionalMessage = `Se encontraron ${results.length} ${entity}(s) pero ocurrió un error al agruparlos. Mostrando lista sin agrupar.`;
+                }
             } else if (results.length > 0) {
                 // Si no hay datos agrupados, pero sí resultados planos, limpiamos el panel de gestión
                 // para asegurar que no queden vistas agrupadas anteriores y mostramos las listas normales.
@@ -463,7 +471,10 @@ async function processLLMResponse(aiResult) {
             } else {
                 additionalMessage = `No se encontraron ${entity} que coincidan con los criterios.`;
             }
-            addMessageToChatLog(additionalMessage, 'ai');
+            // Only add 'additionalMessage' if it contains something meaningful
+            if (additionalMessage && additionalMessage.trim() !== "") {
+                addMessageToChatLog(additionalMessage, 'ai');
+            }
             break;
 
         case 'UPDATE':
@@ -547,8 +558,109 @@ async function processLLMResponse(aiResult) {
     if (operationSuccessful) {
         saveDbToStorage();
     }
-    updateAllDisplayedLists();
+    // updateAllDisplayedLists is called here, but for READ with grouping, it might be redundant
+    // if displayGroupedData already took over the panel.
+    // However, if grouping failed and we fell back, or for other actions, it's needed.
+    // For READ actions without grouping, or if grouping failed, it's essential.
+    if (!(aiResult.action === 'READ' && aiResult.data && aiResult.data.grouping && aiResult.data.grouping.groupBy && aiResult.data.grouping.groupBy.length > 0 && additionalMessage === "")) {
+        updateAllDisplayedLists();
+    }
 }
+
+
+function getResolvedName(value, fieldName) {
+    // Helper to resolve IDs to names for grouping
+    if (!value) return value || "N/A"; // Return "N/A" if value is null/undefined
+
+    switch (fieldName) {
+        case 'clientId':
+            return db.clients.find(c => c.id === value)?.name || value;
+        case 'fieldId':
+            return db.fields.find(f => f.id === value)?.name || value;
+        case 'lotId':
+            const lot = db.lots.find(l => l.id === value);
+            if (lot) {
+                const field = db.fields.find(f => f.id === lot.fieldId);
+                return `${lot.name} (Campo: ${field?.name || lot.fieldId})`;
+            }
+            return value;
+        case 'parcelId':
+            const parcel = db.parcels.find(p => p.id === value);
+            if (parcel) {
+                const lot = db.lots.find(l => l.id === parcel.lotId);
+                const field = lot ? db.fields.find(f => f.id === lot.fieldId) : null;
+                return `${parcel.name} (Lote: ${lot?.name || parcel.lotId}, Campo: ${field?.name || lot?.fieldId})`;
+            }
+            return value;
+        case 'taskId':
+            return db.tasksList.find(t => t.id === value)?.taskName || value;
+        case 'campaignId':
+            return db.campaigns.find(c => c.id === value)?.name || value;
+        // Add other ID to Name resolutions as needed (e.g., machineryId, personnelId)
+        default:
+            return value;
+    }
+}
+
+
+function performClientSideGrouping(items, groupByFields, entityContext = null) {
+    if (!groupByFields || groupByFields.length === 0) {
+        return items; // Base case: no fields to group by, or actual items for the lowest level
+    }
+
+    const currentField = groupByFields[0];
+    const remainingFields = groupByFields.slice(1);
+    
+    // Special handling for JobEvent fieldName, lotName, parcelName as they are not direct properties
+    let getGroupValue;
+    if (entityContext === 'JobEvent') {
+        if (currentField === 'fieldName') {
+            getGroupValue = (item) => {
+                const parcel = db.parcels.find(p => p.id === item.parcelId);
+                const lot = parcel ? db.lots.find(l => l.id === parcel.lotId) : null;
+                const field = lot ? db.fields.find(f => f.id === lot.fieldId) : null;
+                return field ? field.name : "Campo Desconocido";
+            };
+        } else if (currentField === 'lotName') {
+             getGroupValue = (item) => {
+                const parcel = db.parcels.find(p => p.id === item.parcelId);
+                const lot = parcel ? db.lots.find(l => l.id === parcel.lotId) : null;
+                return lot ? lot.name : "Lote Desconocido";
+            };
+        } else if (currentField === 'parcelName') {
+            getGroupValue = (item) => db.parcels.find(p => p.id === item.parcelId)?.name || "Parcela Desconocida";
+        } else {
+             getGroupValue = (item) => item[currentField]; // Standard property access
+        }
+    } else {
+        getGroupValue = (item) => item[currentField]; // Standard property access
+    }
+
+
+    const grouped = items.reduce((acc, item) => {
+        let value = getGroupValue(item);
+        
+        // Resolve ID to name for groupName if currentField is an ID field
+        // For JobEvent context, if grouping by fieldName, lotName, parcelName, value is already name.
+        let groupNameDisplay = value;
+        if (entityContext !== 'JobEvent' || !['fieldName', 'lotName', 'parcelName'].includes(currentField)) {
+             groupNameDisplay = getResolvedName(value, currentField);
+        }
+        groupNameDisplay = groupNameDisplay || "N/A";
+
+
+        (acc[groupNameDisplay] = acc[groupNameDisplay] || []).push(item);
+        return acc;
+    }, {});
+
+    return Object.entries(grouped).map(([groupName, groupItems]) => {
+        return {
+            groupName: groupName,
+            items: performClientSideGrouping(groupItems, remainingFields, entityContext) // Recursive call
+        };
+    }).sort((a, b) => a.groupName.localeCompare(b.groupName)); // Sort groups by name
+}
+
 
 // ----- FUNCIONES DE MANEJO DE ARCHIVOS -----
 function handleSaveDbToFile() {
