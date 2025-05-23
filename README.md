@@ -9,6 +9,9 @@ FarmerChat Modular es una aplicación web de simulación diseñada para actuar c
 *   **Interfaz de Chat:** Permite a los usuarios interactuar mediante comandos de texto.
 *   **Entrada de Voz (Simulada con Transcripción):** Permite grabar audio que se envía a un LLM para transcripción y luego se procesa como texto.
 *   **Procesamiento de Lenguaje Natural (LLM):** Utiliza Google Gemini (configurable) para interpretar comandos del usuario (Altas, Bajas, Modificaciones, Consultas).
+
+**Hay un nuevo Esquema para la base, ver doc Readme_BD a parte!!!**
+
 *   **Gestión de Entidades Agrícolas:** Simula la gestión de:
     *   Clientes
     *   Usuarios

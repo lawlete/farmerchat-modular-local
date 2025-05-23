@@ -5,6 +5,8 @@ let isLLMLoading = false;
 let mediaRecorder;
 let audioChunks = [];
 
+window.isTtsEnabled = false; // Global state for TTS
+
 const MAIN_DOM = {}; // Will be empty after refactor, but kept for structure if needed later for main.js specific elements.
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -93,10 +95,30 @@ document.addEventListener('DOMContentLoaded', () => {
     UI_DOM.loadDbButton.addEventListener('click', () => UI_DOM.loadDbFile.click()); // Corrected: UI_DOM.loadDbFile
     UI_DOM.loadDbFile.addEventListener('change', handleLoadDbFromFile);
     UI_DOM.importCsvButton.addEventListener('click', handleImportCsv);
+
+    // TTS Toggle Button Event Listener
+    const ttsButton = document.getElementById('toggle-tts-button');
+    if (ttsButton) {
+        ttsButton.addEventListener('click', () => {
+            window.isTtsEnabled = !window.isTtsEnabled;
+            ttsButton.textContent = window.isTtsEnabled ? 'Modo Audio: Activado' : 'Modo Audio: Desactivado';
+            if (!window.isTtsEnabled && speechSynthesis.speaking) {
+                speechSynthesis.cancel(); // Stop any current speech if TTS is turned off
+            }
+            console.log("TTS Estatus:", window.isTtsEnabled);
+        });
+    } else {
+        console.warn("Botón TTS no encontrado en el DOM.");
+    }
 });
 
 
 async function handleSendUserInput(textOverride = null) {
+    console.log("handleSendUserInput called. textOverride:", textOverride, "isLLMLoading:", isLLMLoading);
+    if (textOverride !== null) {
+        console.log("HSU called with transcribed text:", textOverride);
+    }
+
     let textToSend;
     if (typeof textOverride === 'string') {
         textToSend = textOverride.trim();
@@ -233,22 +255,34 @@ async function toggleAudioRecording() {
 
                     try {
                         const transcription = await transcribeAudioWithGemini(base64Audio, mediaRecorder.mimeType); 
-                        removeLoadingIndicator(); 
+                        removeLoadingIndicator(); // Remove "Transcribiendo..."
                         if (transcription && transcription.trim() !== "") {
                             addMessageToChatLog(`Transcripción: "${transcription}"`, 'ai');
+                            
+                            // FIX: Reset loading state from transcription phase
+                            isLLMLoading = false;
+                            if (geminiApiKey) enableChatControls(false); 
+                            // End of FIX
+
+                            console.log("Attempting to send transcribed text to LLM (after successful transcription):", transcription);
+                            console.log("isLLMLoading state just before calling HSU with transcription:", isLLMLoading);
                             // handleSendUserInput will manage isLLMLoading and enableChatControls upon its completion/failure.
                             await handleSendUserInput(transcription); 
+                            console.log("Call to HSU for transcription completed.");
+                            console.log("Current isLLMLoading state AFTER HSU for transcription completed:", isLLMLoading);
                         } else {
+                            console.log("Transcription was empty or failed, not sending to HSU.");
                             addMessageToChatLog("No se pudo obtener la transcripción del audio o estaba vacía.", 'ai', true);
-                            isLLMLoading = false; 
-                            if (geminiApiKey) enableChatControls(false);
+                            isLLMLoading = false; // Reset here as HSU won't be called
+                            if (geminiApiKey) enableChatControls(false); // Re-enable controls if appropriate
                         }
                     } catch (error) {
-                        removeLoadingIndicator();
+                        removeLoadingIndicator(); // Remove "Transcribiendo..." if error during transcription step
+                        console.log("Error during transcription process, not sending to HSU:", error);
                         console.error("Error en transcripción de audio (desde toggleAudioRecording):", error);
                         addMessageToChatLog(`Error al transcribir: ${error.message}`, 'ai', true);
-                        isLLMLoading = false; 
-                        if (geminiApiKey) enableChatControls(false);
+                        isLLMLoading = false; // Reset here
+                        if (geminiApiKey) enableChatControls(false); // Re-enable controls
                     } 
                 };
                 reader.onerror = (error) => {
