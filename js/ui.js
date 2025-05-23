@@ -104,6 +104,25 @@ function addMessageToChatLog(text, sender, isError = false, isLoadingMessage = f
     messageDiv.innerHTML = text.replace(/\n/g, '<br>');
     UI_DOM.chatLog.appendChild(messageDiv);
     UI_DOM.chatLog.scrollTop = UI_DOM.chatLog.scrollHeight;
+
+    // TTS Logic
+    if (window.isTtsEnabled && (sender === 'ai' || sender === 'error' || sender === 'clarification') && !isLoadingMessage) {
+        if (speechSynthesis.speaking) {
+            speechSynthesis.cancel(); // Stop any currently speaking utterance before speaking the new one
+        }
+        // Sanitize text for speech: remove potential HTML tags if any were inadvertently included.
+        // The current text.replace(/\n/g, '<br>') is for HTML display, speech needs plain text.
+        // For speech, we should use the original 'text' before replacing newlines with <br>.
+        // However, since 'text' might already contain markdown-like newlines, we'll just use it.
+        // More advanced sanitization might be needed if complex HTML or markdown is expected in 'text'.
+        const textToSpeak = text; // Use original text which might have newlines for natural pauses
+        const utterance = new SpeechSynthesisUtterance(textToSpeak);
+        utterance.lang = 'es-ES'; // Set language for better pronunciation
+        // utterance.rate = 1; // Default rate
+        // utterance.pitch = 1; // Default pitch
+        speechSynthesis.speak(utterance);
+    }
+
     return dynamicId ? document.getElementById(dynamicId) : messageDiv;
 }
 

@@ -94,6 +94,9 @@
         <!-- Chat Panel content moved here -->
         <!-- Original 'main class="chat-panel"' is removed, content moved directly -->
         <div class="chat-container">
+            <div class="chat-controls-extra"> <!-- Wrapper for extra controls like TTS toggle -->
+                <button id="toggle-tts-button" title="Activar o desactivar respuestas de audio">Modo Audio: Desactivado</button>
+            </div>
             <div id="chat-log" class="chat-log"></div>
             <div class="chat-input-area">
                 <input type="text" id="user-input" placeholder="Escribe tu comando o pregunta..." disabled>

@@ -36,11 +36,16 @@ html {
 
 /* Tab Navigation */
 .tab-nav {
-    background-color: #333;
-    color: white;
+    background-color: #fff; /* Changed to white for sticky header look */
+    color: #333; /* Text color adjusted for white background */
     padding: 0 10px;
     flex-shrink: 0; /* Prevent shrinking */
-    border-bottom: 2px solid #F97316; /* Accent border */
+    border-bottom: 1px solid #ddd; /* Lighter border for white background */
+    
+    position: sticky;
+    top: 0; /* Stick to the top of the viewport */
+    z-index: 1000; /* Ensure it's above other content */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Add shadow for separation */
 }
 
 .tab-nav ul {
@@ -54,18 +59,22 @@ html {
 .tab-nav li {
     padding: 12px 20px;
     cursor: pointer;
-    transition: background-color 0.3s;
-    border-right: 1px solid #555; /* Separator */
+    transition: background-color 0.3s, color 0.3s; /* Added color transition */
+    border-right: 1px solid #eee; /* Lighter separator for white background */
+    color: #555; /* Default tab text color */
 }
 
 .tab-nav li:hover {
-    background-color: #555;
+    background-color: #f0f0f0; /* Light grey hover for white background */
+    color: #000; /* Darker text on hover */
 }
 
 .tab-nav li.active {
     background-color: #F97316; /* Active tab background */
-    color: white;
+    color: white; /* Text color for active tab */
     font-weight: bold;
+    border-bottom: 2px solid #F97316; /* Reinforce active state if needed, or remove if border-bottom on .tab-nav is enough */
+    margin-bottom: -1px; /* Align with bottom border of .tab-nav if using a border */
 }
 
 /* Tab Content Area Wrapper */
@@ -344,6 +353,27 @@ html {
     overflow: hidden; /* Important for chat-log scroll */
     height: 100%; /* Fill the tab panel */
 }
+
+.chat-controls-extra {
+    padding: 5px 10px;
+    background-color: #f8f9fa; /* Match input area background */
+    border-bottom: 1px solid #ddd;
+    text-align: right; /* Align button to the right */
+}
+
+#toggle-tts-button {
+    padding: 6px 12px;
+    font-size: 0.9em;
+    background-color: #6c757d; /* Bootstrap secondary-like color */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+#toggle-tts-button:hover {
+    background-color: #5a6268;
+}
+
 
 .chat-log {
     flex-grow: 1; 
