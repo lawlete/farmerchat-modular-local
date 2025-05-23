@@ -307,20 +307,25 @@ function _createGroupElement(group, entityName, currentLevel, maxLevel) {
     details.open = true; // Open by default
 
     const summary = document.createElement('summary');
+    summary.classList.add('grouped-data-summary'); // Added class
     summary.textContent = `${group.groupName || 'Grupo sin nombre'} (${group.items.length} items)`;
-    summary.style.fontWeight = 'bold';
-    summary.style.fontSize = `${Math.max(1, 1.2 - (0.1 * currentLevel))}em`;
-    summary.style.marginLeft = `${currentLevel * 15}px`;
+    // Removed inline styles for summary, will be handled by CSS
+    // summary.style.fontWeight = 'bold';
+    // summary.style.fontSize = `${Math.max(1, 1.2 - (0.1 * currentLevel))}em`;
+    // summary.style.marginLeft = `${currentLevel * 15}px`; 
     details.appendChild(summary);
 
     const ul = document.createElement('ul');
-    ul.style.marginLeft = `${currentLevel * 15}px`;
+    ul.classList.add('grouped-data-list'); // Added class
+    // Removed inline style for ul, will be handled by CSS
+    // ul.style.marginLeft = `${currentLevel * 15}px`;
 
     group.items.forEach(item => {
         if (item.groupName && item.items) { // It's a subgroup
             ul.appendChild(_createGroupElement(item, entityName, currentLevel + 1, maxLevel));
         } else { // It's an entity item
             const li = document.createElement('li');
+            li.classList.add('grouped-data-item'); // Added class
             li.textContent = _formatSingleEntityItem(item, entityName);
             ul.appendChild(li);
         }

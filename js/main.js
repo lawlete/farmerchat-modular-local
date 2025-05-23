@@ -40,8 +40,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Use UI_DOM for elements previously in MAIN_DOM
+    // Use UI_DOM for elements previously in MAIN_DOM
     UI_DOM.saveApiKeyButton.addEventListener('click', () => {
         const key = UI_DOM.apiKeyInput.value.trim();
+        const feedbackSpan = document.getElementById('api-key-feedback'); // Get feedback span
+
+        // Clear previous feedback
+        feedbackSpan.textContent = '';
+        feedbackSpan.classList.remove('feedback-success', 'feedback-alert');
+
         if (key) {
             geminiApiKey = key;
             localStorage.setItem('farmerChatApiKey', key);
@@ -50,14 +57,27 @@ document.addEventListener('DOMContentLoaded', () => {
             enableChatControls(false);
             addMessageToChatLog("API Key guardada. ¡Hola! Soy FarmerChat. ¿En qué puedo ayudarte?", 'ai');
             
+            // Display success feedback
+            feedbackSpan.textContent = '✓ Guardada';
+            feedbackSpan.classList.add('feedback-success');
+            
             // Switch to Chatbot tab after saving API key
             const chatTabButton = document.querySelector('.tab-nav li[data-tab="tab-panel-chat"]');
             if (chatTabButton) {
                 chatTabButton.click();
             }
         } else {
-            alert("Por favor, ingresa una API Key válida.");
+            // Display alert feedback
+            feedbackSpan.textContent = 'Por favor, ingresa una clave.';
+            feedbackSpan.classList.add('feedback-alert');
+            alert("Por favor, ingresa una API Key válida."); // Original alert can remain or be removed
         }
+
+        // Clear feedback after a few seconds
+        setTimeout(() => {
+            feedbackSpan.textContent = '';
+            feedbackSpan.classList.remove('feedback-success', 'feedback-alert');
+        }, 3000); // Clear after 3 seconds
     });
 
     UI_DOM.sendButton.addEventListener('click', () => handleSendUserInput());
@@ -105,19 +125,44 @@ async function handleSendUserInput(textOverride = null) {
     
     isLLMLoading = true;
     enableChatControls(true); 
-    const loadingIndicator = addMessageToChatLog("Procesando con IA...", 'ai', false, true);
+    
+    let currentLoadingIndicatorId = null;
+    if (isFromDirectKeyInput) { // Only show "pensando" if it's a typed message. Transcription has its own.
+        // If a "Transcribiendo..." message exists, remove it before showing "pensando..."
+        const existingTranscriptionIndicator = document.querySelector('.loading-indicator');
+        if (existingTranscriptionIndicator && existingTranscriptionIndicator.textContent.includes("Transcribiendo")) {
+            removeLoadingIndicator(); // Remove specific transcription indicator
+        }
+        currentLoadingIndicatorId = addMessageToChatLog("FarmerChat está pensando...", 'ai', false, true);
+    } else { // For voice input, the "Transcribiendo..." was already shown. This is now the main processing.
+        currentLoadingIndicatorId = addMessageToChatLog("Procesando con IA...", 'ai', false, true);
+    }
 
     try {
         console.log(`Enviando a LLM: "${textToSend}"`); // Log para ver qué se envía
         const aiResultJson = await callGeminiApiWithHistory(textToSend); 
-        removeLoadingIndicator();
+        
+        // Remove the specific loading indicator ("pensando" or "procesando")
+        if (currentLoadingIndicatorId) {
+            const elToRemove = document.getElementById(currentLoadingIndicatorId);
+            if (elToRemove) elToRemove.remove();
+        } else { // Fallback if ID wasn't captured, remove any generic one
+            removeLoadingIndicator();
+        }
+        
         if (aiResultJson) {
             await processLLMResponse(aiResultJson);
         } else {
             addMessageToChatLog("La IA no devolvió una respuesta procesable (resultado nulo o indefinido).", 'ai', true);
         }
     } catch (error) {
-        removeLoadingIndicator();
+        // Ensure loading indicator is removed on error too
+        if (currentLoadingIndicatorId) {
+            const elToRemove = document.getElementById(currentLoadingIndicatorId);
+            if (elToRemove) elToRemove.remove();
+        } else {
+            removeLoadingIndicator();
+        }
         console.error("Error al procesar la entrada del usuario (desde handleSendUserInput):", error);
         let errorMessage = error.message || "Hubo un problema al contactar la IA.";
         if (error.isApiKeyError) { // Flag que podríamos setear en llm.js

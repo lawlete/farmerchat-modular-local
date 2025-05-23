@@ -25,9 +25,9 @@
             <div id="api-key-modal">
                 <h2>Configurar API Key de Gemini</h2>
                 <p>Ingresa tu API Key de Google Generative AI.</p>
-                <input type="password" id="api-key-input" placeholder="Pega tu API Key aquí">
+                <input type="password" id="api-key-input" placeholder="Pega tu API Key de Google Gemini aquí">
                 <br>
-                <button id="save-api-key-button">Guardar y Continuar</button>
+                <button id="save-api-key-button">Guardar y Continuar</button><span id="api-key-feedback"></span>
                 <p class="api-key-note">
                     Tu API Key se guardará en el almacenamiento local de tu navegador.<br>
                     <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Obtener API Key</a>.
@@ -39,21 +39,24 @@
 
     <div id="tab-panel-data" class="tab-panel">
         <h2>Gestión de Datos y Entidades</h2>
-        
-        <!-- DB Operations moved here -->
-        <div class="header-actions data-tab-section">
-            <h3>Operaciones de Base de Datos</h3>
-            <button id="load-db-button" title="Cargar DB desde JSON">Cargar DB</button>
-            <input type="file" id="load-db-file" accept=".json" style="display:none;">
-            <button id="save-db-button" title="Guardar DB como JSON">Guardar DB</button>
+
+        <div class="control-group data-tab-section">
+            <h4>Operaciones de Base de Datos</h4>
+            <!-- DB Operations moved here -->
+            <div class="header-actions">
+                <button id="load-db-button" title="Cargar DB desde JSON">Cargar DB</button>
+                <input type="file" id="load-db-file" accept=".json" style="display:none;">
+                <button id="save-db-button" title="Guardar DB como JSON">Guardar DB</button>
+            </div>
         </div>
 
-        <!-- CSV Import section moved here -->
-        <div class="csv-import-section data-tab-section">
-            <h3>Importar Datos desde CSV</h3>
-            <label for="entity-type-selector">Tipo de Entidad:</label>
-            <select id="entity-type-selector">
-                <option value="clients">Clientes</option>
+        <div class="control-group data-tab-section">
+            <h4>Importación Masiva CSV</h4>
+            <!-- CSV Import section moved here -->
+            <div class="csv-import-section">
+                <label for="entity-type-selector">Tipo de Entidad:</label>
+                <select id="entity-type-selector">
+                    <option value="clients">Clientes</option>
                 <option value="users">Usuarios</option>
                 <option value="fields">Campos</option>
                 <option value="lots">Lotes</option>
@@ -69,18 +72,21 @@
             <p class="csv-format-note">
                 Asegúrate que el CSV tenga las columnas correctas (ej: id, name para Clientes).
             </p>
+            </div>
         </div>
-
+        
         <!-- Data Management (actual lists) moved here -->
         <!-- Original 'aside class="right-panel"' and 'div class="data-panel"' are removed, content moved directly -->
-        <div class="data-management data-tab-section">
-            <h3>Visualización de Entidades</h3>
-            <div class="entity-section"><h3>Clientes (<span id="clients-count">0</span>)</h3><ul id="clients-list"></ul></div>
-            <div class="entity-section"><h3>Usuarios (<span id="users-count">0</span>)</h3><ul id="users-list"></ul></div>
-            <div class="entity-section"><h3>Campos (<span id="fields-count">0</span>)</h3><ul id="fields-list"></ul></div>
-            <div class="entity-section"><h3>Lotes (<span id="lots-count">0</span>)</h3><ul id="lots-list"></ul></div>
-            <div class="entity-section"><h3>Parcelas (<span id="parcels-count">0</span>)</h3><ul id="parcels-list"></ul></div>
-            <div class="entity-section"><h3>Trabajos/Eventos (<span id="jobs-count">0</span>)</h3><ul id="jobs-list"></ul></div>
+        <div class="control-group data-tab-section"> <!-- Added control-group for consistency -->
+            <h4>Visualización de Datos</h4>
+            <div class="data-management">
+                <div class="entity-section"><h3>Clientes (<span id="clients-count">0</span>)</h3><ul id="clients-list"></ul></div>
+                <div class="entity-section"><h3>Usuarios (<span id="users-count">0</span>)</h3><ul id="users-list"></ul></div>
+                <div class="entity-section"><h3>Campos (<span id="fields-count">0</span>)</h3><ul id="fields-list"></ul></div>
+                <div class="entity-section"><h3>Lotes (<span id="lots-count">0</span>)</h3><ul id="lots-list"></ul></div>
+                <div class="entity-section"><h3>Parcelas (<span id="parcels-count">0</span>)</h3><ul id="parcels-list"></ul></div>
+                <div class="entity-section"><h3>Trabajos/Eventos (<span id="jobs-count">0</span>)</h3><ul id="jobs-list"></ul></div>
+            </div>
         </div>
     </div>
 
