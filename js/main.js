@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // MAIN_DOM.csvFileInput = document.getElementById('csv-file-input');
     // MAIN_DOM.importCsvButton = document.getElementById('import-csv-button');
     
+    initializeTabs(); // Initialize tab switching logic from ui.js
     const dbLoadedSuccessfully = loadDbFromStorage(); 
     updateAllDisplayedLists(); 
 
@@ -45,9 +46,15 @@ document.addEventListener('DOMContentLoaded', () => {
             geminiApiKey = key;
             localStorage.setItem('farmerChatApiKey', key);
             setApiKeyForLlmModule(geminiApiKey);
-            hideApiKeyModal();
+            hideApiKeyModal(); // This is now a no-op for hiding, but fine to call.
             enableChatControls(false);
             addMessageToChatLog("API Key guardada. ¡Hola! Soy FarmerChat. ¿En qué puedo ayudarte?", 'ai');
+            
+            // Switch to Chatbot tab after saving API key
+            const chatTabButton = document.querySelector('.tab-nav li[data-tab="tab-panel-chat"]');
+            if (chatTabButton) {
+                chatTabButton.click();
+            }
         } else {
             alert("Por favor, ingresa una API Key válida.");
         }

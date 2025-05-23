@@ -3,86 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FarmerChat Modular v3</title>
+    <title>FarmerChat Modular v3 - Tabbed</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div id="api-key-overlay">
-        <div id="api-key-modal">
-            <h2>Configurar API Key de Gemini</h2>
-            <p>Ingresa tu API Key de Google Generative AI.</p>
-            <input type="password" id="api-key-input" placeholder="Pega tu API Key aquí">
-            <br>
-            <button id="save-api-key-button">Guardar y Continuar</button>
-            <p class="api-key-note">
-                Tu API Key se guardará en el almacenamiento local de tu navegador.<br>
-                <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Obtener API Key</a>.
-            </p>
-        </div>
+    <header class="top-panel page-header"> <!-- Added page-header class for general title -->
+        <h1>FarmerChat Modular v3</h1>
+    </header>
+
+    <div class="tab-nav">
+        <ul>
+            <li data-tab="tab-panel-config" class="active">Configuración</li>
+            <li data-tab="tab-panel-data">Gestión de Datos</li>
+            <li data-tab="tab-panel-chat">Chatbot</li>
+        </ul>
     </div>
 
-    <div class="main-container">
-        <header class="top-panel">
-            <h1>FarmerChat Modular v3</h1>
-            <div class="header-actions">
-                <button id="load-db-button" title="Cargar DB desde JSON">Cargar DB</button>
-                <input type="file" id="load-db-file" accept=".json" style="display:none;">
-                <button id="save-db-button" title="Guardar DB como JSON">Guardar DB</button>
-            </div>
-            <div class="csv-import-section">
-                <h2>Importar Datos desde CSV</h2>
-                <label for="entity-type-selector">Tipo de Entidad:</label>
-                <select id="entity-type-selector">
-                    <option value="clients">Clientes</option> <!-- AÑADIDO -->
-                    <option value="users">Usuarios</option>   <!-- AÑADIDO -->
-                    <option value="fields">Campos</option>
-                    <option value="lots">Lotes</option>
-                    <option value="parcels">Parcelas</option>
-                    <option value="tasksList">Definiciones de Tareas</option>
-                    <option value="productsInsumes">Productos/Insumos</option>
-                    <option value="machineries">Maquinarias</option>
-                    <option value="personnel">Personal</option>
-                    <option value="campaigns">Campañas</option>
-                </select>
-                <input type="file" id="csv-file-input" accept=".csv">
-                <button id="import-csv-button">Importar CSV</button>
-                <p class="csv-format-note">
-                    Asegúrate que el CSV tenga las columnas correctas (ej: id, name para Clientes).
+    <div id="tab-panel-config" class="tab-panel active">
+        <!-- API Key Overlay/Modal moved here -->
+        <div id="api-key-overlay">
+            <div id="api-key-modal">
+                <h2>Configurar API Key de Gemini</h2>
+                <p>Ingresa tu API Key de Google Generative AI.</p>
+                <input type="password" id="api-key-input" placeholder="Pega tu API Key aquí">
+                <br>
+                <button id="save-api-key-button">Guardar y Continuar</button>
+                <p class="api-key-note">
+                    Tu API Key se guardará en el almacenamiento local de tu navegador.<br>
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Obtener API Key</a>.
                 </p>
             </div>
-        </header>
+        </div>
+        <p>Aquí se configuran los parámetros de la aplicación, como la API Key.</p>
+    </div>
 
-        <div class="content-area">
-            <main class="chat-panel">
-                <div class="chat-container">
-                    <div id="chat-log" class="chat-log"></div>
-                    <div class="chat-input-area">
-                        <input type="text" id="user-input" placeholder="Escribe tu comando o pregunta..." disabled>
-                        <button id="send-button" title="Enviar" disabled>➢</button>
-                        <button id="voice-button" title="Grabar Voz (Click para Iniciar/Detener)" disabled>🎙️</button>
-                        <!-- Título cambiado para reflejar la nueva funcionalidad -->
-                    </div>
-                </div>
-            </main>
+    <div id="tab-panel-data" class="tab-panel">
+        <h2>Gestión de Datos y Entidades</h2>
+        
+        <!-- DB Operations moved here -->
+        <div class="header-actions data-tab-section">
+            <h3>Operaciones de Base de Datos</h3>
+            <button id="load-db-button" title="Cargar DB desde JSON">Cargar DB</button>
+            <input type="file" id="load-db-file" accept=".json" style="display:none;">
+            <button id="save-db-button" title="Guardar DB como JSON">Guardar DB</button>
+        </div>
 
-            <aside class="right-panel">
-                <div class="data-panel">
-                    <div class="data-management">
-                        <h2>Gestión de Entidades</h2>
-                        <div class="entity-section"><h3>Clientes (<span id="clients-count">0</span>)</h3><ul id="clients-list"></ul></div>
-                        <div class="entity-section"><h3>Usuarios (<span id="users-count">0</span>)</h3><ul id="users-list"></ul></div>
-                        <div class="entity-section"><h3>Campos (<span id="fields-count">0</span>)</h3><ul id="fields-list"></ul></div>
-                        <div class="entity-section"><h3>Lotes (<span id="lots-count">0</span>)</h3><ul id="lots-list"></ul></div>
-                        <div class="entity-section"><h3>Parcelas (<span id="parcels-count">0</span>)</h3><ul id="parcels-list"></ul></div>
-                        <div class="entity-section"><h3>Trabajos/Eventos (<span id="jobs-count">0</span>)</h3><ul id="jobs-list"></ul></div>
-                    </div>
-                </div>
-            </aside>
+        <!-- CSV Import section moved here -->
+        <div class="csv-import-section data-tab-section">
+            <h3>Importar Datos desde CSV</h3>
+            <label for="entity-type-selector">Tipo de Entidad:</label>
+            <select id="entity-type-selector">
+                <option value="clients">Clientes</option>
+                <option value="users">Usuarios</option>
+                <option value="fields">Campos</option>
+                <option value="lots">Lotes</option>
+                <option value="parcels">Parcelas</option>
+                <option value="tasksList">Definiciones de Tareas</option>
+                <option value="productsInsumes">Productos/Insumos</option>
+                <option value="machineries">Maquinarias</option>
+                <option value="personnel">Personal</option>
+                <option value="campaigns">Campañas</option>
+            </select>
+            <input type="file" id="csv-file-input" accept=".csv">
+            <button id="import-csv-button">Importar CSV</button>
+            <p class="csv-format-note">
+                Asegúrate que el CSV tenga las columnas correctas (ej: id, name para Clientes).
+            </p>
+        </div>
+
+        <!-- Data Management (actual lists) moved here -->
+        <!-- Original 'aside class="right-panel"' and 'div class="data-panel"' are removed, content moved directly -->
+        <div class="data-management data-tab-section">
+            <h3>Visualización de Entidades</h3>
+            <div class="entity-section"><h3>Clientes (<span id="clients-count">0</span>)</h3><ul id="clients-list"></ul></div>
+            <div class="entity-section"><h3>Usuarios (<span id="users-count">0</span>)</h3><ul id="users-list"></ul></div>
+            <div class="entity-section"><h3>Campos (<span id="fields-count">0</span>)</h3><ul id="fields-list"></ul></div>
+            <div class="entity-section"><h3>Lotes (<span id="lots-count">0</span>)</h3><ul id="lots-list"></ul></div>
+            <div class="entity-section"><h3>Parcelas (<span id="parcels-count">0</span>)</h3><ul id="parcels-list"></ul></div>
+            <div class="entity-section"><h3>Trabajos/Eventos (<span id="jobs-count">0</span>)</h3><ul id="jobs-list"></ul></div>
         </div>
     </div>
 
+    <div id="tab-panel-chat" class="tab-panel">
+        <!-- Chat Panel content moved here -->
+        <!-- Original 'main class="chat-panel"' is removed, content moved directly -->
+        <div class="chat-container">
+            <div id="chat-log" class="chat-log"></div>
+            <div class="chat-input-area">
+                <input type="text" id="user-input" placeholder="Escribe tu comando o pregunta..." disabled>
+                <button id="send-button" title="Enviar" disabled>➢</button>
+                <button id="voice-button" title="Grabar Voz (Click para Iniciar/Detener)" disabled>🎙️</button>
+            </div>
+        </div>
+    </div>
+    
     <footer>
-        <p>FarmerChat Modular v3 - Con Entrada de Voz y Correcciones.</p>
+        <p>FarmerChat Modular v3 - Tabbed Layout.</p>
     </footer>
 
     <script src="js/utils.js"></script>

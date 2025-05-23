@@ -33,12 +33,46 @@ const UI_DOM = {
     jobsList: document.getElementById('jobs-list'),
 };
 
+function initializeTabs() {
+    const tabButtons = document.querySelectorAll('.tab-nav li[data-tab]');
+    const tabPanels = document.querySelectorAll('.tab-panel');
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const targetPanelId = button.getAttribute('data-tab');
+            
+            // Deactivate all tabs and panels
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabPanels.forEach(panel => panel.classList.remove('active'));
+
+            // Activate clicked tab and corresponding panel
+            button.classList.add('active');
+            const targetPanel = document.getElementById(targetPanelId);
+            if (targetPanel) {
+                targetPanel.classList.add('active');
+            } else {
+                console.error(`Tab panel with ID ${targetPanelId} not found.`);
+            }
+        });
+    });
+}
+
 function showApiKeyModal() {
-    if (UI_DOM.apiKeyOverlay) UI_DOM.apiKeyOverlay.style.display = 'flex';
+    // Now, instead of showing a modal, we ensure the 'Configuración' tab is active
+    // and the api-key section within it is visible.
+    const configTabButton = document.querySelector('.tab-nav li[data-tab="tab-panel-config"]');
+    if (configTabButton) {
+        configTabButton.click(); // Simulate a click to activate the tab
+    }
+    // The #api-key-overlay div is always part of the 'tab-panel-config'
+    // Its visibility is controlled by the tab panel being active.
 }
 
 function hideApiKeyModal() {
-    if (UI_DOM.apiKeyOverlay) UI_DOM.apiKeyOverlay.style.display = 'none';
+    // This function is less relevant now. If an API key is saved,
+    // the user is typically allowed to proceed, maybe to the Chatbot tab.
+    // We don't need to hide the #api-key-overlay div itself if it's part of a static tab.
+    // If we wanted to switch to a default tab after saving the key, that logic would be in main.js.
 }
 
 function enableChatControls(isLoading = false) {
