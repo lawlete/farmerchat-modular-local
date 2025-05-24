@@ -1,0 +1,1 @@
+Transcribe el siguiente audio a texto. Devuelve ÚNICAMENTE la transcripción, sin ningún texto adicional, explicaciones, ni formato markdown.
