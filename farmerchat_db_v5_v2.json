@@ -1,0 +1,2780 @@
+{
+  "clients": [
+    {
+      "id": "client_01",
+      "name": "Agropecuaria El Amanecer S.A.",
+      "phone": "+549351000001",
+      "email": "contacto@elamanecer.com"
+    },
+    {
+      "id": "client_02",
+      "name": "Estancia La Sureña",
+      "phone": "+549299000002",
+      "email": "admin@lasurena.net"
+    },
+    {
+      "id": "client_03",
+      "name": "Finca Los Viñedos del Sol",
+      "phone": "+549261000003",
+      "email": "info@vinedosdelsol.com.ar"
+    },
+    {
+      "id": "client_04",
+      "name": "Productores del Norte Asociados",
+      "phone": "+549387000004",
+      "email": "norteagro@email.com"
+    },
+    {
+      "id": "client_05",
+      "name": "Ganadera Pampeana SRL",
+      "phone": "+549239000005",
+      "email": "gpampeana@server.com"
+    }
+  ],
+  "users": [
+    {
+      "id": "user_admin_ama",
+      "name": "Roberto Carlos",
+      "role": "Administrator",
+      "clientId": "client_01"
+    },
+    {
+      "id": "user_ing_ama",
+      "name": "Laura Fernandez",
+      "role": "Engineer",
+      "clientId": "client_01"
+    },
+    {
+      "id": "user_enc_ama",
+      "name": "Pedro Gomez",
+      "role": "Manager",
+      "clientId": "client_01"
+    },
+    {
+      "id": "user_trab_ama_1",
+      "name": "Luis Paez",
+      "role": "Worker",
+      "clientId": "client_01"
+    },
+    {
+      "id": "user_trab_ama_2",
+      "name": "Maria Luna",
+      "role": "Worker",
+      "clientId": "client_01"
+    },
+    {
+      "id": "user_admin_sur",
+      "name": "Ana Rodriguez",
+      "role": "Administrator",
+      "clientId": "client_02"
+    },
+    {
+      "id": "user_ing_sur",
+      "name": "Juan Martinez",
+      "role": "Engineer",
+      "clientId": "client_02"
+    },
+    {
+      "id": "user_enc_sur",
+      "name": "Sofia Diaz",
+      "role": "Manager",
+      "clientId": "client_02"
+    },
+    {
+      "id": "user_trab_sur_1",
+      "name": "Carlos Sosa",
+      "role": "Worker",
+      "clientId": "client_02"
+    },
+    {
+      "id": "user_trab_sur_2",
+      "name": "Elena Torres",
+      "role": "Worker",
+      "clientId": "client_02"
+    },
+    {
+      "id": "user_admin_vin",
+      "name": "Miguel Angel Russo",
+      "role": "Administrator",
+      "clientId": "client_03"
+    },
+    {
+      "id": "user_ing_vin",
+      "name": "Carolina Herrera",
+      "role": "Engineer",
+      "clientId": "client_03"
+    },
+    {
+      "id": "user_admin_nor",
+      "name": "Jorge Campos",
+      "role": "Administrator",
+      "clientId": "client_04"
+    },
+    {
+      "id": "user_admin_pam",
+      "name": "Esteban Quito",
+      "role": "Administrator",
+      "clientId": "client_05"
+    }
+  ],
+  "contractors": [
+    {
+      "id": "cont_int_001",
+      "name": "\"Recursos Propios - Agropecuaria El Amanecer S.A.\"",
+      "contactPerson": "Gerente de Operaciones",
+      "address": "Oficina Principal del Cliente",
+      "phone": "+549351000001",
+      "isInternal": true
+    },
+    {
+      "id": "cont_int_002",
+      "name": "\"Recursos Propios - Estancia La Sureña\"",
+      "contactPerson": "Gerente de Operaciones",
+      "address": "Oficina Principal del Cliente",
+      "phone": "+549299000002",
+      "isInternal": true
+    },
+    {
+      "id": "cont_int_003",
+      "name": "\"Recursos Propios - Finca Los Viñedos del Sol\"",
+      "contactPerson": "Gerente de Operaciones",
+      "address": "Oficina Principal del Cliente",
+      "phone": "+549261000003",
+      "isInternal": true
+    },
+    {
+      "id": "cont_int_004",
+      "name": "\"Recursos Propios - Productores del Norte Asociados\"",
+      "contactPerson": "Gerente de Operaciones",
+      "address": "Oficina Principal del Cliente",
+      "phone": "+549387000004",
+      "isInternal": true
+    },
+    {
+      "id": "cont_int_005",
+      "name": "\"Recursos Propios - Ganadera Pampeana SRL\"",
+      "contactPerson": "Gerente de Operaciones",
+      "address": "Oficina Principal del Cliente",
+      "phone": "+549239000005",
+      "isInternal": true
+    },
+    {
+      "id": "cont_ext_006",
+      "name": "Servicios Agrícolas Sur SRL",
+      "contactPerson": "Juan Perez",
+      "address": "Ruta 3 Km 100",
+      "phone": "+5492915550011",
+      "isInternal": false
+    },
+    {
+      "id": "cont_ext_007",
+      "name": "Aero Fumigaciones Pampeanas",
+      "contactPerson": "Maria Gomez",
+      "address": "Aeroclub Local",
+      "phone": "+5492392550022",
+      "isInternal": false
+    },
+    {
+      "id": "cont_ext_008",
+      "name": "\"Logística y Transporte Agro S.A.\"",
+      "contactPerson": "Carlos Lopez",
+      "address": "Parque Industrial Oeste",
+      "phone": "+549115550033",
+      "isInternal": false
+    },
+    {
+      "id": "cont_ext_009",
+      "name": "Cosechas del Norte Hnos.",
+      "contactPerson": "Laura Fernandez",
+      "address": "Camino Rural S/N",
+      "phone": "+5493875550044",
+      "isInternal": false
+    },
+    {
+      "id": "cont_ext_010",
+      "name": "Viñedos Asistidos Mendoza",
+      "contactPerson": "Roberto Sanchez",
+      "address": "Carril Rodriguez Peña 123",
+      "phone": "+5492615550055",
+      "isInternal": false
+    }
+  ],
+  "personnel": [
+    {
+      "id": "pers_ing_lopez",
+      "name": "Ing. Ricardo Lopez",
+      "role": "Engineer",
+      "phone": "+549351600001",
+      "clientId": "client_01",
+      "contractorId": "cont_int_001"
+    },
+    {
+      "id": "pers_op_gimenez",
+      "name": "Raul Gimenez",
+      "role": "Operator",
+      "phone": "+549351600002",
+      "clientId": "client_01",
+      "contractorId": "cont_int_001"
+    },
+    {
+      "id": "pers_enc_diaz",
+      "name": "Marta Diaz",
+      "role": "Manager",
+      "phone": "+549351600003",
+      "clientId": "client_01",
+      "contractorId": "cont_int_001"
+    },
+    {
+      "id": "pers_cont_silva",
+      "name": "Contratista Silva Hnos.",
+      "role": "ContractorFirm",
+      "phone": "+54911700001",
+      "clientId": "client_04",
+      "contractorId": "cont_ext_006"
+    },
+    {
+      "id": "pers_op_vega",
+      "name": "Lucia Vega",
+      "role": "Operator",
+      "phone": "+549299600001",
+      "clientId": "client_02",
+      "contractorId": "cont_int_002"
+    },
+    {
+      "id": "pers_vet_arias",
+      "name": "Dr. Esteban Arias",
+      "role": "Veterinarian",
+      "phone": "+549239700002",
+      "clientId": "client_05",
+      "contractorId": "cont_int_005"
+    },
+    {
+      "id": "pers_ing_rios",
+      "name": "Ing. Sofia Rios",
+      "role": "Engineer",
+      "phone": "+549299600002",
+      "clientId": "client_02",
+      "contractorId": "cont_int_002"
+    },
+    {
+      "id": "pers_op_molina",
+      "name": "Alberto Molina",
+      "role": "Operator",
+      "phone": "+549261600001",
+      "clientId": "client_03",
+      "contractorId": "cont_int_003"
+    },
+    {
+      "id": "pers_capataz_vides",
+      "name": "Capataz Vides",
+      "role": "Manager",
+      "phone": "+549261600002",
+      "clientId": "client_03",
+      "contractorId": "cont_int_003"
+    },
+    {
+      "id": "pers_agron_cruz",
+      "name": "Agrónomo Cruz",
+      "role": "Consultant",
+      "phone": "+549387700003",
+      "clientId": "client_04",
+      "contractorId": "cont_int_004"
+    },
+    {
+      "id": "pers_op_flores",
+      "name": "Carmen Flores",
+      "role": "Operator",
+      "phone": "+549387600001",
+      "clientId": "client_04",
+      "contractorId": "cont_int_004"
+    },
+    {
+      "id": "pers_tec_ruiz",
+      "name": "Técnico Ruiz",
+      "role": "Mechanic",
+      "phone": "+549387600002",
+      "clientId": "client_04",
+      "contractorId": "cont_ext_009"
+    },
+    {
+      "id": "pers_op_castro",
+      "name": "José Castro",
+      "role": "Operator",
+      "phone": "+549239600001",
+      "clientId": "client_05",
+      "contractorId": "cont_int_005"
+    },
+    {
+      "id": "pers_admin_pena",
+      "name": "Administración Peña",
+      "role": "AdminStaff",
+      "phone": "+549239600002",
+      "clientId": "client_05",
+      "contractorId": "cont_int_005"
+    },
+    {
+      "id": "pers_fumigador_x",
+      "name": "Fumigaciones Aéreas X",
+      "role": "ContractorPilot",
+      "phone": "+54911700004",
+      "clientId": "client_05",
+      "contractorId": "cont_ext_007"
+    },
+    {
+      "id": "pers_op_sanchez",
+      "name": "Manuel Sanchez",
+      "role": "Operator",
+      "phone": "+549351600004",
+      "clientId": "client_01",
+      "contractorId": "cont_int_001"
+    },
+    {
+      "id": "pers_op_benitez",
+      "name": "Laura Benitez",
+      "role": "Operator",
+      "phone": "+549351600005",
+      "clientId": "client_01",
+      "contractorId": "cont_int_001"
+    },
+    {
+      "id": "pers_ing_torres",
+      "name": "Ing. Martin Torres",
+      "role": "Engineer",
+      "phone": "+54911700005",
+      "clientId": "client_03",
+      "contractorId": "cont_int_003"
+    },
+    {
+      "id": "pers_enc_romero",
+      "name": "Encargado Romero",
+      "role": "Manager",
+      "phone": "+549299600003",
+      "clientId": "client_02",
+      "contractorId": "cont_int_002"
+    },
+    {
+      "id": "pers_op_navarro",
+      "name": "Diego Navarro",
+      "role": "Operator",
+      "phone": "+549299600004",
+      "clientId": "client_02",
+      "contractorId": "cont_int_002"
+    },
+    {
+      "id": "pers_op_ferrari",
+      "name": "Franco Ferrari",
+      "role": "Operator",
+      "phone": "+549261600003",
+      "clientId": "client_03",
+      "contractorId": "cont_int_003"
+    },
+    {
+      "id": "pers_op_blanco",
+      "name": "Isabel Blanco",
+      "role": "Operator",
+      "phone": "+549387600003",
+      "clientId": "client_04",
+      "contractorId": "cont_int_004"
+    },
+    {
+      "id": "pers_op_mendez",
+      "name": "Roberto Mendez",
+      "role": "Operator",
+      "phone": "+549239600003",
+      "clientId": "client_05",
+      "contractorId": "cont_int_005"
+    },
+    {
+      "id": "pers_cosechadora_team",
+      "name": "Equipo Cosecha Sur",
+      "role": "ContractorTeam",
+      "phone": "+549291700006",
+      "clientId": "client_04",
+      "contractorId": "cont_ext_009"
+    },
+    {
+      "id": "pers_op_quiroga",
+      "name": "Estela Quiroga",
+      "role": "Operator",
+      "phone": "+549351600006",
+      "clientId": "client_01",
+      "contractorId": "cont_int_001"
+    },
+    {
+      "id": "pers_mecanico_perez",
+      "name": "Mecánico Pérez Taller",
+      "role": "Mechanic",
+      "phone": "+549358700007",
+      "clientId": "client_01",
+      "contractorId": "cont_ext_008"
+    },
+    {
+      "id": "pers_op_acuna",
+      "name": "Oscar Acuña",
+      "role": "Operator",
+      "phone": "+549299600005",
+      "clientId": "client_02",
+      "contractorId": "cont_int_002"
+    },
+    {
+      "id": "pers_enologo_sala",
+      "name": "Enólogo Ricardo Sala",
+      "role": "Consultant",
+      "phone": "+549261700008",
+      "clientId": "client_03",
+      "contractorId": "cont_int_003"
+    },
+    {
+      "id": "pers_op_vera",
+      "name": "Patricia Vera",
+      "role": "Operator",
+      "phone": "+549387600004",
+      "clientId": "client_04",
+      "contractorId": "cont_int_004"
+    },
+    {
+      "id": "pers_alambrador_cacho",
+      "name": "Cacho Alambrados",
+      "role": "Wireman",
+      "phone": "+549234700009",
+      "clientId": "client_05",
+      "contractorId": "cont_ext_006"
+    }
+  ],
+  "machineries": [
+    {
+      "id": "mach_jd_7200",
+      "name": "Tractor John Deere 7200",
+      "type": "Tractor",
+      "model": "NULL",
+      "clientId": "client_01",
+      "contractorId": "cont_int_001"
+    },
+    {
+      "id": "mach_case_2388",
+      "name": "Cosechadora Case 2388 Axial",
+      "type": "Cosechadora",
+      "model": "NULL",
+      "clientId": "client_02",
+      "contractorId": "cont_ext_006"
+    },
+    {
+      "id": "mach_agrometal_tx",
+      "name": "Sembradora Agrometal TX Mega 10m",
+      "type": "Sembradora",
+      "model": "NULL",
+      "clientId": "client_03",
+      "contractorId": "cont_int_003"
+    },
+    {
+      "id": "mach_pla_map3",
+      "name": "Pulverizadora PLA MAP II 3000",
+      "type": "Pulverizadora",
+      "model": "NULL",
+      "clientId": "client_04",
+      "contractorId": "cont_ext_007"
+    },
+    {
+      "id": "mach_mf_4290",
+      "name": "Tractor Massey Ferguson 4290",
+      "type": "Tractor",
+      "model": "NULL",
+      "clientId": "client_05",
+      "contractorId": "cont_int_005"
+    },
+    {
+      "id": "mach_nh_tc57",
+      "name": "Cosechadora New Holland TC57",
+      "type": "Cosechadora",
+      "model": "NULL",
+      "clientId": "client_01",
+      "contractorId": "cont_ext_008"
+    },
+    {
+      "id": "mach_bertini_21000",
+      "name": "Sembradora Bertini 21000 Air Drill",
+      "type": "Sembradora",
+      "model": "NULL",
+      "clientId": "client_02",
+      "contractorId": "cont_int_002"
+    },
+    {
+      "id": "mach_jacto_2000",
+      "name": "Pulverizadora Jacto Uniport 2000",
+      "type": "Pulverizadora",
+      "model": "NULL",
+      "clientId": "client_03",
+      "contractorId": "cont_ext_009"
+    },
+    {
+      "id": "mach_valtra_a990",
+      "name": "Tractor Valtra A990",
+      "type": "Tractor",
+      "model": "NULL",
+      "clientId": "client_04",
+      "contractorId": "cont_int_004"
+    },
+    {
+      "id": "mach_jd_s670",
+      "name": "Cosechadora John Deere S670",
+      "type": "Cosechadora",
+      "model": "NULL",
+      "clientId": "client_05",
+      "contractorId": "cont_ext_010"
+    },
+    {
+      "id": "mach_crucianelli_gringa",
+      "name": "Sembradora Crucianelli Gringa V",
+      "type": "Sembradora",
+      "model": "NULL",
+      "clientId": "client_01",
+      "contractorId": "cont_int_001"
+    },
+    {
+      "id": "mach_metalfor_3200",
+      "name": "Pulverizadora Metalfor Futur 3200",
+      "type": "Pulverizadora",
+      "model": "NULL",
+      "clientId": "client_02",
+      "contractorId": "cont_int_002"
+    },
+    {
+      "id": "mach_pauny_500",
+      "name": "Tractor Pauny 500 Evo",
+      "type": "Tractor",
+      "model": "NULL",
+      "clientId": "client_03",
+      "contractorId": "cont_int_003"
+    },
+    {
+      "id": "mach_jd_6150",
+      "name": "Tractor John Deere 6150J",
+      "type": "Tractor",
+      "model": "NULL",
+      "clientId": "client_04",
+      "contractorId": "cont_int_004"
+    },
+    {
+      "id": "mach_case_puma180",
+      "name": "Tractor Case Puma 180",
+      "type": "Tractor",
+      "model": "NULL",
+      "clientId": "client_05",
+      "contractorId": "cont_int_005"
+    },
+    {
+      "id": "mach_vassalli_1550",
+      "name": "Cosechadora Vassalli AX 7510 Lider",
+      "type": "Cosechadora",
+      "model": "NULL",
+      "clientId": "client_01",
+      "contractorId": "cont_int_001"
+    },
+    {
+      "id": "mach_gimetal_airplanter",
+      "name": "Sembradora Gimetal Air Planter G600",
+      "type": "Sembradora",
+      "model": "NULL",
+      "clientId": "client_02",
+      "contractorId": "cont_int_002"
+    },
+    {
+      "id": "mach_caiman_spt300",
+      "name": "Pulverizadora Caimán SP Hidro 3000",
+      "type": "Pulverizadora",
+      "model": "NULL",
+      "clientId": "client_03",
+      "contractorId": "cont_ext_006"
+    },
+    {
+      "id": "mach_zanello_460",
+      "name": "Tractor Zanello 460 Articulado",
+      "type": "Tractor",
+      "model": "NULL",
+      "clientId": "client_04",
+      "contractorId": "cont_int_004"
+    },
+    {
+      "id": "mach_deutz_ax100",
+      "name": "Tractor Deutz-Fahr AX 100",
+      "type": "Tractor",
+      "model": "NULL",
+      "clientId": "client_05",
+      "contractorId": "cont_int_005"
+    },
+    {
+      "id": "mach_cele_axion850",
+      "name": "Cosechadora Claas Axion 850",
+      "type": "Cosechadora",
+      "model": "NULL",
+      "clientId": "client_01",
+      "contractorId": "cont_ext_007"
+    },
+    {
+      "id": "mach_apache_54000",
+      "name": "Sembradora Apache 54000",
+      "type": "Sembradora",
+      "model": "NULL",
+      "clientId": "client_02",
+      "contractorId": "cont_int_002"
+    },
+    {
+      "id": "mach_favot_fv3000",
+      "name": "Pulverizadora Favot Turbina FV3000",
+      "type": "Pulverizadora",
+      "model": "NULL",
+      "clientId": "client_03",
+      "contractorId": "cont_int_003"
+    },
+    {
+      "id": "mach_fiat_780",
+      "name": "Tractor Fiat 780",
+      "type": "Tractor",
+      "model": "NULL",
+      "clientId": "client_04",
+      "contractorId": "cont_int_004"
+    },
+    {
+      "id": "mach_jd_1175",
+      "name": "Cosechadora John Deere 1175",
+      "type": "Cosechadora",
+      "model": "NULL",
+      "clientId": "client_05",
+      "contractorId": "cont_int_005"
+    },
+    {
+      "id": "mach_tanzi_4300",
+      "name": "Sembradora Tanzi 4300 Air Drill",
+      "type": "Sembradora",
+      "model": "NULL",
+      "clientId": "client_01",
+      "contractorId": "cont_int_001"
+    },
+    {
+      "id": "mach_ombu_ar3000",
+      "name": "Pulverizadora Ombú AR3000",
+      "type": "Pulverizadora",
+      "model": "NULL",
+      "clientId": "client_02",
+      "contractorId": "cont_ext_008"
+    },
+    {
+      "id": "mach_someca_m45",
+      "name": "Tractor Someca M45 Viñatero",
+      "type": "Tractor",
+      "model": "NULL",
+      "clientId": "client_03",
+      "contractorId": "cont_int_003"
+    },
+    {
+      "id": "mach_donroque_150",
+      "name": "Cosechadora Don Roque RV 150 M",
+      "type": "Cosechadora",
+      "model": "NULL",
+      "clientId": "client_04",
+      "contractorId": "cont_ext_009"
+    },
+    {
+      "id": "mach_roland_h01",
+      "name": "Rastra de discos Roland H01",
+      "type": "Implement",
+      "model": "NULL",
+      "clientId": "client_05",
+      "contractorId": "cont_int_005"
+    }
+  ],
+  "fields": [
+    {
+      "id": "field_ama_01",
+      "name": "La Esperanza",
+      "location": "Ruta 9 Km 750 - Córdoba",
+      "clientId": "client_01",
+      "area": 1250
+    },
+    {
+      "id": "field_ama_02",
+      "name": "El Retiro",
+      "location": "Camino a Jesús María - Córdoba",
+      "clientId": "client_01",
+      "area": 800
+    },
+    {
+      "id": "field_ama_03",
+      "name": "San Isidro",
+      "location": "Cerca de Sinsacate - Córdoba",
+      "clientId": "client_01",
+      "area": 1500
+    },
+    {
+      "id": "field_sur_01",
+      "name": "Pampa Linda",
+      "location": "Cerca de Neuquén Capital",
+      "clientId": "client_02",
+      "area": 2500
+    },
+    {
+      "id": "field_sur_02",
+      "name": "Valle Fértil",
+      "location": "Ruta 22 - Río Negro",
+      "clientId": "client_02",
+      "area": 1800
+    },
+    {
+      "id": "field_vin_01",
+      "name": "Viña Alta",
+      "location": "Luján de Cuyo - Mendoza",
+      "clientId": "client_03",
+      "area": 150
+    },
+    {
+      "id": "field_vin_02",
+      "name": "Sol Radiante",
+      "location": "Maipú - Mendoza",
+      "clientId": "client_03",
+      "area": 200
+    },
+    {
+      "id": "field_nor_01",
+      "name": "El Tabacal",
+      "location": "Orán - Salta",
+      "clientId": "client_04",
+      "area": 3000
+    },
+    {
+      "id": "field_nor_02",
+      "name": "Las Lajitas",
+      "location": "Anta - Salta",
+      "clientId": "client_04",
+      "area": 5000
+    },
+    {
+      "id": "field_pam_01",
+      "name": "El Cencerro",
+      "location": "Zona Rural Trenque Lauquen",
+      "clientId": "client_05",
+      "area": 4500
+    },
+    {
+      "id": "field_pam_02",
+      "name": "La Posta",
+      "location": "Cerca de Pehuajó",
+      "clientId": "client_05",
+      "area": 3000
+    },
+    {
+      "id": "field_ama_04",
+      "name": "La Casualidad",
+      "location": "Este de Córdoba",
+      "clientId": "client_01",
+      "area": 950
+    },
+    {
+      "id": "field_sur_03",
+      "name": "El Oasis",
+      "location": "Cipolletti",
+      "clientId": "client_02",
+      "area": 600
+    },
+    {
+      "id": "field_vin_03",
+      "name": "Finca Morena",
+      "location": "Valle de Uco",
+      "clientId": "client_03",
+      "area": 120
+    },
+    {
+      "id": "field_nor_03",
+      "name": "Quebrachal",
+      "location": "Metán",
+      "clientId": "client_04",
+      "area": 2200
+    }
+  ],
+  "lots": [
+    {
+      "id": "lot_ama_e_01",
+      "name": "Lote 1 Maíz",
+      "fieldId": "field_ama_01",
+      "area": 120
+    },
+    {
+      "id": "lot_ama_e_02",
+      "name": "Lote 2 Soja",
+      "fieldId": "field_ama_01",
+      "area": 150
+    },
+    {
+      "id": "lot_ama_e_03",
+      "name": "Lote 3 Trigo",
+      "fieldId": "field_ama_01",
+      "area": 100
+    },
+    {
+      "id": "lot_ama_e_04",
+      "name": "Lote 4 Girasol",
+      "fieldId": "field_ama_01",
+      "area": 130
+    },
+    {
+      "id": "lot_ama_e_05",
+      "name": "Lote 5 Alfalfa",
+      "fieldId": "field_ama_01",
+      "area": 80
+    },
+    {
+      "id": "lot_ama_r_01",
+      "name": "Lote A Ganadero",
+      "fieldId": "field_ama_02",
+      "area": 200
+    },
+    {
+      "id": "lot_ama_r_02",
+      "name": "Lote B Experimental",
+      "fieldId": "field_ama_02",
+      "area": 50
+    },
+    {
+      "id": "lot_ama_i_01",
+      "name": "Lote Norte Silo",
+      "fieldId": "field_ama_03",
+      "area": 300
+    },
+    {
+      "id": "lot_ama_i_02",
+      "name": "Lote Sur Pastura",
+      "fieldId": "field_ama_03",
+      "area": 250
+    },
+    {
+      "id": "lot_ama_c_01",
+      "name": "Lote 10 Descanso",
+      "fieldId": "field_ama_04",
+      "area": 150
+    },
+    {
+      "id": "lot_sur_pl_01",
+      "name": "Lote 101 Pera",
+      "fieldId": "field_sur_01",
+      "area": 50
+    },
+    {
+      "id": "lot_sur_pl_02",
+      "name": "Lote 102 Manzana",
+      "fieldId": "field_sur_01",
+      "area": 60
+    },
+    {
+      "id": "lot_sur_pl_03",
+      "name": "Lote 103 Durazno",
+      "fieldId": "field_sur_01",
+      "area": 40
+    },
+    {
+      "id": "lot_sur_vf_01",
+      "name": "Lote 201 Forraje",
+      "fieldId": "field_sur_02",
+      "area": 300
+    },
+    {
+      "id": "lot_sur_vf_02",
+      "name": "Lote 202 Cría",
+      "fieldId": "field_sur_02",
+      "area": 400
+    },
+    {
+      "id": "lot_sur_o_01",
+      "name": "Lote 301 Hortalizas",
+      "fieldId": "field_sur_03",
+      "area": 20
+    },
+    {
+      "id": "lot_vin_va_01",
+      "name": "Cuadro Malbec",
+      "fieldId": "field_vin_01",
+      "area": 30
+    },
+    {
+      "id": "lot_vin_va_02",
+      "name": "Cuadro Cabernet",
+      "fieldId": "field_vin_01",
+      "area": 25
+    },
+    {
+      "id": "lot_vin_sr_01",
+      "name": "Espaldero Bonarda",
+      "fieldId": "field_vin_02",
+      "area": 40
+    },
+    {
+      "id": "lot_vin_fm_01",
+      "name": "Cuartel Syrah",
+      "fieldId": "field_vin_03",
+      "area": 20
+    },
+    {
+      "id": "lot_nor_t_01",
+      "name": "Cañaveral 1",
+      "fieldId": "field_nor_01",
+      "area": 500
+    },
+    {
+      "id": "lot_nor_t_02",
+      "name": "Cañaveral 2",
+      "fieldId": "field_nor_01",
+      "area": 600
+    },
+    {
+      "id": "lot_nor_ll_01",
+      "name": "Lote Soja Norte",
+      "fieldId": "field_nor_02",
+      "area": 1000
+    },
+    {
+      "id": "lot_nor_ll_02",
+      "name": "Lote Maíz Sur",
+      "fieldId": "field_nor_02",
+      "area": 800
+    },
+    {
+      "id": "lot_nor_q_01",
+      "name": "Lote Poroto",
+      "fieldId": "field_nor_03",
+      "area": 400
+    },
+    {
+      "id": "lot_pam_c_01",
+      "name": "Potrero 1 Vacas",
+      "fieldId": "field_pam_01",
+      "area": 1000
+    },
+    {
+      "id": "lot_pam_c_02",
+      "name": "Potrero 2 Novillos",
+      "fieldId": "field_pam_01",
+      "area": 800
+    },
+    {
+      "id": "lot_pam_p_01",
+      "name": "Siembra Maíz 1",
+      "fieldId": "field_pam_02",
+      "area": 500
+    },
+    {
+      "id": "lot_pam_p_02",
+      "name": "Siembra Soja 2",
+      "fieldId": "field_pam_02",
+      "area": 600
+    },
+    {
+      "id": "lot_ama_e_06",
+      "name": "Lote 6 Experimental",
+      "fieldId": "field_ama_01",
+      "area": 70
+    }
+  ],
+  "parcels": [
+    {
+      "id": "parcel_ama_e01_01",
+      "name": "Parcela 1A",
+      "lotId": "lot_ama_e_01"
+    },
+    {
+      "id": "parcel_ama_e01_02",
+      "name": "Parcela 1B",
+      "lotId": "lot_ama_e_01"
+    },
+    {
+      "id": "parcel_ama_e02_01",
+      "name": "Parcela 2A",
+      "lotId": "lot_ama_e_02"
+    },
+    {
+      "id": "parcel_ama_e02_02",
+      "name": "Parcela 2B",
+      "lotId": "lot_ama_e_02"
+    },
+    {
+      "id": "parcel_ama_e03_01",
+      "name": "Parcela 3 Unica",
+      "lotId": "lot_ama_e_03"
+    },
+    {
+      "id": "parcel_ama_e04_01",
+      "name": "Parcela 4 Este",
+      "lotId": "lot_ama_e_04"
+    },
+    {
+      "id": "parcel_ama_e04_02",
+      "name": "Parcela 4 Oeste",
+      "lotId": "lot_ama_e_04"
+    },
+    {
+      "id": "parcel_ama_e05_01",
+      "name": "Parcela 5 Unica",
+      "lotId": "lot_ama_e_05"
+    },
+    {
+      "id": "parcel_ama_r01_01",
+      "name": "Cuadro A1",
+      "lotId": "lot_ama_r_01"
+    },
+    {
+      "id": "parcel_ama_r01_02",
+      "name": "Cuadro A2",
+      "lotId": "lot_ama_r_01"
+    },
+    {
+      "id": "parcel_ama_r02_01",
+      "name": "Ensayo 1",
+      "lotId": "lot_ama_r_02"
+    },
+    {
+      "id": "parcel_ama_i01_01",
+      "name": "Tabla N1",
+      "lotId": "lot_ama_i_01"
+    },
+    {
+      "id": "parcel_ama_i01_02",
+      "name": "Tabla N2",
+      "lotId": "lot_ama_i_01"
+    },
+    {
+      "id": "parcel_ama_i02_01",
+      "name": "Tabla S1",
+      "lotId": "lot_ama_i_02"
+    },
+    {
+      "id": "parcel_ama_c01_01",
+      "name": "Parcela Descanso 1",
+      "lotId": "lot_ama_c_01"
+    },
+    {
+      "id": "parcel_sur_pl01_01",
+      "name": "Fila 1-10 Pera",
+      "lotId": "lot_sur_pl_01"
+    },
+    {
+      "id": "parcel_sur_pl02_01",
+      "name": "Fila 1-12 Manzana",
+      "lotId": "lot_sur_pl_02"
+    },
+    {
+      "id": "parcel_sur_pl03_01",
+      "name": "Fila 1-8 Durazno",
+      "lotId": "lot_sur_pl_03"
+    },
+    {
+      "id": "parcel_sur_vf01_01",
+      "name": "Parcela Forraje A",
+      "lotId": "lot_sur_vf_01"
+    },
+    {
+      "id": "parcel_sur_vf02_01",
+      "name": "Potrerillo Cría 1",
+      "lotId": "lot_sur_vf_02"
+    },
+    {
+      "id": "parcel_sur_o01_01",
+      "name": "Cantero Tomate",
+      "lotId": "lot_sur_o_01"
+    },
+    {
+      "id": "parcel_vin_va01_01",
+      "name": "Bloque Malbec Sur",
+      "lotId": "lot_vin_va_01"
+    },
+    {
+      "id": "parcel_vin_va02_01",
+      "name": "Bloque Cab. Norte",
+      "lotId": "lot_vin_va_02"
+    },
+    {
+      "id": "parcel_vin_sr01_01",
+      "name": "Hilera Bonarda Larga",
+      "lotId": "lot_vin_sr_01"
+    },
+    {
+      "id": "parcel_vin_fm01_01",
+      "name": "Cuadro Syrah Chico",
+      "lotId": "lot_vin_fm_01"
+    },
+    {
+      "id": "parcel_nor_t01_01",
+      "name": "Sector Caña A",
+      "lotId": "lot_nor_t_01"
+    },
+    {
+      "id": "parcel_nor_ll01_01",
+      "name": "Tabla Soja 1",
+      "lotId": "lot_nor_ll_01"
+    },
+    {
+      "id": "parcel_pam_c01_01",
+      "name": "División Vacas 1A",
+      "lotId": "lot_pam_c_01"
+    },
+    {
+      "id": "parcel_pam_p01_01",
+      "name": "Tabla Maíz A",
+      "lotId": "lot_pam_p_01"
+    },
+    {
+      "id": "parcel_ama_e06_01",
+      "name": "Test Plot 1",
+      "lotId": "lot_ama_e_06"
+    }
+  ],
+  "campaigns": [
+    {
+      "id": "camp_soja2324_ama",
+      "name": "Soja 23/24 El Amanecer",
+      "startDate": "2023-10-15",
+      "endDate": "2024-04-30",
+      "clientId": "client_01",
+      "description": "Siembra de primera"
+    },
+    {
+      "id": "camp_maiz2324_ama",
+      "name": "Maíz Tardío 23/24 El Amanecer",
+      "startDate": "2023-12-01",
+      "endDate": "2024-06-15",
+      "clientId": "client_01",
+      "description": "Para silo y grano"
+    },
+    {
+      "id": "camp_trigo24_ama",
+      "name": "Trigo Fino Invierno 2024",
+      "startDate": "2024-05-10",
+      "endDate": "2024-11-20",
+      "clientId": "client_01"
+    },
+    {
+      "id": "camp_girasol24_ama",
+      "name": "Girasol Verano 2024",
+      "startDate": "2024-09-01",
+      "endDate": "2025-02-28",
+      "clientId": "client_01",
+      "description": "Alto oleico"
+    },
+    {
+      "id": "camp_pasturas24_ama",
+      "name": "Implantación Pasturas 2024",
+      "startDate": "2024-03-01",
+      "endDate": "2024-12-31",
+      "clientId": "client_01",
+      "description": "Consociada"
+    },
+    {
+      "id": "camp_peras24_sur",
+      "name": "Cosecha Peras Williams 2024",
+      "startDate": "2024-01-15",
+      "endDate": "2024-03-10",
+      "clientId": "client_02",
+      "description": "Exportación"
+    },
+    {
+      "id": "camp_manzanas24_sur",
+      "name": "Cosecha Manzanas Red Delicious 2024",
+      "startDate": "2024-02-20",
+      "endDate": "2024-04-15",
+      "clientId": "client_02"
+    },
+    {
+      "id": "camp_forraje24_sur",
+      "name": "Verdeo Invierno 2024",
+      "startDate": "2024-04-01",
+      "endDate": "2024-09-30",
+      "clientId": "client_02",
+      "description": "Para pastoreo directo"
+    },
+    {
+      "id": "camp_malbec24_vin",
+      "name": "Vendimia Malbec 2024",
+      "startDate": "2024-03-05",
+      "endDate": "2024-04-05",
+      "clientId": "client_03",
+      "description": "Alta gama"
+    },
+    {
+      "id": "camp_cabernet24_vin",
+      "name": "Vendimia Cabernet Sauvignon 2024",
+      "startDate": "2024-03-20",
+      "endDate": "2024-04-20",
+      "clientId": "client_03"
+    },
+    {
+      "id": "camp_cana24_nor",
+      "name": "Zafra Caña de Azúcar 2024",
+      "startDate": "2024-05-01",
+      "endDate": "2024-10-31",
+      "clientId": "client_04"
+    },
+    {
+      "id": "camp_soja24_nor",
+      "name": "Soja Verano 24/25 Norte",
+      "startDate": "2024-11-01",
+      "endDate": "2025-05-15",
+      "clientId": "client_04"
+    },
+    {
+      "id": "camp_poroto24_nor",
+      "name": "Poroto Negro Cosecha 2024",
+      "startDate": "2024-02-10",
+      "endDate": "2024-05-20",
+      "clientId": "client_04"
+    },
+    {
+      "id": "camp_invernada24_pam",
+      "name": "Invernada Larga 2024",
+      "startDate": "2024-03-01",
+      "endDate": "2024-11-30",
+      "clientId": "client_05",
+      "description": "Engorde a corral"
+    },
+    {
+      "id": "camp_siembragruesa24_pam",
+      "name": "Siembra Gruesa 24/25 Pampa",
+      "startDate": "2024-10-01",
+      "endDate": "2025-04-30",
+      "clientId": "client_05"
+    },
+    {
+      "id": "camp_alfalfa23_ama",
+      "name": "Alfalfa Producción 2023/24",
+      "startDate": "2023-09-01",
+      "endDate": "2024-05-31",
+      "clientId": "client_01",
+      "description": "Para fardos"
+    },
+    {
+      "id": "camp_duraznos24_sur",
+      "name": "Cosecha Duraznos Industria 2024",
+      "startDate": "2023-12-10",
+      "endDate": "2024-01-30",
+      "clientId": "client_02"
+    },
+    {
+      "id": "camp_bonarda24_vin",
+      "name": "Vendimia Bonarda 2024",
+      "startDate": "2024-04-01",
+      "endDate": "2024-04-25",
+      "clientId": "client_03"
+    },
+    {
+      "id": "camp_maiztemprano24_nor",
+      "name": "Maíz Temprano 24/25",
+      "startDate": "2024-09-15",
+      "endDate": "2025-03-15",
+      "clientId": "client_04"
+    },
+    {
+      "id": "camp_cria24_pam",
+      "name": "Servicio Primavera 2024 Cría",
+      "startDate": "2024-09-01",
+      "endDate": "2024-12-15",
+      "clientId": "client_05",
+      "description": "Para entore"
+    },
+    {
+      "id": "camp_sorgo24_ama",
+      "name": "Sorgo Granífero 2024",
+      "startDate": "2024-10-20",
+      "endDate": "2025-03-30",
+      "clientId": "client_01"
+    },
+    {
+      "id": "camp_hortalizas_prim24_sur",
+      "name": "Hortalizas Primavera/Verano 24",
+      "startDate": "2024-09-01",
+      "endDate": "2025-02-28",
+      "clientId": "client_02"
+    },
+    {
+      "id": "camp_syrah24_vin",
+      "name": "Vendimia Syrah 2024",
+      "startDate": "2024-03-10",
+      "endDate": "2024-04-10",
+      "clientId": "client_03"
+    },
+    {
+      "id": "camp_legumbresinv24_nor",
+      "name": "Legumbres de Invierno 2024",
+      "startDate": "2024-05-15",
+      "endDate": "2024-10-15",
+      "clientId": "client_04"
+    },
+    {
+      "id": "camp_recria24_pam",
+      "name": "Recría Otoño/Invierno 2024",
+      "startDate": "2024-04-01",
+      "endDate": "2024-08-31",
+      "clientId": "client_05"
+    },
+    {
+      "id": "camp_trigo24_pam",
+      "name": "Trigo/Cebada Invierno 2024 Pampa",
+      "startDate": "2024-06-01",
+      "endDate": "2024-12-10",
+      "clientId": "client_05"
+    },
+    {
+      "id": "camp_ajo24_vin",
+      "name": "Ajo Cosecha 2024",
+      "startDate": "2024-10-01",
+      "endDate": "2024-12-15",
+      "clientId": "client_03"
+    },
+    {
+      "id": "camp_citricos24_nor",
+      "name": "Cítricos Campaña 2024",
+      "startDate": "2024-04-01",
+      "endDate": "2024-09-30",
+      "clientId": "client_04"
+    },
+    {
+      "id": "camp_olivos24_vin",
+      "name": "Aceitunas Cosecha 2024",
+      "startDate": "2024-05-01",
+      "endDate": "2024-07-31",
+      "clientId": "client_03"
+    },
+    {
+      "id": "camp_feedlot24_ama",
+      "name": "Engorde Feedlot Ciclo Corto",
+      "startDate": "2024-07-01",
+      "endDate": "2024-10-31",
+      "clientId": "client_01"
+    }
+  ],
+  "tasksList": [
+    {
+      "id": "task_siembra",
+      "taskName": "Siembra Directa",
+      "description": "Siembra de granos con mínima labranza",
+      "category": "Cultivo"
+    },
+    {
+      "id": "task_fumigacion_h",
+      "taskName": "Fumigación Herbicida",
+      "description": "Aplicación de herbicidas pre o post emergentes",
+      "category": "Cultivo"
+    },
+    {
+      "id": "task_fumigacion_i",
+      "taskName": "Fumigación Insecticida",
+      "description": "Aplicación de insecticidas para control de plagas",
+      "category": "Cultivo"
+    },
+    {
+      "id": "task_fumigacion_f",
+      "taskName": "Fumigación Fungicida",
+      "description": "Aplicación de fungicidas para control de enfermedades",
+      "category": "Cultivo"
+    },
+    {
+      "id": "task_fertilizacion_b",
+      "taskName": "Fertilización de Base",
+      "description": "Aplicación de fertilizantes al momento de siembra",
+      "category": "Cultivo"
+    },
+    {
+      "id": "task_fertilizacion_r",
+      "taskName": "Fertilización de Cobertura",
+      "description": "Aplicación de fertilizantes durante el ciclo del cultivo",
+      "category": "Cultivo"
+    },
+    {
+      "id": "task_cosecha_g",
+      "taskName": "Cosecha de Granos",
+      "description": "Recolección mecánica de granos",
+      "category": "Cultivo"
+    },
+    {
+      "id": "task_cosecha_f",
+      "taskName": "Cosecha de Frutas",
+      "description": "Recolección manual o mecánica de frutas",
+      "category": "Fruticultura"
+    },
+    {
+      "id": "task_cosecha_h",
+      "taskName": "Cosecha de Hortalizas",
+      "description": "Recolección de hortalizas",
+      "category": "Horticultura"
+    },
+    {
+      "id": "task_labranza_p",
+      "taskName": "Labranza Primaria",
+      "description": "\"Arado",
+      "category": "rastra de discos"
+    },
+    {
+      "id": "task_labranza_s",
+      "taskName": "Labranza Secundaria",
+      "description": "\"Rastra de dientes",
+      "category": "rolo"
+    },
+    {
+      "id": "task_riego_g",
+      "taskName": "Riego por Goteo",
+      "description": "Aplicación de agua localizada por goteo",
+      "category": "Riego"
+    },
+    {
+      "id": "task_riego_a",
+      "taskName": "Riego por Aspersión",
+      "description": "Aplicación de agua mediante aspersores",
+      "category": "Riego"
+    },
+    {
+      "id": "task_poda",
+      "taskName": "Poda de Frutales",
+      "description": "\"Poda de formación",
+      "category": "fructificación o limpieza\""
+    },
+    {
+      "id": "task_raleo",
+      "taskName": "Raleo de Frutos",
+      "description": "Eliminación de exceso de frutos para mejorar calidad",
+      "category": "Fruticultura"
+    },
+    {
+      "id": "task_monitoreo_p",
+      "taskName": "Monitoreo de Plagas",
+      "description": "Revisión de cultivos para detección de plagas",
+      "category": "Sanidad"
+    },
+    {
+      "id": "task_monitoreo_e",
+      "taskName": "Monitoreo de Enfermedades",
+      "description": "Revisión de cultivos para detección de enfermedades",
+      "category": "Sanidad"
+    },
+    {
+      "id": "task_reparacion_a",
+      "taskName": "Reparación de Alambrados",
+      "description": "Mantenimiento de cercos perimetrales e internos",
+      "category": "Mantenimiento"
+    },
+    {
+      "id": "task_reparacion_m",
+      "taskName": "Reparación de Maquinaria",
+      "description": "Mantenimiento correctivo o preventivo de equipos",
+      "category": "Mantenimiento"
+    },
+    {
+      "id": "task_limpieza_c",
+      "taskName": "Limpieza de Canales",
+      "description": "Mantenimiento de canales de riego o drenaje",
+      "category": "Mantenimiento"
+    },
+    {
+      "id": "task_control_m",
+      "taskName": "Control de Malezas Manual",
+      "description": "Desmalezado manual o con herramientas menores",
+      "category": "Cultivo"
+    },
+    {
+      "id": "task_vacunacion",
+      "taskName": "Vacunación de Ganado",
+      "description": "Aplicación de vacunas a animales",
+      "category": "Ganadería"
+    },
+    {
+      "id": "task_alimentacion_s",
+      "taskName": "Alimentación Suplementaria",
+      "description": "Suministro de alimento extra al ganado",
+      "category": "Ganadería"
+    },
+    {
+      "id": "task_rotacion_p",
+      "taskName": "Rotación de Potreros",
+      "description": "Movimiento de ganado entre diferentes potreros",
+      "category": "Ganadería"
+    },
+    {
+      "id": "task_control_parasitos",
+      "taskName": "Control de Parásitos Externos",
+      "description": "Baños o aplicación de productos para parásitos",
+      "category": "Ganadería"
+    },
+    {
+      "id": "task_siembra_pastura",
+      "taskName": "Siembra de Pasturas",
+      "description": "Implantación de especies forrajeras",
+      "category": "Ganadería"
+    },
+    {
+      "id": "task_marcacion",
+      "taskName": "Marcación de Ganado",
+      "description": "Identificación de animales",
+      "category": "Ganadería"
+    },
+    {
+      "id": "task_destete",
+      "taskName": "Destete de Terneros",
+      "description": "Separación de crías de sus madres",
+      "category": "Ganadería"
+    },
+    {
+      "id": "task_inseminacion",
+      "taskName": "Inseminación Artificial",
+      "description": "Técnica de reproducción asistida",
+      "category": "Ganadería"
+    },
+    {
+      "id": "task_mantenimiento_b",
+      "taskName": "Mantenimiento de Bebederos",
+      "description": "Limpieza y reparación de bebederos",
+      "category": "Mantenimiento"
+    }
+  ],
+  "productsInsumes": [
+    {
+      "id": "prod_glifo_max",
+      "name": "Glifosato Max Power",
+      "type": "Herbicide",
+      "unit": "litro"
+    },
+    {
+      "id": "prod_24d",
+      "name": "\"2",
+      "type": "4-D Amina\"",
+      "unit": "Herbicide"
+    },
+    {
+      "id": "prod_atrazina",
+      "name": "Atrazina 90%",
+      "type": "Herbicide",
+      "unit": "kg"
+    },
+    {
+      "id": "prod_sem_maiz_dk7210",
+      "name": "\"Semilla Maíz DK 72-10 VT3P\"",
+      "type": "Seed",
+      "unit": "bolsa"
+    },
+    {
+      "id": "prod_sem_soja_dm4600",
+      "name": "\"Semilla Soja DM 46R18 STS\"",
+      "type": "Seed",
+      "unit": "bolsa"
+    },
+    {
+      "id": "prod_sem_trigo_bag",
+      "name": "Semilla Trigo Baguette 620",
+      "type": "Seed",
+      "unit": "bolsa"
+    },
+    {
+      "id": "prod_urea_g",
+      "name": "Urea Granulada",
+      "type": "Fertilizer",
+      "unit": "kg"
+    },
+    {
+      "id": "prod_fosfato_d",
+      "name": "Fosfato Diamónico (DAP)",
+      "type": "Fertilizer",
+      "unit": "kg"
+    },
+    {
+      "id": "prod_clorpirifos",
+      "name": "Clorpirifos 48%",
+      "type": "Insecticide",
+      "unit": "litro"
+    },
+    {
+      "id": "prod_cipermetrina",
+      "name": "Cipermetrina 25%",
+      "type": "Insecticide",
+      "unit": "litro"
+    },
+    {
+      "id": "prod_tebuconazole",
+      "name": "Tebuconazole Plus",
+      "type": "Fungicide",
+      "unit": "litro"
+    },
+    {
+      "id": "prod_gasoil",
+      "name": "Gasoil Grado 2",
+      "type": "Fuel",
+      "unit": "litro"
+    },
+    {
+      "id": "prod_aceite_motor",
+      "name": "Aceite Motor 15W40",
+      "type": "Lubricant",
+      "unit": "litro"
+    },
+    {
+      "id": "prod_grasa_litio",
+      "name": "Grasa de Litio Multipropósito",
+      "type": "Lubricant",
+      "unit": "kg"
+    },
+    {
+      "id": "prod_alambre_alta",
+      "name": "Alambre Alta Resistencia 17/15",
+      "type": "Wire",
+      "unit": "rollo"
+    },
+    {
+      "id": "prod_varilla_euca",
+      "name": "Varilla Eucalipto 2.2m",
+      "type": "Post",
+      "unit": "unidad"
+    },
+    {
+      "id": "prod_sem_girasol_adv",
+      "name": "Semilla Girasol Advanta P65",
+      "type": "Seed",
+      "unit": "bolsa"
+    },
+    {
+      "id": "prod_sem_alfalfa_cuf",
+      "name": "Semilla Alfalfa CUF 101",
+      "type": "Seed",
+      "unit": "bolsa"
+    },
+    {
+      "id": "prod_ivermectina",
+      "name": "Ivermectina 3.15%",
+      "type": "Veterinary",
+      "unit": "frasco"
+    },
+    {
+      "id": "prod_vacuna_aftosa",
+      "name": "Vacuna Antiaftosa",
+      "type": "Veterinary",
+      "unit": "dosis"
+    },
+    {
+      "id": "prod_sem_avena",
+      "name": "Semilla Avena Strigosa",
+      "type": "Seed",
+      "unit": "kg"
+    },
+    {
+      "id": "prod_sem_cebada",
+      "name": "Semilla Cebada Andreia",
+      "type": "Seed",
+      "unit": "kg"
+    },
+    {
+      "id": "prod_paraquat",
+      "name": "Paraquat Gramoxone",
+      "type": "Herbicide",
+      "unit": "litro"
+    },
+    {
+      "id": "prod_sulfato_amonio",
+      "name": "Sulfato de Amonio",
+      "type": "Fertilizer",
+      "unit": "kg"
+    },
+    {
+      "id": "prod_potasio_cloruro",
+      "name": "Cloruro de Potasio",
+      "type": "Fertilizer",
+      "unit": "kg"
+    },
+    {
+      "id": "prod_sem_sorgo_g",
+      "name": "\"Semilla Sorgo Granífero Adv G120\"",
+      "type": "Seed",
+      "unit": "bolsa"
+    },
+    {
+      "id": "prod_sem_centeno",
+      "name": "Semilla Centeno Don Enrique",
+      "type": "Seed",
+      "unit": "kg"
+    },
+    {
+      "id": "prod_metalaxil",
+      "name": "\"Metalaxil + Mancozeb\"",
+      "type": "Fungicide",
+      "unit": "kg"
+    },
+    {
+      "id": "prod_deltametrina",
+      "name": "Deltametrina",
+      "type": "Insecticide",
+      "unit": "litro"
+    },
+    {
+      "id": "prod_caldo_bordeles",
+      "name": "Caldo Bordelés",
+      "type": "Fungicide",
+      "unit": "kg"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task_entry_v5_001",
+      "taskIdRef": "task_cosecha_h",
+      "createdByUserId": "user_admin_vin",
+      "clientId": "client_03",
+      "contractorId": "cont_int_003",
+      "campaignId": "camp_ajo24_vin",
+      "fieldId": "field_vin_03",
+      "lotId": "lot_vin_fm_01",
+      "parcelId": "parcel_vin_fm01_01",
+      "startDatetime": "2024-10-09 09:45:00",
+      "endDatetime": "NULL",
+      "status": "Bloqueada",
+      "costEstimated": 1444.93,
+      "resultDescription": "\"Bloqueada: Cosecha de Hortalizas en field_vin_03.\"",
+      "notes": "NULL",
+      "creationTimestamp": "2024-01-10 18:35:11"
+    },
+    {
+      "id": "task_entry_v5_002",
+      "taskIdRef": "task_labranza_s",
+      "createdByUserId": "user_admin_ama",
+      "clientId": "client_01",
+      "contractorId": "cont_ext_008",
+      "campaignId": "camp_soja2324_ama",
+      "fieldId": "field_ama_01",
+      "lotId": "lot_ama_e_01",
+      "parcelId": "parcel_ama_e01_01",
+      "startDatetime": "2023-12-19 11:45:00",
+      "endDatetime": "2023-12-19 15:09:00",
+      "durationHours": 3.4,
+      "status": "Finalizada",
+      "costEstimated": 1079.85,
+      "costActual": 994.91,
+      "resultDescription": "\"Finalizada: Labranza Secundaria en field_ama_01.\"",
+      "notes": "NULL",
+      "creationTimestamp": "2024-01-23 18:35:11"
+    },
+    {
+      "id": "task_entry_v5_003",
+      "taskIdRef": "task_fumigacion_h",
+      "createdByUserId": "user_admin_nor",
+      "clientId": "client_04",
+      "contractorId": "cont_int_004",
+      "campaignId": "camp_legumbresinv24_nor",
+      "fieldId": "field_nor_03",
+      "lotId": "lot_nor_q_01",
+      "parcelId": "NULL",
+      "startDatetime": "2024-09-10 14:30:00",
+      "endDatetime": "NULL",
+      "status": "Cancelada",
+      "costEstimated": 4487.19,
+      "resultDescription": "\"Cancelada: Fumigación Herbicida en field_nor_03.\"",
+      "notes": "Maquinaria con desperfecto menor.",
+      "creationTimestamp": "2024-02-01 18:35:11"
+    },
+    {
+      "id": "task_entry_v5_004",
+      "taskIdRef": "task_control_parasitos",
+      "createdByUserId": "user_admin_pam",
+      "clientId": "client_05",
+      "contractorId": "cont_int_005",
+      "campaignId": "camp_invernada24_pam",
+      "fieldId": "field_pam_01",
+      "lotId": "NULL",
+      "parcelId": "NULL",
+      "startDatetime": "2024-10-03 15:30:00",
+      "endDatetime": "NULL",
+      "status": "Demorada",
+      "costEstimated": 4299.68,
+      "resultDescription": "\"Demorada: Control de Parásitos Externos en field_pam_01.\"",
+      "notes": "Todo según lo planeado.",
+      "creationTimestamp": "2024-02-01 18:35:11"
+    },
+    {
+      "id": "task_entry_v5_005",
+      "taskIdRef": "task_destete",
+      "createdByUserId": "user_admin_pam",
+      "clientId": "client_05",
+      "contractorId": "cont_int_005",
+      "campaignId": "NULL",
+      "fieldId": "field_pam_02",
+      "lotId": "lot_pam_p_01",
+      "parcelId": "NULL",
+      "startDatetime": "2024-09-01 08:15:00",
+      "endDatetime": "NULL",
+      "status": "Demorada",
+      "costEstimated": 2140.21,
+      "resultDescription": "\"Demorada: Destete de Terneros en field_pam_02.\"",
+      "notes": "Personal adicional requerido.",
+      "creationTimestamp": "2024-01-12 18:35:11"
+    },
+    {
+      "id": "task_entry_v5_006",
+      "taskIdRef": "task_reparacion_m",
+      "createdByUserId": "user_admin_ama",
+      "clientId": "client_01",
+      "contractorId": "cont_ext_008",
+      "campaignId": "camp_trigo24_ama",
+      "fieldId": "field_ama_01",
+      "lotId": "NULL",
+      "parcelId": "NULL",
+      "startDatetime": "2024-06-22 14:00:00",
+      "endDatetime": "NULL",
+      "status": "Bloqueada",
+      "costEstimated": 287.89,
+      "resultDescription": "\"Bloqueada: Reparación de Maquinaria en field_ama_01.\"",
+      "notes": "NULL",
+      "creationTimestamp": "2024-01-13 18:35:11"
+    },
+    {
+      "id": "task_entry_v5_007",
+      "taskIdRef": "task_siembra_pastura",
+      "createdByUserId": "user_admin_sur",
+      "clientId": "client_02",
+      "contractorId": "cont_int_002",
+      "campaignId": "NULL",
+      "fieldId": "field_sur_02",
+      "lotId": "lot_sur_vf_02",
+      "parcelId": "NULL",
+      "startDatetime": "2024-11-05 15:00:00",
+      "endDatetime": "NULL",
+      "status": "Programada",
+      "costEstimated": 2396.69,
+      "resultDescription": "\"Programada: Siembra de Pasturas en field_sur_02.\"",
+      "notes": "Personal adicional requerido.",
+      "creationTimestamp": "2024-02-13 18:35:11"
+    },
+    {
+      "id": "task_entry_v5_008",
+      "taskIdRef": "task_fertilizacion_b",
+      "createdByUserId": "user_ing_ama",
+      "clientId": "client_01",
+      "contractorId": "cont_int_001",
+      "campaignId": "camp_girasol24_ama",
+      "fieldId": "field_ama_04",
+      "lotId": "lot_ama_c_01",
+      "parcelId": "parcel_ama_c01_01",
+      "startDatetime": "2024-09-22 08:30:00",
+      "endDatetime": "2024-09-22 11:42:00",
+      "durationHours": 3.2,
+      "status": "Finalizada",
+      "costEstimated": 2108.03,
+      "costActual": 2252.4,
+      "resultDescription": "\"Finalizada: Fertilización de Base en field_ama_04.\"",
+      "notes": "Condiciones climáticas óptimas.",
+      "creationTimestamp": "2024-02-06 18:35:11"
+    },
+    {
+      "id": "task_entry_v5_009",
+      "taskIdRef": "task_reparacion_a",
+      "createdByUserId": "user_admin_pam",
+      "clientId": "client_05",
+      "contractorId": "cont_ext_006",
+      "campaignId": "NULL",
+      "fieldId": "field_pam_01",
+      "lotId": "NULL",
+      "parcelId": "NULL",
+      "startDatetime": "2024-10-27 11:45:00",
+      "endDatetime": "NULL",
+      "status": "Programada",
+      "costEstimated": 2070.89,
+      "resultDescription": "\"Programada: Reparación de Alambrados en field_pam_01.\"",
+      "notes": "Todo según lo planeado.",
+      "creationTimestamp": "2023-12-25 18:35:11"
+    },
+    {
+      "id": "task_entry_v5_010",
+      "taskIdRef": "task_monitoreo_p",
+      "createdByUserId": "user_admin_sur",
+      "clientId": "client_02",
+      "contractorId": "cont_int_002",
+      "campaignId": "camp_manzanas24_sur",
+      "fieldId": "field_sur_01",
+      "lotId": "lot_sur_pl_02",
+      "parcelId": "parcel_sur_pl02_01",
+      "startDatetime": "2024-03-11 14:15:00",
+      "endDatetime": "NULL",
+      "status": "Cancelada",
+      "costEstimated": 1300.35,
+      "costActual": 45.51,
+      "resultDescription": "\"Cancelada: Monitoreo de Plagas en field_sur_01.\"",
+      "notes": "Personal adicional requerido.",
+      "creationTimestamp": "2024-02-18 18:35:11"
+    },
+    {
+      "id": "task_entry_v5_011",
+      "taskIdRef": "task_limpieza_c",
+      "createdByUserId": "user_ing_vin",
+      "clientId": "client_03",
+      "contractorId": "cont_int_003",
+      "campaignId": "camp_cabernet24_vin",
+      "fieldId": "field_vin_01",
+      "lotId": "NULL",
+      "parcelId": "NULL",
+      "startDatetime": "2024-04-09 14:00:00",
+      "endDatetime": "NULL",
+      "status": "Programada",
+      "costEstimated": 4685.17,
+      "resultDescription": "\"Programada: Limpieza de Canales en field_vin_01.\"",
+      "notes": "Condiciones climáticas óptimas.",
+      "creationTimestamp": "2024-02-14 18:35:11"
+    },
+    {
+      "id": "task_entry_v5_012",
+      "taskIdRef": "task_cosecha_f",
+      "createdByUserId": "user_ing_vin",
+      "clientId": "client_03",
+      "contractorId": "cont_ext_010",
+      "campaignId": "camp_malbec24_vin",
+      "fieldId": "field_vin_02",
+      "lotId": "lot_vin_sr_01",
+      "parcelId": "parcel_vin_sr01_01",
+      "startDatetime": "2024-03-19 08:00:00",
+      "endDatetime": "2024-03-19 15:12:00",
+      "durationHours": 7.2,
+      "status": "Finalizada",
+      "costEstimated": 443.66,
+      "costActual": 469.2,
+      "resultDescription": "\"Finalizada: Cosecha de Frutas en field_vin_02.\"",
+      "notes": "Personal adicional requerido.",
+      "creationTimestamp": "2024-01-28 18:35:11"
+    },
+    {
+      "id": "task_entry_v5_013",
+      "taskIdRef": "task_fumigacion_f",
+      "createdByUserId": "user_admin_nor",
+      "clientId": "client_04",
+      "contractorId": "cont_int_004",
+      "campaignId": "camp_poroto24_nor",
+      "fieldId": "field_nor_03",
+      "lotId": "lot_nor_q_01",
+      "parcelId": "NULL",
+      "startDatetime": "2024-03-20 12:00:00",
+      "endDatetime": "NULL",
+      "durationHours": 1.6,
+      "status": "En Progreso",
+      "costEstimated": 4886.97,
+      "resultDescription": "\"En Progreso: Fumigación Fungicida en field_nor_03.\"",
+      "notes": "Lluvia interrumpió labores.",
+      "creationTimestamp": "2024-01-19 18:35:11"
+    },
+    {
+      "id": "task_entry_v5_014",
+      "taskIdRef": "task_alimentacion_s",
+      "createdByUserId": "user_admin_ama",
+      "clientId": "client_01",
+      "contractorId": "cont_int_001",
+      "campaignId": "camp_feedlot24_ama",
+      "fieldId": "field_ama_02",
+      "lotId": "lot_ama_r_01",
+      "parcelId": "parcel_ama_r01_01",
+      "startDatetime": "2024-07-27 10:15:00",
+      "endDatetime": "NULL",
+      "status": "Programada",
+      "costEstimated": 282.76,
+      "resultDescription": "\"Programada: Alimentación Suplementaria en field_ama_02.\"",
+      "notes": "Maquinaria con desperfecto menor.",
+      "creationTimestamp": "2024-02-01 18:35:11"
+    },
+    {
+      "id": "task_entry_v5_015",
+      "taskIdRef": "task_siembra",
+      "createdByUserId": "user_admin_pam",
+      "clientId": "client_05",
+      "contractorId": "cont_ext_006",
+      "campaignId": "camp_trigo24_pam",
+      "fieldId": "field_pam_02",
+      "lotId": "lot_pam_p_02",
+      "parcelId": "NULL",
+      "startDatetime": "2024-07-04 14:15:00",
+      "endDatetime": "NULL",
+      "durationHours": 3,
+      "status": "En Progreso",
+      "costEstimated": 2563.34,
+      "resultDescription": "\"En Progreso: Siembra Directa en field_pam_02.\"",
+      "notes": "NULL",
+      "creationTimestamp": "2023-12-27 18:35:11"
+    },
+    {
+      "id": "... (10 filas más) ..."
+    },
+    {
+      "id": "task_entry_v5_026",
+      "taskIdRef": "task_cosecha_g",
+      "createdByUserId": "user_admin_ama",
+      "clientId": "client_01",
+      "contractorId": "cont_ext_009",
+      "campaignId": "camp_alfalfa23_ama",
+      "fieldId": "field_ama_01",
+      "lotId": "lot_ama_e_05",
+      "parcelId": "parcel_ama_e05_01",
+      "startDatetime": "2024-04-14 10:45:00",
+      "endDatetime": "NULL",
+      "durationHours": 3,
+      "status": "En Progreso",
+      "costEstimated": 1996.01,
+      "resultDescription": "\"En Progreso: Cosecha de Granos en field_ama_01.\"",
+      "notes": "NULL",
+      "creationTimestamp": "2024-02-15 18:35:11"
+    },
+    {
+      "id": "task_entry_v5_027",
+      "taskIdRef": "task_fumigacion_i",
+      "createdByUserId": "user_admin_vin",
+      "clientId": "client_03",
+      "contractorId": "cont_ext_007",
+      "campaignId": "camp_bonarda24_vin",
+      "fieldId": "field_vin_01",
+      "lotId": "lot_vin_va_01",
+      "parcelId": "parcel_vin_va01_01",
+      "startDatetime": "2024-04-14 11:15:00",
+      "endDatetime": "NULL",
+      "status": "Cancelada",
+      "costEstimated": 3537.11,
+      "resultDescription": "\"Cancelada: Fumigación Insecticida en field_vin_01.\"",
+      "notes": "NULL",
+      "creationTimestamp": "2024-01-16 18:35:11"
+    },
+    {
+      "id": "task_entry_v5_028",
+      "taskIdRef": "task_monitoreo_e",
+      "createdByUserId": "user_admin_nor",
+      "clientId": "client_04",
+      "contractorId": "cont_int_004",
+      "campaignId": "camp_citricos24_nor",
+      "fieldId": "field_nor_02",
+      "lotId": "lot_nor_ll_01",
+      "parcelId": "parcel_nor_ll01_01",
+      "startDatetime": "2024-08-03 11:15:00",
+      "endDatetime": "NULL",
+      "status": "Cancelada",
+      "costEstimated": 2828.52,
+      "resultDescription": "\"Cancelada: Monitoreo de Enfermedades en field_nor_02.\"",
+      "notes": "NULL",
+      "creationTimestamp": "2024-02-15 18:35:11"
+    },
+    {
+      "id": "task_entry_v5_029",
+      "taskIdRef": "task_mantenimiento_b",
+      "createdByUserId": "user_trab_ama_2",
+      "clientId": "client_01",
+      "contractorId": "cont_int_001",
+      "campaignId": "NULL",
+      "fieldId": "field_ama_03",
+      "lotId": "lot_ama_i_02",
+      "parcelId": "parcel_ama_i02_01",
+      "startDatetime": "2024-02-02 07:30:00",
+      "endDatetime": "2024-02-02 13:36:00",
+      "durationHours": 6.1,
+      "status": "Finalizada",
+      "costEstimated": 1385.22,
+      "costActual": 1291.28,
+      "resultDescription": "\"Finalizada: Mantenimiento de Bebederos en field_ama_03.\"",
+      "notes": "NULL",
+      "creationTimestamp": "2024-01-10 18:35:11"
+    },
+    {
+      "id": "task_entry_v5_030",
+      "taskIdRef": "task_vacunacion",
+      "createdByUserId": "user_admin_pam",
+      "clientId": "client_05",
+      "contractorId": "cont_int_005",
+      "campaignId": "NULL",
+      "fieldId": "field_pam_01",
+      "lotId": "lot_pam_c_01",
+      "parcelId": "parcel_pam_c01_01",
+      "startDatetime": "2024-01-13 14:45:00",
+      "endDatetime": "NULL",
+      "status": "Programada",
+      "costEstimated": 2775.61,
+      "resultDescription": "\"Programada: Vacunación de Ganado en field_pam_01.\"",
+      "notes": "Lluvia interrumpió labores.",
+      "creationTimestamp": "2023-12-27 18:35:11"
+    },
+    {
+      "id": "task_generated_uuid_xxxx",
+      "tasksListId": "task_cosecha_g",
+      "createdByUserId": "user_admin_sur",
+      "clientId": "client_02",
+      "contractorId": "cont_ext_006",
+      "campaignId": "camp_hortalizas_prim24_sur",
+      "fieldId": "field_sur_03",
+      "lotId": "lot_sur_o_01",
+      "parcelId": "parcel_sur_o01_01",
+      "startDateTime": "2024-05-27T12:00:00Z",
+      "endDateTime": null,
+      "durationHours": null,
+      "status": "Programada",
+      "costEstimated": null,
+      "costActual": null,
+      "resultDescription": "Tarea de Cosecha de Granos programada para la parcela parcel_sur_o01_01.",
+      "notes": null,
+      "creationTimestamp": "2024-07-29T10:30:00Z"
+    },
+    {
+      "id": "task_generated_uuid_replace_me",
+      "tasksListId": "task_cosecha_g",
+      "createdByUserId": "user_admin_sur",
+      "clientId": "client_02",
+      "contractorId": "cont_ext_006",
+      "campaignId": "camp_hortalizas_prim24_sur",
+      "fieldId": "field_sur_03",
+      "lotId": "lot_sur_o_01",
+      "parcelId": "parcel_sur_o01_01",
+      "startDateTime": "2024-05-27T12:00:00Z",
+      "endDateTime": null,
+      "durationHours": null,
+      "status": "Programada",
+      "costEstimated": null,
+      "costActual": null,
+      "resultDescription": null,
+      "notes": null,
+      "creationTimestamp": "2024-07-29T10:30:00Z"
+    },
+    {
+      "id": "task_generated_uuid_replace_me_2",
+      "tasksListId": "task_cosecha_g",
+      "createdByUserId": "user_admin_sur",
+      "clientId": "client_02",
+      "contractorId": "cont_ext_006",
+      "campaignId": "camp_hortalizas_prim24_sur",
+      "fieldId": "field_sur_03",
+      "lotId": "lot_sur_o_01",
+      "parcelId": "parcel_sur_o01_01",
+      "startDateTime": "2024-05-27T12:00:00Z",
+      "endDateTime": null,
+      "durationHours": null,
+      "status": "Programada",
+      "costEstimated": null,
+      "costActual": null,
+      "resultDescription": "Tarea de Cosecha de Granos programada para la parcela parcel_sur_o01_01.",
+      "notes": null,
+      "creationTimestamp": "2024-07-29T10:35:00Z"
+    }
+  ],
+  "taskMachineryLinks": [
+    {
+      "id": "tml_0001",
+      "taskEntryId": "task_entry_v5_001",
+      "machineryId": "mach_nh_tc57",
+      "hoursUsed": 8,
+      "notes": "Principal"
+    },
+    {
+      "id": "tml_0002",
+      "taskEntryId": "task_entry_v5_002",
+      "machineryId": "mach_roland_h01",
+      "hoursUsed": 3.4,
+      "notes": "Secundaria"
+    },
+    {
+      "id": "tml_0003",
+      "taskEntryId": "task_entry_v5_002",
+      "machineryId": "mach_deutz_ax100",
+      "hoursUsed": 3.4,
+      "notes": "Principal"
+    },
+    {
+      "id": "tml_0004",
+      "taskEntryId": "task_entry_v5_003",
+      "machineryId": "mach_pla_map3",
+      "notes": "NULL"
+    },
+    {
+      "id": "tml_0005",
+      "taskEntryId": "task_entry_v5_006",
+      "machineryId": "mach_fiat_780",
+      "notes": "Standby"
+    },
+    {
+      "id": "tml_0006",
+      "taskEntryId": "task_entry_v5_007",
+      "machineryId": "mach_bertini_21000",
+      "notes": "Principal"
+    },
+    {
+      "id": "tml_0007",
+      "taskEntryId": "task_entry_v5_008",
+      "machineryId": "mach_agrometal_tx",
+      "hoursUsed": 3.2,
+      "notes": "NULL"
+    },
+    {
+      "id": "tml_0008",
+      "taskEntryId": "task_entry_v5_008",
+      "machineryId": "mach_mf_4290",
+      "hoursUsed": 3.2,
+      "notes": "NULL"
+    },
+    {
+      "id": "tml_0009",
+      "taskEntryId": "task_entry_v5_012",
+      "machineryId": "mach_donroque_150",
+      "hoursUsed": 7.2,
+      "notes": "Secundaria"
+    },
+    {
+      "id": "tml_0010",
+      "taskEntryId": "task_entry_v5_013",
+      "machineryId": "mach_jacto_2000",
+      "hoursUsed": 1.6,
+      "notes": "Principal"
+    },
+    {
+      "id": "tml_0011",
+      "taskEntryId": "task_entry_v5_014",
+      "machineryId": "mach_valtra_a990",
+      "notes": "Standby"
+    },
+    {
+      "id": "tml_0012",
+      "taskEntryId": "task_entry_v5_015",
+      "machineryId": "mach_apache_54000",
+      "hoursUsed": 3,
+      "notes": "NULL"
+    },
+    {
+      "id": "tml_0013",
+      "taskEntryId": "task_entry_v5_015",
+      "machineryId": "mach_case_puma180",
+      "hoursUsed": 3,
+      "notes": "Principal"
+    },
+    {
+      "id": "tml_0014",
+      "taskEntryId": "task_entry_v5_016",
+      "machineryId": "mach_mf_4290",
+      "notes": "Secundaria"
+    },
+    {
+      "id": "tml_0015",
+      "taskEntryId": "task_entry_v5_017",
+      "machineryId": "mach_jd_1175",
+      "hoursUsed": 3.9,
+      "notes": "NULL"
+    },
+    {
+      "id": "d3b55c29-28d9-43f5-9525-4590d7d07402",
+      "taskId": "task_generated_uuid_replace_me",
+      "machineryId": "mach_case_2388"
+    },
+    {
+      "id": "bec188ee-0370-4edb-97d8-42d7ad777fc4",
+      "taskId": "task_generated_uuid_replace_me_2",
+      "machineryId": "mach_case_2388"
+    }
+  ],
+  "taskPersonnelLinks": [
+    {
+      "id": "tpl_0001",
+      "taskEntryId": "task_entry_v5_001",
+      "personnelId": "pers_op_molina",
+      "roleInTask": "Supervisor",
+      "hoursWorked": 8
+    },
+    {
+      "id": "tpl_0002",
+      "taskEntryId": "task_entry_v5_001",
+      "personnelId": "pers_op_ferrari",
+      "roleInTask": "Conductor",
+      "hoursWorked": 8
+    },
+    {
+      "id": "tpl_0003",
+      "taskEntryId": "task_entry_v5_002",
+      "personnelId": "pers_mecanico_perez",
+      "roleInTask": "Supervisor",
+      "hoursWorked": 3.4
+    },
+    {
+      "id": "tpl_0004",
+      "taskEntryId": "task_entry_v5_002",
+      "personnelId": "pers_ing_torres",
+      "roleInTask": "Operador",
+      "hoursWorked": 3.4
+    },
+    {
+      "id": "tpl_0005",
+      "taskEntryId": "task_entry_v5_003",
+      "personnelId": "pers_op_blanco",
+      "roleInTask": "NULL"
+    },
+    {
+      "id": "tpl_0006",
+      "taskEntryId": "task_entry_v5_004",
+      "personnelId": "pers_vet_arias",
+      "roleInTask": "Ayudante"
+    },
+    {
+      "id": "tpl_0007",
+      "taskEntryId": "task_entry_v5_004",
+      "personnelId": "pers_op_mendez",
+      "roleInTask": "Operador"
+    },
+    {
+      "id": "tpl_0008",
+      "taskEntryId": "task_entry_v5_005",
+      "personnelId": "pers_op_mendez",
+      "roleInTask": "Operador"
+    },
+    {
+      "id": "tpl_0009",
+      "taskEntryId": "task_entry_v5_006",
+      "personnelId": "pers_ing_torres",
+      "roleInTask": "Ayudante"
+    },
+    {
+      "id": "tpl_0010",
+      "taskEntryId": "task_entry_v5_007",
+      "personnelId": "pers_op_vega",
+      "roleInTask": "Supervisor"
+    },
+    {
+      "id": "tpl_0011",
+      "taskEntryId": "task_entry_v5_007",
+      "personnelId": "pers_op_navarro",
+      "roleInTask": "Operador"
+    },
+    {
+      "id": "tpl_0012",
+      "taskEntryId": "task_entry_v5_008",
+      "personnelId": "pers_enc_diaz",
+      "roleInTask": "Ayudante",
+      "hoursWorked": 3.2
+    },
+    {
+      "id": "tpl_0013",
+      "taskEntryId": "task_entry_v5_008",
+      "personnelId": "pers_op_gimenez",
+      "roleInTask": "Operador",
+      "hoursWorked": 3.2
+    },
+    {
+      "id": "tpl_0014",
+      "taskEntryId": "task_entry_v5_009",
+      "personnelId": "pers_alambrador_cacho",
+      "roleInTask": "Supervisor"
+    },
+    {
+      "id": "tpl_0015",
+      "taskEntryId": "task_entry_v5_010",
+      "personnelId": "pers_op_acuna",
+      "roleInTask": "NULL"
+    },
+    {
+      "id": "c6f16a01-581b-4d16-83bf-266d33eb1956",
+      "taskId": "task_generated_uuid_replace_me",
+      "personnelId": "pers_op_navarro"
+    },
+    {
+      "id": "41b65235-f0b4-4d73-ac9f-750ae39bde6c",
+      "taskId": "task_generated_uuid_replace_me",
+      "personnelId": "pers_op_acuna"
+    },
+    {
+      "id": "3fa7083c-ba90-4a31-96c4-e3d45ff93790",
+      "taskId": "task_generated_uuid_replace_me_2",
+      "personnelId": "pers_op_navarro"
+    },
+    {
+      "id": "edd7d67a-ddb7-4636-9fd9-4a556264d2a8",
+      "taskId": "task_generated_uuid_replace_me_2",
+      "personnelId": "pers_op_acuna"
+    }
+  ],
+  "taskInsumeLinks": [
+    {
+      "id": "til_0001",
+      "taskEntryId": "task_entry_v5_003",
+      "productInsumeId": "prod_paraquat",
+      "quantityUsed": 185,
+      "unitUsed": "litro",
+      "applicationDetails": "Dosis completa"
+    },
+    {
+      "id": "til_0002",
+      "taskEntryId": "task_entry_v5_004",
+      "productInsumeId": "prod_ivermectina",
+      "quantityUsed": 11,
+      "unitUsed": "frasco",
+      "applicationDetails": "Según etiqueta"
+    },
+    {
+      "id": "til_0003",
+      "taskEntryId": "task_entry_v5_007",
+      "productInsumeId": "prod_sem_avena",
+      "quantityUsed": 145,
+      "unitUsed": "kg",
+      "applicationDetails": "Según etiqueta"
+    },
+    {
+      "id": "til_0004",
+      "taskEntryId": "task_entry_v5_007",
+      "productInsumeId": "prod_sem_centeno",
+      "quantityUsed": 16,
+      "unitUsed": "kg",
+      "applicationDetails": "NULL"
+    },
+    {
+      "id": "til_0005",
+      "taskEntryId": "task_entry_v5_008",
+      "productInsumeId": "prod_fosfato_d",
+      "quantityUsed": 52,
+      "unitUsed": "kg",
+      "applicationDetails": "Dosis completa"
+    },
+    {
+      "id": "til_0006",
+      "taskEntryId": "task_entry_v5_008",
+      "productInsumeId": "prod_urea_g",
+      "quantityUsed": 141,
+      "unitUsed": "kg",
+      "applicationDetails": "NULL"
+    },
+    {
+      "id": "til_0007",
+      "taskEntryId": "task_entry_v5_009",
+      "productInsumeId": "prod_varilla_euca",
+      "quantityUsed": 15,
+      "unitUsed": "unidad",
+      "applicationDetails": "Preventivo"
+    },
+    {
+      "id": "til_0008",
+      "taskEntryId": "task_entry_v5_009",
+      "productInsumeId": "prod_alambre_alta",
+      "quantityUsed": 2,
+      "unitUsed": "rollo",
+      "applicationDetails": "NULL"
+    },
+    {
+      "id": "til_0009",
+      "taskEntryId": "task_entry_v5_013",
+      "productInsumeId": "prod_tebuconazole",
+      "quantityUsed": 184,
+      "unitUsed": "litro",
+      "applicationDetails": "Dosis completa"
+    },
+    {
+      "id": "til_0010",
+      "taskEntryId": "task_entry_v5_013",
+      "productInsumeId": "prod_metalaxil",
+      "quantityUsed": 147,
+      "unitUsed": "kg",
+      "applicationDetails": "Según etiqueta"
+    },
+    {
+      "id": "til_0011",
+      "taskEntryId": "task_entry_v5_014",
+      "productInsumeId": "prod_sem_centeno",
+      "quantityUsed": 186,
+      "unitUsed": "kg",
+      "applicationDetails": "Preventivo"
+    },
+    {
+      "id": "til_0012",
+      "taskEntryId": "task_entry_v5_015",
+      "productInsumeId": "prod_sem_cebada",
+      "quantityUsed": 3,
+      "unitUsed": "kg",
+      "applicationDetails": "NULL"
+    },
+    {
+      "id": "til_0013",
+      "taskEntryId": "task_entry_v5_015",
+      "productInsumeId": "prod_sem_sorgo_g",
+      "quantityUsed": 66,
+      "unitUsed": "bolsa",
+      "applicationDetails": "Dosis completa"
+    },
+    {
+      "id": "til_0014",
+      "taskEntryId": "task_entry_v5_016",
+      "productInsumeId": "prod_sem_girasol_adv",
+      "quantityUsed": 18,
+      "unitUsed": "bolsa",
+      "applicationDetails": "NULL"
+    },
+    {
+      "id": "til_0015",
+      "taskEntryId": "task_entry_v5_017",
+      "productInsumeId": "prod_sem_maiz_dk7210",
+      "quantityUsed": 159,
+      "unitUsed": "bolsa",
+      "applicationDetails": "Dosis completa"
+    }
+  ],
+  "userAccess": [
+    {
+      "userId": "user_admin_ama",
+      "campoId": "field_ama_01",
+      "accesoTotal": "True",
+      "id": "e525a68e-15bd-4334-8bba-d5b9827100a1"
+    },
+    {
+      "userId": "user_admin_ama",
+      "campoId": "field_ama_02",
+      "accesoTotal": "True",
+      "id": "a375c63e-dac6-4a3a-9144-d4e59fa34553"
+    },
+    {
+      "userId": "user_admin_ama",
+      "campoId": "field_ama_03",
+      "accesoTotal": "True",
+      "id": "430ba08a-cec4-4ab3-acc3-3971bf85392c"
+    },
+    {
+      "userId": "user_admin_ama",
+      "campoId": "field_ama_04",
+      "accesoTotal": "True",
+      "id": "01ca529e-dbd1-4a1a-af0f-16c7ce509151"
+    },
+    {
+      "userId": "user_ing_ama",
+      "campoId": "field_ama_01",
+      "accesoTotal": "True",
+      "id": "2433c571-297d-4c62-851f-1b861f32919b"
+    },
+    {
+      "userId": "user_ing_ama",
+      "campoId": "field_ama_02",
+      "accesoTotal": "True",
+      "id": "26e5efc7-eb3e-468d-b592-e931f3aee460"
+    },
+    {
+      "userId": "user_ing_ama",
+      "campoId": "field_ama_03",
+      "accesoTotal": "True",
+      "id": "7a973154-9aad-439e-9842-683fa0dee7b1"
+    },
+    {
+      "userId": "user_ing_ama",
+      "campoId": "field_ama_04",
+      "accesoTotal": "True",
+      "id": "a91a2beb-7d86-49b0-9d04-2cfcb2565330"
+    },
+    {
+      "userId": "user_enc_ama",
+      "campoId": "field_ama_01",
+      "accesoTotal": "True",
+      "id": "f9067522-b227-45e8-948f-03151e399ca2"
+    },
+    {
+      "userId": "user_enc_ama",
+      "campoId": "field_ama_02",
+      "accesoTotal": "True",
+      "id": "ccd8e6b8-38fe-447e-9206-fd399a9e3c5a"
+    },
+    {
+      "userId": "user_enc_ama",
+      "campoId": "field_ama_03",
+      "accesoTotal": "True",
+      "id": "e81aa6dd-2afa-4ed7-910c-fa1ae69b4616"
+    },
+    {
+      "userId": "user_enc_ama",
+      "campoId": "field_ama_04",
+      "accesoTotal": "True",
+      "id": "5aa0af33-e778-49c1-9cc8-5c51e34cde3a"
+    },
+    {
+      "userId": "user_trab_ama_1",
+      "campoId": "field_ama_01",
+      "accesoTotal": "True",
+      "id": "9bc2ede8-aed0-4930-b8f6-f49215fbba92"
+    },
+    {
+      "userId": "user_trab_ama_1",
+      "campoId": "field_ama_02",
+      "accesoTotal": "True",
+      "id": "39d668c0-7fef-4c89-8c53-2ea2ccc314bb"
+    },
+    {
+      "userId": "user_trab_ama_1",
+      "campoId": "field_ama_03",
+      "accesoTotal": "True",
+      "id": "6e1d22b3-ab10-4026-b6b1-1f5658817ea2"
+    },
+    {
+      "userId": "user_trab_ama_1",
+      "campoId": "field_ama_04",
+      "accesoTotal": "True",
+      "id": "2c11af55-eb00-46d3-992b-9df67bda283b"
+    },
+    {
+      "userId": "user_trab_ama_2",
+      "campoId": "field_ama_01",
+      "accesoTotal": "True",
+      "id": "5f83c27a-4e5c-4498-b4f6-8e5f540712a6"
+    },
+    {
+      "userId": "user_trab_ama_2",
+      "campoId": "field_ama_02",
+      "accesoTotal": "True",
+      "id": "35809ad8-a11b-454b-a75c-e6ce3f27b51b"
+    },
+    {
+      "userId": "user_trab_ama_2",
+      "campoId": "field_ama_03",
+      "accesoTotal": "True",
+      "id": "55446f1a-f8c6-404d-a0c9-7dc1e2c93b7f"
+    },
+    {
+      "userId": "user_trab_ama_2",
+      "campoId": "field_ama_04",
+      "accesoTotal": "True",
+      "id": "39c75052-8b47-4864-bf5d-dc0ba2288b2a"
+    },
+    {
+      "userId": "user_admin_sur",
+      "campoId": "field_sur_01",
+      "accesoTotal": "True",
+      "id": "5b06c49e-45e2-41bc-8ddc-7ae9c91df7cd"
+    },
+    {
+      "userId": "user_admin_sur",
+      "campoId": "field_sur_02",
+      "accesoTotal": "True",
+      "id": "4026b7a4-478e-4f83-b95b-a3abd64b0e39"
+    },
+    {
+      "userId": "user_admin_sur",
+      "campoId": "field_sur_03",
+      "accesoTotal": "True",
+      "id": "5ebbb853-8170-4ba3-9ab4-085cf2e00907"
+    },
+    {
+      "userId": "user_ing_sur",
+      "campoId": "field_sur_01",
+      "accesoTotal": "True",
+      "id": "b0ea946b-02b3-45dc-922f-4f8d57776bd4"
+    },
+    {
+      "userId": "user_ing_sur",
+      "campoId": "field_sur_02",
+      "accesoTotal": "True",
+      "id": "d36cdea0-8a8a-4d82-95bb-d78a08ab458c"
+    },
+    {
+      "userId": "user_ing_sur",
+      "campoId": "field_sur_03",
+      "accesoTotal": "True",
+      "id": "cfa2e8f3-7a05-4d4c-8500-b69a24b83be6"
+    },
+    {
+      "userId": "user_enc_sur",
+      "campoId": "field_sur_01",
+      "accesoTotal": "True",
+      "id": "c2f3d02a-c1c9-4c6e-bf69-7c59da40b776"
+    },
+    {
+      "userId": "user_enc_sur",
+      "campoId": "field_sur_02",
+      "accesoTotal": "True",
+      "id": "2c8bd876-48e0-48ba-855c-1eeccd4cec17"
+    },
+    {
+      "userId": "user_enc_sur",
+      "campoId": "field_sur_03",
+      "accesoTotal": "True",
+      "id": "672d550e-e5f5-43da-a244-277892e77816"
+    },
+    {
+      "userId": "user_trab_sur_1",
+      "campoId": "field_sur_01",
+      "accesoTotal": "True",
+      "id": "315d3bc4-4e51-469b-801c-c042bf6ec6bb"
+    },
+    {
+      "userId": "user_trab_sur_1",
+      "campoId": "field_sur_02",
+      "accesoTotal": "True",
+      "id": "55eeb9da-fb02-434b-a000-70b158bdef61"
+    },
+    {
+      "userId": "user_trab_sur_1",
+      "campoId": "field_sur_03",
+      "accesoTotal": "True",
+      "id": "1233bf0a-4a0c-4b5e-a2cf-53d837fb09c6"
+    },
+    {
+      "userId": "user_trab_sur_2",
+      "campoId": "field_sur_01",
+      "accesoTotal": "True",
+      "id": "267311ed-d0db-4d99-93b0-5694db7948c0"
+    },
+    {
+      "userId": "user_trab_sur_2",
+      "campoId": "field_sur_02",
+      "accesoTotal": "True",
+      "id": "4887c823-0824-408f-9b82-f589600c7259"
+    },
+    {
+      "userId": "user_trab_sur_2",
+      "campoId": "field_sur_03",
+      "accesoTotal": "True",
+      "id": "7e131ca4-e2b6-480c-b38b-0af051ac5824"
+    },
+    {
+      "userId": "user_admin_vin",
+      "campoId": "field_vin_01",
+      "accesoTotal": "True",
+      "id": "812f6a36-e3e4-4930-8bae-e8d958ba8c69"
+    },
+    {
+      "userId": "user_admin_vin",
+      "campoId": "field_vin_02",
+      "accesoTotal": "True",
+      "id": "599d3445-06ef-4a67-bd5e-c82c97fb15a6"
+    },
+    {
+      "userId": "user_admin_vin",
+      "campoId": "field_vin_03",
+      "accesoTotal": "True",
+      "id": "0bbb0635-2533-4cd2-b45d-d73161429fea"
+    },
+    {
+      "userId": "user_ing_vin",
+      "campoId": "field_vin_01",
+      "accesoTotal": "True",
+      "id": "61897866-4afb-4102-acd5-86f194a72552"
+    },
+    {
+      "userId": "user_ing_vin",
+      "campoId": "field_vin_02",
+      "accesoTotal": "True",
+      "id": "8e00c9c4-5d8b-4aec-885e-99955a884c3f"
+    },
+    {
+      "userId": "user_ing_vin",
+      "campoId": "field_vin_03",
+      "accesoTotal": "True",
+      "id": "6a9cdedb-6ba4-4ec9-93dd-c53b1653e858"
+    },
+    {
+      "userId": "user_admin_nor",
+      "campoId": "field_nor_01",
+      "accesoTotal": "True",
+      "id": "7fc155e6-6714-4065-969a-bf9ec69d6660"
+    },
+    {
+      "userId": "user_admin_nor",
+      "campoId": "field_nor_02",
+      "accesoTotal": "True",
+      "id": "c7a14b27-ffb6-4945-9da1-140d689f9ec4"
+    },
+    {
+      "userId": "user_admin_nor",
+      "campoId": "field_nor_03",
+      "accesoTotal": "True",
+      "id": "d883cd17-51e8-4435-88e9-43337b5d3a60"
+    },
+    {
+      "userId": "user_admin_pam",
+      "campoId": "field_pam_01",
+      "accesoTotal": "True",
+      "id": "aff50fd0-5629-4a5f-92e0-4d412e036750"
+    },
+    {
+      "userId": "user_admin_pam",
+      "campoId": "field_pam_02",
+      "accesoTotal": "True",
+      "id": "32dafc33-3fec-474d-b7e9-dc17c6df0f7a"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+id,name,fieldId,area
+lot_ama_e_01,Lote 1 Maíz,field_ama_01,120
+lot_ama_e_02,Lote 2 Soja,field_ama_01,150
+lot_ama_e_03,Lote 3 Trigo,field_ama_01,100
+lot_ama_e_04,Lote 4 Girasol,field_ama_01,130
+lot_ama_e_05,Lote 5 Alfalfa,field_ama_01,80
+lot_ama_r_01,Lote A Ganadero,field_ama_02,200
+lot_ama_r_02,Lote B Experimental,field_ama_02,50
+lot_ama_i_01,Lote Norte Silo,field_ama_03,300
+lot_ama_i_02,Lote Sur Pastura,field_ama_03,250
+lot_ama_c_01,Lote 10 Descanso,field_ama_04,150
+lot_sur_pl_01,Lote 101 Pera,field_sur_01,50
+lot_sur_pl_02,Lote 102 Manzana,field_sur_01,60
+lot_sur_pl_03,Lote 103 Durazno,field_sur_01,40
+lot_sur_vf_01,Lote 201 Forraje,field_sur_02,300
+lot_sur_vf_02,Lote 202 Cría,field_sur_02,400
+lot_sur_o_01,Lote 301 Hortalizas,field_sur_03,20
+lot_vin_va_01,Cuadro Malbec,field_vin_01,30
+lot_vin_va_02,Cuadro Cabernet,field_vin_01,25
+lot_vin_sr_01,Espaldero Bonarda,field_vin_02,40
+lot_vin_fm_01,Cuartel Syrah,field_vin_03,20
+lot_nor_t_01,Cañaveral 1,field_nor_01,500
+lot_nor_t_02,Cañaveral 2,field_nor_01,600
+lot_nor_ll_01,Lote Soja Norte,field_nor_02,1000
+lot_nor_ll_02,Lote Maíz Sur,field_nor_02,800
+lot_nor_q_01,Lote Poroto,field_nor_03,400
+lot_pam_c_01,Potrero 1 Vacas,field_pam_01,1000
+lot_pam_c_02,Potrero 2 Novillos,field_pam_01,800
+lot_pam_p_01,Siembra Maíz 1,field_pam_02,500
+lot_pam_p_02,Siembra Soja 2,field_pam_02,600
+lot_ama_e_06,Lote 6 Experimental,field_ama_01,70

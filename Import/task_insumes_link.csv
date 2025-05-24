@@ -1,0 +1,16 @@
+task_insume_link_id,task_entry_id,product_insume_id,quantity_used,unit_used,application_details
+til_0001,task_entry_v5_003,prod_paraquat,185,litro,Dosis completa
+til_0002,task_entry_v5_004,prod_ivermectina,11,frasco,Según etiqueta
+til_0003,task_entry_v5_007,prod_sem_avena,145,kg,Según etiqueta
+til_0004,task_entry_v5_007,prod_sem_centeno,16,kg,NULL
+til_0005,task_entry_v5_008,prod_fosfato_d,52,kg,Dosis completa
+til_0006,task_entry_v5_008,prod_urea_g,141,kg,NULL
+til_0007,task_entry_v5_009,prod_varilla_euca,15,unidad,Preventivo
+til_0008,task_entry_v5_009,prod_alambre_alta,2,rollo,NULL
+til_0009,task_entry_v5_013,prod_tebuconazole,184,litro,Dosis completa
+til_0010,task_entry_v5_013,prod_metalaxil,147,kg,Según etiqueta
+til_0011,task_entry_v5_014,prod_sem_centeno,186,kg,Preventivo
+til_0012,task_entry_v5_015,prod_sem_cebada,3,kg,NULL
+til_0013,task_entry_v5_015,prod_sem_sorgo_g,66,bolsa,Dosis completa
+til_0014,task_entry_v5_016,prod_sem_girasol_adv,18,bolsa,NULL
+til_0015,task_entry_v5_017,prod_sem_maiz_dk7210,159,bolsa,Dosis completa

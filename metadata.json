@@ -1,0 +1,8 @@
+{
+  "name": "FarmerChat: Asistente Agrícola IA",
+  "description": "FarmerChat es una aplicación web de simulación que actúa como un asistente virtual para la gestión de registros y tareas en el sector agropecuario, utilizando IA para procesar comandos en lenguaje natural.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "prompt": ""
+}

@@ -1,0 +1,29 @@
+farmer-chat-app/
+├── public/                    # Carpeta para activos estáticos (opcional si usas un empaquetador)
+│   └── index.html             # O en la raíz si sirves los archivos directamente
+├── src/                       # Carpeta principal para tu código fuente TypeScript/TSX
+│   ├── components/            # Componentes de React reutilizables
+│   │   ├── icons/             # Subcarpeta para componentes de iconos SVG
+│   │   │   ├── ChatIcons.tsx
+│   │   │   ├── FileIcons.tsx
+│   │   │   ├── ThemeIcons.tsx
+│   │   │   └── VoiceModeIcons.tsx
+│   │   ├── ChatPanel.tsx
+│   │   ├── DataPanel.tsx
+│   │   ├── DataTable.tsx
+│   │   ├── EntityDisplay.tsx
+│   │   ├── MessageBubble.tsx
+│   │   ├── MultipleCsvUploadModal.tsx
+│   │   └── TopBar.tsx
+│   ├── services/              # Módulos para lógica de servicios (API, base de datos simulada)
+│   │   ├── dbService.ts
+│   │   └── geminiService.ts   # (Este archivo parece tener ejemplos/utilidades de Gemini)
+│   ├── App.tsx                # El componente principal de tu aplicación
+│   ├── constants.ts           # Constantes de la aplicación
+│   ├── index.tsx              # Punto de entrada de React que renderiza App.tsx
+│   └── types.ts               # Definiciones de tipos e interfaces TypeScript
+│
+├── .gitignore                 # Archivo para especificar qué archivos ignorar en Git (lo crearás tú)
+├── metadata.json              # Metadatos de la aplicación
+├── README.md                  # Documentación del proyecto
+└── index.html                 # (Si no está en public/, podría estar aquí en la raíz)
