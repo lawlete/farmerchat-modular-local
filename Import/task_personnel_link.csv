@@ -1,0 +1,16 @@
+task_personnel_link_id,task_entry_id,personnel_id,role_in_task,hours_worked
+tpl_0001,task_entry_v5_001,pers_op_molina,Supervisor,8.0
+tpl_0002,task_entry_v5_001,pers_op_ferrari,Conductor,8.0
+tpl_0003,task_entry_v5_002,pers_mecanico_perez,Supervisor,3.4
+tpl_0004,task_entry_v5_002,pers_ing_torres,Operador,3.4
+tpl_0005,task_entry_v5_003,pers_op_blanco,NULL,NULL
+tpl_0006,task_entry_v5_004,pers_vet_arias,Ayudante,NULL
+tpl_0007,task_entry_v5_004,pers_op_mendez,Operador,NULL
+tpl_0008,task_entry_v5_005,pers_op_mendez,Operador,NULL
+tpl_0009,task_entry_v5_006,pers_ing_torres,Ayudante,NULL
+tpl_0010,task_entry_v5_007,pers_op_vega,Supervisor,NULL
+tpl_0011,task_entry_v5_007,pers_op_navarro,Operador,NULL
+tpl_0012,task_entry_v5_008,pers_enc_diaz,Ayudante,3.2
+tpl_0013,task_entry_v5_008,pers_op_gimenez,Operador,3.2
+tpl_0014,task_entry_v5_009,pers_alambrador_cacho,Supervisor,NULL
+tpl_0015,task_entry_v5_010,pers_op_acuna,NULL,NULL

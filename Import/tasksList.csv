@@ -8,11 +8,11 @@ task_fertilizacion_r,Fertilización de Cobertura,Aplicación de fertilizantes du
 task_cosecha_g,Cosecha de Granos,Recolección mecánica de granos,Cultivo
 task_cosecha_f,Cosecha de Frutas,Recolección manual o mecánica de frutas,Fruticultura
 task_cosecha_h,Cosecha de Hortalizas,Recolección de hortalizas,Horticultura
-task_labranza_p,Labranza Primaria,Arado, rastra de discos, subsolado,Cultivo
-task_labranza_s,Labranza Secundaria,Rastra de dientes, rolo, preparación de cama de siembra,Cultivo
+task_labranza_p,Labranza Primaria,"Arado, rastra de discos, subsolado",Cultivo
+task_labranza_s,Labranza Secundaria,"Rastra de dientes, rolo, preparación de cama de siembra",Cultivo
 task_riego_g,Riego por Goteo,Aplicación de agua localizada por goteo,Riego
 task_riego_a,Riego por Aspersión,Aplicación de agua mediante aspersores,Riego
-task_poda,Poda de Frutales,Poda de formación, fructificación o limpieza,Fruticultura
+task_poda,Poda de Frutales,"Poda de formación, fructificación o limpieza",Fruticultura
 task_raleo,Raleo de Frutos,Eliminación de exceso de frutos para mejorar calidad,Fruticultura
 task_monitoreo_p,Monitoreo de Plagas,Revisión de cultivos para detección de plagas,Sanidad
 task_monitoreo_e,Monitoreo de Enfermedades,Revisión de cultivos para detección de enfermedades,Sanidad

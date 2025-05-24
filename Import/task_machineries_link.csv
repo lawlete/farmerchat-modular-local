@@ -1,0 +1,16 @@
+task_machinery_link_id,task_entry_id,machinery_id,hours_used,notes
+tml_0001,task_entry_v5_001,mach_nh_tc57,8.0,Principal
+tml_0002,task_entry_v5_002,mach_roland_h01,3.4,Secundaria
+tml_0003,task_entry_v5_002,mach_deutz_ax100,3.4,Principal
+tml_0004,task_entry_v5_003,mach_pla_map3,NULL,NULL
+tml_0005,task_entry_v5_006,mach_fiat_780,NULL,Standby
+tml_0006,task_entry_v5_007,mach_bertini_21000,NULL,Principal
+tml_0007,task_entry_v5_008,mach_agrometal_tx,3.2,NULL
+tml_0008,task_entry_v5_008,mach_mf_4290,3.2,NULL
+tml_0009,task_entry_v5_012,mach_donroque_150,7.2,Secundaria
+tml_0010,task_entry_v5_013,mach_jacto_2000,1.6,Principal
+tml_0011,task_entry_v5_014,mach_valtra_a990,NULL,Standby
+tml_0012,task_entry_v5_015,mach_apache_54000,3.0,NULL
+tml_0013,task_entry_v5_015,mach_case_puma180,3.0,Principal
+tml_0014,task_entry_v5_016,mach_mf_4290,NULL,Secundaria
+tml_0015,task_entry_v5_017,mach_jd_1175,3.9,NULL

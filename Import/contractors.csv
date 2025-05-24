@@ -1,0 +1,11 @@
+contractor_id,name,contact_person,address,phone,is_internal
+cont_int_001,"Recursos Propios - Agropecuaria El Amanecer S.A.",Gerente de Operaciones,Oficina Principal del Cliente,+549351000001,True
+cont_int_002,"Recursos Propios - Estancia La Sureña",Gerente de Operaciones,Oficina Principal del Cliente,+549299000002,True
+cont_int_003,"Recursos Propios - Finca Los Viñedos del Sol",Gerente de Operaciones,Oficina Principal del Cliente,+549261000003,True
+cont_int_004,"Recursos Propios - Productores del Norte Asociados",Gerente de Operaciones,Oficina Principal del Cliente,+549387000004,True
+cont_int_005,"Recursos Propios - Ganadera Pampeana SRL",Gerente de Operaciones,Oficina Principal del Cliente,+549239000005,True
+cont_ext_006,Servicios Agrícolas Sur SRL,Juan Perez,Ruta 3 Km 100,+5492915550011,False
+cont_ext_007,Aero Fumigaciones Pampeanas,Maria Gomez,Aeroclub Local,+5492392550022,False
+cont_ext_008,"Logística y Transporte Agro S.A.",Carlos Lopez,Parque Industrial Oeste,+549115550033,False
+cont_ext_009,Cosechas del Norte Hnos.,Laura Fernandez,Camino Rural S/N,+5493875550044,False
+cont_ext_010,Viñedos Asistidos Mendoza,Roberto Sanchez,Carril Rodriguez Peña 123,+5492615550055,False
