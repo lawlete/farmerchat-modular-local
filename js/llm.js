@@ -99,7 +99,38 @@ async function callGeminiApiWithHistory(userInputText) {
         throw new Error("La entrada para la IA debe ser texto.");
     }
 
-    const systemInstructionText = await (await fetch('../prompts/farmer_chat_system_prompt.txt')).text();
+    const baseSystemInstructionText = await (await fetch('../prompts/farmer_chat_system_prompt.txt')).text();
+
+    // Prepare dynamic data for the prompt
+    const currentClientId = db.config.currentClientId;
+    const clientName = db.clients.find(c => c.id === currentClientId)?.name || 'Desconocido';
+    const currentDate = new Date().toLocaleDateString('es-ES');
+    
+    // Campos del cliente actual
+    const fieldsContextArr = db.fields.filter(f => f.clientId === currentClientId).slice(0,3);
+    const fieldsContextText = fieldsContextArr.length > 0 ? fieldsContextArr.map(f => `'${f.name}' (ID: ${f.id})`).join(', ') : 'Ninguno';
+
+    // Contratistas disponibles
+    const contractorsContextArr = db.contractors ? db.contractors.filter(c => c.is_internal || db.clients.find(client => client.id === currentClientId) ) : [];
+    const contractorsContextText = contractorsContextArr.length > 0 ? contractorsContextArr.slice(0,3).map(c => `'${c.name}' (ID: ${c.contractor_id})`).join(', ') : 'Ninguno';
+
+    // Populate the system instruction text
+    let populatedSystemInstructionText = baseSystemInstructionText;
+
+    const clienteActualContext = `- Cliente Actual: ${clientName} (ID: ${currentClientId})`;
+    const hoyEsContext = `- Hoy es: ${currentDate}`;
+    const camposContextLine = `- Campos del cliente actual (primeros 3): ${fieldsContextText}`;
+    const contratistasContextLine = `- Contratistas disponibles (primeros 3): ${contractorsContextText}`;
+
+    const originalClienteActualLine = "- Cliente Actual: ${db.clients.find(c=>c.id === db.config.currentClientId)?.name || 'Desconocido'} (ID: ${db.config.currentClientId})";
+    const originalHoyEsLine = "- Hoy es: ${new Date().toLocaleDateString('es-ES')}";
+    const originalCamposLine = "- Campos del cliente actual (primeros 3): ${db.fields.filter(f=>f.clientId === db.config.currentClientId).slice(0,3).map(f=>`'${f.name}' (ID: ${f.id})`).join(', ') || 'Ninguno'}";
+    const originalContratistasLine = "- Contratistas disponibles (primeros 3): ${db.contractors.filter(c => c.is_internal || db.clients.find(client => client.id === db.config.currentClientId)).slice(0,3).map(c=>`'${c.name}' (ID: ${c.contractor_id})`).join(', ') || 'Ninguno'}";
+
+    populatedSystemInstructionText = populatedSystemInstructionText.replace(originalClienteActualLine, clienteActualContext);
+    populatedSystemInstructionText = populatedSystemInstructionText.replace(originalHoyEsLine, hoyEsContext);
+    populatedSystemInstructionText = populatedSystemInstructionText.replace(originalCamposLine, camposContextLine);
+    populatedSystemInstructionText = populatedSystemInstructionText.replace(originalContratistasLine, contratistasContextLine);
 
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL_NAME_LLM_MODULE}:generateContent?key=${GEMINI_API_KEY_LLM_MODULE}`;
 
@@ -108,7 +139,7 @@ async function callGeminiApiWithHistory(userInputText) {
     let finalApiContents = [];
 
     // 1. System Prompt (como el primer mensaje con rol 'user', Gemini lo trata como instrucción)
-    finalApiContents.push({ role: "user", parts: [{ text: systemInstructionText }] });
+    finalApiContents.push({ role: "user", parts: [{ text: populatedSystemInstructionText }] });
     // 2. Historial de la conversación (model/user/model/user...)
     //    Asegurándonos que el contenido del historial sea string
     conversationHistoryLLM.forEach(turn => {
@@ -142,7 +173,7 @@ async function callGeminiApiWithHistory(userInputText) {
     // Si el historial está vacío, el primer mensaje es el system prompt + la pregunta del usuario.
     if (conversationHistoryLLM.length === 0) {
         finalApiContents = [
-            { role: "user", parts: [{ text: systemInstructionText + "\n\nUsuario: " + userInputText }] }
+            { role: "user", parts: [{ text: populatedSystemInstructionText + "\n\nUsuario: " + userInputText }] }
         ];
     } else {
         // Si hay historial, lo incluimos y añadimos la nueva pregunta del usuario.
@@ -160,10 +191,10 @@ async function callGeminiApiWithHistory(userInputText) {
         // ]
         //
         // Por ahora, vamos a simplificar y enviar el system prompt + el historial + el nuevo input,
-        // intentando que el `systemInstructionText` guíe el primer procesamiento.
+        // intentando que el `populatedSystemInstructionText` guíe el primer procesamiento.
         // La API de Gemini (especialmente los modelos más nuevos como 1.5) son buenos manejando esto en el `contents`.
 
-        finalApiContents.push({role: "user", parts: [{text: systemInstructionText}]});
+        finalApiContents.push({role: "user", parts: [{text: populatedSystemInstructionText}]});
         // Añadir el historial, asegurando alternancia. Si el historial ya empieza con 'user', está bien.
         // Si el historial empieza con 'model', eso también está bien después de nuestro 'user' system prompt.
         conversationHistoryLLM.forEach(turn => {

@@ -385,6 +385,46 @@ async function processLLMResponse(aiResult) {
             if (!db[collectionName]) {
                 addMessageToChatLog(`Error interno: Colección "${collectionName}" para entidad "${entity}" no existe.`, 'ai', true); break;
             }
+
+            // --- START OF CONTRACTOR CREATE LOGIC ---
+            if (entity === 'Contractor') {
+                if (!dataForDb.name || dataForDb.name.trim() === '') {
+                    addMessageToChatLog('Error: Se necesita un nombre para crear un Contratista.', 'ai', true);
+                    operationSuccessful = false; // Explicitly set
+                    break; // Exit CREATE case
+                }
+                // newItem is already declared using collectionName.
+                // We need to ensure it's correctly populated for Contractor.
+                // The generic 'id' field added by `const newItem = { id: generateId(...), ...dataForDb }`
+                // needs to be replaced by `contractor_id`.
+
+                const newContractor = { ...dataForDb }; // Start with resolved data
+                newContractor.contractor_id = generateId('cont_'); // Specific ID field
+                delete newContractor.id; // Remove generic 'id' if present from spread
+
+                newContractor.is_internal = typeof dataForDb.is_internal === 'boolean' ? dataForDb.is_internal : false;
+                
+                // Remove clientId if it was somehow added by resolveEntityNamesToIds for contractor
+                // as 'contractors' table doesn't have a clientId column.
+                delete newContractor.clientId; 
+
+                // Check if contractor already exists by name
+                if (db.contractors.some(c => normalizeString(c.name) === normalizeString(newContractor.name))) {
+                    addMessageToChatLog(`Error: Ya existe un Contratista con el nombre "${newContractor.name}". No se creó un duplicado.`, 'ai', true);
+                    operationSuccessful = false; // Explicitly set
+                    break; // Exit CREATE case
+                }
+
+                db.contractors.push(newContractor);
+                operationSuccessful = true;
+                // responseText del LLM ya debería indicar éxito.
+                // We will break here to avoid falling through to other entity logic.
+                // The main `db[collectionName].push(newItem)` at the end of CREATE will be skipped for Contractor.
+                // This break is important.
+                break; 
+            }
+            // --- END OF CONTRACTOR CREATE LOGIC ---
+            
             // Validaciones robustas
             if (entity === 'Field' && (!dataForDb.name || dataForDb.name.trim() === '')) {
                 addMessageToChatLog(`Error: Se necesita un nombre para crear un Campo.`, 'ai', true); break;
@@ -395,30 +435,243 @@ async function processLLMResponse(aiResult) {
             if (entity === 'Parcel' && (!dataForDb.name || !dataForDb.lotId)) {
                 addMessageToChatLog(`Error: Para crear una Parcela se necesita un nombre y asociarla a un Lote existente (ID: ${dataForDb.lotId}, Nombre buscado: "${dataForDb.lotName || ''}").`, 'ai', true); break;
             }
-            if (entity === 'JobEvent' && (!dataForDb.taskId || !dataForDb.parcelId || !dataForDb.dateTimeScheduled)) {
+            // Validaciones específicas para CREATE
+            if (entity === 'Field' && (!dataForDb.name || dataForDb.name.trim() === '')) {
+                addMessageToChatLog(`Error: Se necesita un nombre para crear un Campo.`, 'ai', true); break;
+            }
+            if (entity === 'Lot' && (!dataForDb.name || !dataForDb.fieldId)) {
+                addMessageToChatLog(`Error: Para crear un Lote se necesita un nombre y asociarlo a un Campo existente (ID: ${dataForDb.fieldId}, Nombre buscado: "${rawDataFromLLM.fieldName || ''}").`, 'ai', true); break;
+            }
+            if (entity === 'Parcel' && (!dataForDb.name || !dataForDb.lotId)) {
+                addMessageToChatLog(`Error: Para crear una Parcela se necesita un nombre y asociarla a un Lote existente (ID: ${dataForDb.lotId}, Nombre buscado: "${rawDataFromLLM.lotName || ''}").`, 'ai', true); break;
+            }
+            if (entity === 'Contractor' && (!dataForDb.name || dataForDb.name.trim() === '')) {
+                addMessageToChatLog(`Error: Se necesita un nombre para crear un Contratista.`, 'ai', true); break;
+            }
+            if (entity === 'Task' && (!dataForDb.task_id_ref || !dataForDb.contractor_id)) {
                 let missing = [];
-                if(!dataForDb.taskId) missing.push(`tarea (buscada como: "${dataForDb.taskName || '?'}")`);
-                if(!dataForDb.parcelId) missing.push(`parcela (buscada como: "${dataForDb.parcelName || '?'}")`);
-                if(!dataForDb.dateTimeScheduled) missing.push("fecha programada");
-                addMessageToChatLog(`Error: Faltan datos críticos para crear el Trabajo/Evento: ${missing.join(', ')}. Asegúrate que las entidades referenciadas existan y la fecha sea válida.`, 'ai', true); break;
+                if (!dataForDb.task_id_ref) missing.push(`tipo de tarea (buscada como: "${rawDataFromLLM.taskName || '?'}")`);
+                if (!dataForDb.contractor_id) missing.push(`contratista (buscado como: "${rawDataFromLLM.contractorName || '?'}")`);
+                addMessageToChatLog(`Error: Faltan datos críticos para crear la Tarea: ${missing.join(', ')}. Asegúrate que las entidades referenciadas existan.`, 'ai', true); break;
             }
 
-            const newItem = { id: generateId(entity.substring(0, 3).toLowerCase() + '_'), ...dataForDb };
-            if (['Field', 'Campaign'].includes(entity)) newItem.clientId = db.config.currentClientId;
-            if (entity === 'User' && !newItem.clientId) newItem.clientId = db.config.currentClientId; 
-            if (entity === 'JobEvent' && !newItem.status) newItem.status = 'Scheduled';
-
+            let newItem;
             let alreadyExists = false;
-            // ... (chequeo de alreadyExists como antes, usando newItem) ...
-            if (entity === 'Field' && db.fields.some(f => f.clientId === newItem.clientId && normalizeString(f.name) === normalizeString(newItem.name))) alreadyExists = true;
-            if (entity === 'Lot' && db.lots.some(l => l.fieldId === newItem.fieldId && normalizeString(l.name) === normalizeString(newItem.name))) alreadyExists = true;
-            if (entity === 'Parcel' && db.parcels.some(p => p.lotId === newItem.lotId && normalizeString(p.name) === normalizeString(newItem.name))) alreadyExists = true;
-            if (['TaskDefinition', 'ProductInsume', 'Machinery', 'Personnel', 'Campaign', 'Client', 'User'].includes(entity) && 
-                db[collectionName].some(item => normalizeString(item.name) === normalizeString(newItem.name) && 
-                ( (entity === 'Campaign' && item.clientId === newItem.clientId) || 
-                  (entity === 'User' && item.clientId === newItem.clientId) || // Usuarios únicos por nombre DENTRO de un cliente
-                  (!['Campaign', 'User'].includes(entity)) ) // Otros son únicos globalmente por nombre
-                )) {
+
+            if (entity === 'Contractor') {
+                newItem = { 
+                    contractor_id: generateId('con_'), 
+                    is_internal: dataForDb.is_internal === undefined ? false : dataForDb.is_internal,
+                    ...dataForDb 
+                };
+                if (db.contractors.some(c => normalizeString(c.name) === normalizeString(newItem.name))) {
+                    alreadyExists = true;
+                }
+            } else if (entity === 'Task') {
+                newItem = {
+                    task_entry_id: generateId('task_entry_'),
+                    client_id: db.config.currentClientId,
+                    status: dataForDb.status || 'Programada',
+                    created_by_user_id: db.config.currentUser.id,
+                    creation_timestamp: new Date().toISOString(),
+                    ...dataForDb
+                };
+                // Considerar si se necesita un chequeo de 'alreadyExists' para Task (ej. misma task_id_ref, parcel_id y start_datetime). Por ahora, se permite.
+            } else {
+                 // Lógica general para otras entidades (Field, Lot, Parcel, TaskDefinition, ProductInsume, Machinery, Personnel, Campaign, Client, User)
+                const idPrefix = entity.substring(0, 3).toLowerCase() + '_';
+                newItem = { id: generateId(idPrefix), ...dataForDb }; // 'id' genérico para estas entidades
+                
+                if (['Field', 'Campaign'].includes(entity)) newItem.client_id = db.config.currentClientId; // Asegurar client_id
+                if (entity === 'User' && !newItem.client_id) newItem.client_id = db.config.currentClientId; 
+
+                if (entity === 'Field' && db.fields.some(f => f.client_id === newItem.client_id && normalizeString(f.name) === normalizeString(newItem.name))) alreadyExists = true;
+                else if (entity === 'Lot' && db.lots.some(l => l.fieldId === newItem.fieldId && normalizeString(l.name) === normalizeString(newItem.name))) alreadyExists = true;
+                else if (entity === 'Parcel' && db.parcels.some(p => p.lotId === newItem.lotId && normalizeString(p.name) === normalizeString(newItem.name))) alreadyExists = true;
+                else if (['TaskDefinition', 'ProductInsume', 'Machinery', 'Personnel', 'Campaign', 'Client', 'User'].includes(entity) && 
+                    db[collectionName].some(item => normalizeString(item.name) === normalizeString(newItem.name) && 
+                    ( (entity === 'Campaign' && item.client_id === newItem.client_id) || 
+                      (entity === 'User' && item.client_id === newItem.client_id) || 
+                      (!['Campaign', 'User'].includes(entity)) ) 
+                    )) {
+                    alreadyExists = true;
+                }
+            }
+            
+            if (alreadyExists) {
+                addMessageToChatLog(`Error: Ya existe un/a ${entity} con el nombre "${newItem.name}" en el contexto actual. No se creó un duplicado.`, 'ai', true);
+                break;
+            }
+
+            db[collectionName].push(newItem);
+            operationSuccessful = true;
+
+            // Manejo de entidades vinculadas para 'Task'
+            if (entity === 'Task' && operationSuccessful) {
+                const newTaskId = newItem.task_entry_id;
+                if (dataForDb.machinery_ids && Array.isArray(dataForDb.machinery_ids)) {
+                    dataForDb.machinery_ids.forEach(machinery_id => {
+                        if (machinery_id && db.machineries.some(m => m.id === machinery_id)) {
+                            db.taskMachineriesLink.push({
+                                task_machinery_link_id: generateId('tml_'),
+                                task_entry_id: newTaskId,
+                                machinery_id: machinery_id
+                            });
+                        } else {
+                            const machineryName = rawDataFromLLM.machineryNames?.find(name => findIdByName('Machinery', name) === machinery_id) || machinery_id || '?';
+                            addMessageToChatLog(`Advertencia: Maquinaria "${machineryName}" no encontrada. No se vinculó a la tarea.`, 'ai', true);
+                        }
+                    });
+                }
+                if (dataForDb.personnel_ids && Array.isArray(dataForDb.personnel_ids)) {
+                    dataForDb.personnel_ids.forEach(personnel_id => {
+                         if (personnel_id && db.personnel.some(p => p.id === personnel_id)) {
+                            db.taskPersonnelLink.push({
+                                task_personnel_link_id: generateId('tpl_'),
+                                task_entry_id: newTaskId,
+                                personnel_id: personnel_id,
+                                role_in_task: dataForDb.role_in_task || '' // Asumiendo que LLM podría dar un rol
+                            });
+                        } else {
+                            const personnelName = rawDataFromLLM.personnelNames?.find(name => findIdByName('Personnel', name) === personnel_id) || personnel_id || '?';
+                            addMessageToChatLog(`Advertencia: Personal "${personnelName}" no encontrado. No se vinculó a la tarea.`, 'ai', true);
+                        }
+                    });
+                }
+                if (dataForDb.insumes_used && Array.isArray(dataForDb.insumes_used)) {
+                    dataForDb.insumes_used.forEach(insume => {
+                        if (insume.product_insume_id && db.productsInsumes.some(pi => pi.id === insume.product_insume_id)) {
+                            db.taskInsumesLink.push({
+                                task_insume_link_id: generateId('til_'),
+                                task_entry_id: newTaskId,
+                                product_insume_id: insume.product_insume_id,
+                                quantity_used: insume.quantity_used,
+                                unit_used: insume.unit_used
+                            });
+                        } else {
+                            const insumeName = rawDataFromLLM.insumesUsed?.find(i => findIdByName('ProductInsume', i.productName) === insume.product_insume_id)?.productName || insume.product_insume_id || '?';
+                            addMessageToChatLog(`Advertencia: Insumo "${insumeName}" no encontrado. No se vinculó a la tarea.`, 'ai', true);
+                        }
+                    });
+                }
+            }
+            // responseText del LLM ya debería indicar éxito.
+            break;
+
+        case 'READ':
+            if (!db[collectionName]) {
+                addMessageToChatLog(`Error interno: Colección "${collectionName}" para entidad "${entity}" no existe.`, 'ai', true); break;
+            }
+            console.log(`Procesando READ para ${entity} con filtros resueltos:`, dataForDb.filters);
+            
+            let results = db[collectionName];
+            const currentClientId = db.config.currentClientId;
+
+            // Aplicar filtro de cliente actual para entidades que lo requieren
+            if (['Field', 'Campaign', 'User', 'Task'].includes(entity)) { // 'Task' ahora tiene client_id
+                results = results.filter(item => item.client_id === currentClientId);
+            } else if (entity === 'Lot') {
+                results = results.filter(item => db.fields.some(f => f.id === item.fieldId && f.client_id === currentClientId));
+            } else if (entity === 'Parcel') {
+                results = results.filter(item => db.lots.some(l => l.id === item.lotId && db.fields.some(f => f.id === l.fieldId && f.client_id === currentClientId)));
+            } else if (entity === 'Contractor') {
+                if (!dataForDb.filters?.client_id && !dataForDb.filters?.id && !dataForDb.filters?.name) { // Si no hay filtro específico de cliente o ID/nombre
+                     results = results.filter(item => item.is_internal || item.client_id === currentClientId || !item.client_id);
+                }
+            }
+            
+            // Aplicar filtros específicos del data.filters
+            if (dataForDb.filters && Object.keys(dataForDb.filters).length > 0) {
+                results = results.filter(item => {
+                    for (const key in dataForDb.filters) {
+                        const filterValue = normalizeString(dataForDb.filters[key]);
+                        let itemValue;
+                        
+                        if (entity === 'Task') { // Filtros específicos para Task
+                            if (key === 'fieldName' && item.field_id) {
+                                const field = db.fields.find(f => f.id === item.field_id);
+                                itemValue = field ? normalizeString(field.name) : '';
+                            } else if (key === 'lotName' && item.lot_id) {
+                                const lot = db.lots.find(l => l.id === item.lot_id);
+                                itemValue = lot ? normalizeString(lot.name) : '';
+                            } else if (key === 'parcelName' && item.parcel_id) {
+                                 const parcel = db.parcels.find(p => p.id === item.parcel_id);
+                                 itemValue = parcel ? normalizeString(parcel.name) : '';
+                            } else if (key === 'contractorName' && item.contractor_id) {
+                                const contractor = db.contractors.find(c => c.contractor_id === item.contractor_id);
+                                itemValue = contractor ? normalizeString(contractor.name) : '';
+                            } else if (key === 'personnelName') {
+                                const personnelId = findIdByName('Personnel', dataForDb.filters[key]);
+                                itemValue = personnelId && db.taskPersonnelLink.some(link => link.task_entry_id === item.task_entry_id && link.personnel_id === personnelId) ? filterValue : 'mismatch';
+                            } else if (key === 'machineryName') {
+                                const machineryId = findIdByName('Machinery', dataForDb.filters[key]);
+                                itemValue = machineryId && db.taskMachineriesLink.some(link => link.task_entry_id === item.task_entry_id && link.machinery_id === machineryId) ? filterValue : 'mismatch';
+                            } else if (key === 'taskNamePattern' && item.task_id_ref) {
+                                const taskDef = db.tasksList.find(td => td.id === item.task_id_ref);
+                                itemValue = taskDef ? normalizeString(taskDef.taskName) : '';
+                            } else {
+                               itemValue = item[key] ? normalizeString(item[key]) : undefined;
+                            }
+                        } else { // Filtros para otras entidades
+                           itemValue = item[key] ? normalizeString(item[key]) : undefined;
+                        }
+                        
+                        if (itemValue === undefined || itemValue === 'mismatch' || !itemValue.includes(filterValue)) {
+                            return false; 
+                        }
+                    }
+                    return true; 
+                });
+            }
+
+            // Comprobar si hay datos agrupados para mostrar
+            if (aiResult.data && aiResult.data.grouping && aiResult.data.grouping.groupBy && aiResult.data.grouping.groupBy.length > 0) {
+                const groupByFields = aiResult.data.grouping.groupBy;
+                try {
+                    console.log(`Client-side grouping by: ${groupByFields.join(', ')} for ${results.length} items.`);
+                    const groupedClientData = performClientSideGrouping(results, groupByFields, entity);
+                    displayGroupedData(groupedClientData, entity, groupByFields);
+                    additionalMessage = ""; 
+                } catch (groupingError) {
+                    console.error("Error during client-side grouping:", groupingError);
+                    addMessageToChatLog(`Error al intentar agrupar los datos: ${groupingError.message}`, 'ai', true);
+                    resetDataManagementPanelToDefaultLists();
+                    updateAllDisplayedLists();
+                    additionalMessage = `Se encontraron ${results.length} ${entity}(s) pero ocurrió un error al agruparlos. Mostrando lista sin agrupar.`;
+                }
+            } else if (results.length > 0) {
+                resetDataManagementPanelToDefaultLists(); 
+                updateAllDisplayedLists(); 
+
+                additionalMessage = `Encontrados ${results.length} ${entity}(s):\n`;
+                results.slice(0, 15).forEach(item => { 
+                    let displayName;
+                     if (entity === 'Task') {
+                        const taskDef = db.tasksList.find(t=>t.id === item.task_id_ref);
+                        const parcel = item.parcel_id ? db.parcels.find(p=>p.id === item.parcel_id) : null;
+                        const contractor = db.contractors.find(c => c.contractor_id === item.contractor_id);
+                        displayName = `${taskDef?.taskName || '?'} en ${parcel?.name || (item.lot_id ? db.lots.find(l=>l.id===item.lot_id)?.name : (item.field_id ? db.fields.find(f=>f.id===item.field_id)?.name : '?')) } (Contratista: ${contractor?.name || '?'}, Estado: ${item.status}, ID: ${item.task_entry_id.substring(0,4)})`;
+                    } else if (entity === 'Lot') {
+                        const field = db.fields.find(f=>f.id === item.fieldId);
+                        displayName = `${item.name} (en Campo: ${field?.name || '?'}, ID: ${item.id.substring(0,4)})`;
+                    } else if (entity === 'Parcel') {
+                         const lot = db.lots.find(l=>l.id === item.lotId);
+                        displayName = `${item.name} (en Lote: ${lot?.name || '?'}, ID: ${item.id.substring(0,4)})`;
+                    } else if (entity === 'Contractor') {
+                        displayName = `${item.name} (Contacto: ${item.contact_person || 'N/A'}, ID: ${item.contractor_id.substring(0,4)})`;
+                    } else if (item.id || item.contractor_id || item.task_entry_id) { // General ID check
+                        const currentId = item.task_entry_id || item.contractor_id || item.id;
+                        displayName = `${item.name || item.taskName} (ID: ${currentId.substring(0,4)})`;
+                    } else {
+                        displayName = JSON.stringify(item); // Fallback
+                    }
+                    additionalMessage += `- ${displayName}\n`;
+                });
+                if (results.length > 15) {
+                    additionalMessage += `...y ${results.length - 15} más.\n`;
+                }
+            } else {
+                additionalMessage = `No se encontraron ${entity} que coincidan con los criterios.`;
                 alreadyExists = true;
             }
 
@@ -780,7 +1033,11 @@ function handleLoadDbFromFile(event) {
                 Array.isArray(loadedDbData.parcels) && Array.isArray(loadedDbData.tasksList) &&
                 Array.isArray(loadedDbData.productsInsumes) && Array.isArray(loadedDbData.machineries) &&
                 Array.isArray(loadedDbData.personnel) && Array.isArray(loadedDbData.campaigns) &&
-                Array.isArray(loadedDbData.jobsEvents)
+                // V5 collections
+                Array.isArray(loadedDbData.contractors) && Array.isArray(loadedDbData.tasks) &&
+                Array.isArray(loadedDbData.taskMachineriesLink) && Array.isArray(loadedDbData.taskPersonnelLink) &&
+                Array.isArray(loadedDbData.taskInsumesLink) && Array.isArray(loadedDbData.userAccess)
+                // jobsEvents is removed
             ) {
                 db = loadedDbData; 
                 saveDbToStorage(); 
