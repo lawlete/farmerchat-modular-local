@@ -21,11 +21,13 @@ async function transcribeAudioWithGemini(base64AudioData, mimeType = 'audio/webm
     }
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL_NAME_LLM_MODULE}:generateContent?key=${GEMINI_API_KEY_LLM_MODULE}`;
 
+    const transcriptionPromptText = await (await fetch('../prompts/transcription_prompt.txt')).text();
+
     const payload = {
         contents: [{
             parts: [
                 // Prompt MUY directo para transcripción
-                { text: "Transcribe el siguiente audio a texto. Devuelve ÚNICAMENTE la transcripción, sin ningún texto adicional, explicaciones, ni formato markdown." },
+                { text: transcriptionPromptText },
                 {
                     inlineData: { 
                         mimeType: mimeType, 
@@ -97,167 +99,47 @@ async function callGeminiApiWithHistory(userInputText) {
         throw new Error("La entrada para la IA debe ser texto.");
     }
 
+    const baseSystemInstructionText = await (await fetch('../prompts/farmer_chat_system_prompt.txt')).text();
+
+    // Prepare dynamic data for the prompt
+    const currentClientId = db.config.currentClientId;
+    const clientName = db.clients.find(c => c.id === currentClientId)?.name || 'Desconocido';
+    const currentDate = new Date().toLocaleDateString('es-ES');
+    
+    // Campos del cliente actual
+    const fieldsContextArr = db.fields.filter(f => f.clientId === currentClientId).slice(0,3);
+    const fieldsContextText = fieldsContextArr.length > 0 ? fieldsContextArr.map(f => `'${f.name}' (ID: ${f.id})`).join(', ') : 'Ninguno';
+
+    // Contratistas disponibles
+    const contractorsContextArr = db.contractors ? db.contractors.filter(c => c.is_internal || db.clients.find(client => client.id === currentClientId) ) : [];
+    const contractorsContextText = contractorsContextArr.length > 0 ? contractorsContextArr.slice(0,3).map(c => `'${c.name}' (ID: ${c.contractor_id})`).join(', ') : 'Ninguno';
+
+    // Populate the system instruction text
+    let populatedSystemInstructionText = baseSystemInstructionText;
+
+    const clienteActualContext = `- Cliente Actual: ${clientName} (ID: ${currentClientId})`;
+    const hoyEsContext = `- Hoy es: ${currentDate}`;
+    const camposContextLine = `- Campos del cliente actual (primeros 3): ${fieldsContextText}`;
+    const contratistasContextLine = `- Contratistas disponibles (primeros 3): ${contractorsContextText}`;
+
+    const originalClienteActualLine = "- Cliente Actual: ${db.clients.find(c=>c.id === db.config.currentClientId)?.name || 'Desconocido'} (ID: ${db.config.currentClientId})";
+    const originalHoyEsLine = "- Hoy es: ${new Date().toLocaleDateString('es-ES')}";
+    const originalCamposLine = "- Campos del cliente actual (primeros 3): ${db.fields.filter(f=>f.clientId === db.config.currentClientId).slice(0,3).map(f=>`'${f.name}' (ID: ${f.id})`).join(', ') || 'Ninguno'}";
+    const originalContratistasLine = "- Contratistas disponibles (primeros 3): ${db.contractors.filter(c => c.is_internal || db.clients.find(client => client.id === db.config.currentClientId)).slice(0,3).map(c=>`'${c.name}' (ID: ${c.contractor_id})`).join(', ') || 'Ninguno'}";
+
+    populatedSystemInstructionText = populatedSystemInstructionText.replace(originalClienteActualLine, clienteActualContext);
+    populatedSystemInstructionText = populatedSystemInstructionText.replace(originalHoyEsLine, hoyEsContext);
+    populatedSystemInstructionText = populatedSystemInstructionText.replace(originalCamposLine, camposContextLine);
+    populatedSystemInstructionText = populatedSystemInstructionText.replace(originalContratistasLine, contratistasContextLine);
+
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL_NAME_LLM_MODULE}:generateContent?key=${GEMINI_API_KEY_LLM_MODULE}`;
-
-    // --- NUEVO SYSTEM PROMPT MÁS DIRECTIVO Y CON EJEMPLOS JSON ---
-    const systemInstructionText = `
-Eres FarmerChat, un asistente virtual para la gestión de registros y tareas en el sector agropecuario.
-Tu ÚNICA función es interpretar las peticiones del usuario y responder SIEMPRE y ÚNICAMENTE con un objeto JSON válido. No añadas ningún texto antes o después del JSON, ni explicaciones, ni markdown.
-
-El JSON de respuesta DEBE tener la siguiente estructura:
-{
-  "action": "STRING_ACCION",
-  "entity": "STRING_ENTIDAD_OPCIONAL",
-  "data": { // OBJETO_DATOS_OPCIONAL
-    "filters": {}, // (Opcional) Filtros para READ, UPDATE, DELETE
-    "grouping": { // (Opcional, solo para READ) Especificación de agrupación
-      "groupBy": ["STRING_CAMPO1", "STRING_CAMPO2"], // Campos por los que agrupar
-      "groupedData": [] // Array de datos agrupados (estructura anidada si groupBy tiene múltiples campos)
-    },
-    "criteria": {}, // (Opcional) Criterios para UPDATE, DELETE
-    "nuevosDatos": {} // (Opcional) Nuevos datos para UPDATE
-    // ...otros campos según la acción y entidad
-  },
-  "clarificationQuestion": "STRING_PREGUNTA_OPCIONAL",
-  "responseText": "STRING_RESPUESTA_PARA_USUARIO",
-  "externalQuery": "STRING_CONSULTA_EXTERNA_OPCIONAL"
-}
-
-Valores posibles para "action":
-- "CREATE": Para crear una nueva entidad. "entity" y "data" (con campos y valores) son requeridos.
-- "READ": Para consultar/listar entidades. "entity" es requerido.
-    - "data.filters" (opcional) contiene los filtros.
-    - Si el usuario pide agrupar (ej. "listar X agrupados por Y"), incluye "data.grouping".
-      - "data.grouping.groupBy": Array de strings con los nombres de los campos por los cuales se agrupa (ej., ["fieldName", "lotName"]).
-      - "data.grouping.groupedData": Array de objetos. Cada objeto es un grupo con "groupName" (valor del grupo) e "items" (array de sub-grupos o items finales).
-    - Si no puedes realizar la agrupación solicitada o la entidad no se presta para ello, omite "data.grouping" y explícalo en "responseText".
-- "UPDATE": Para modificar una entidad. "entity" y "data" son requeridos. "data.criteria" identifica el registro y "data.nuevosDatos" tiene los cambios.
-- "DELETE": Para eliminar una entidad. "entity" y "data.criteria" son requeridos.
-- "CLARIFY": Si necesitas más información. "clarificationQuestion" y "responseText" son requeridos.
-- "INFO_EXTERNAL": Para búsquedas externas (clima, precios). "externalQuery" y "responseText" son requeridos.
-- "GREETING": Para saludos. "responseText" es requerido.
-- "HELP_COMMAND": Si el usuario pide ayuda sobre un comando o ayuda general. "responseText" es requerido. "entity" y "data" (con detalles del comando) son opcionales pero recomendados.
-- "NOT_UNDERSTOOD": Si no entiendes la petición o no puedes mapearla a una acción. "responseText" es requerido.
-
-Entidades que gestionas (para el campo "entity"): Field, Lot, Parcel, TaskDefinition, ProductInsume, Machinery, Personnel, Campaign, JobEvent, Client, User.
-
-Contexto de Datos Existentes (para tu referencia, no lo incluyas en tu respuesta JSON):
-- Cliente Actual: ${db.clients.find(c=>c.id === db.config.currentClientId)?.name || 'Desconocido'} (ID: ${db.config.currentClientId})
-- Hoy es: ${new Date().toLocaleDateString('es-ES')}
-- Campos del cliente actual (primeros 3): ${db.fields.filter(f=>f.clientId === db.config.currentClientId).slice(0,3).map(f=>`'${f.name}' (ID: ${f.id})`).join(', ') || 'Ninguno'}
-
-EJEMPLOS DE PETICIONES Y RESPUESTAS JSON ESPERADAS:
-
-Petición Usuario: "hola"
-Respuesta JSON Esperada:
-{
-  "action": "GREETING",
-  "responseText": "¡Hola! Soy FarmerChat, tu asistente agrícola. ¿Cómo puedo ayudarte hoy?"
-}
-
-Petición Usuario: "listar los campos"
-Respuesta JSON Esperada:
-{
-  "action": "READ",
-  "entity": "Field",
-  "data": { "filters": {} },
-  "responseText": "Aquí tienes la lista de campos: [NombreCampo1 (ID: id1), NombreCampo2 (ID: id2)...] (El backend llenará esta lista. Tú solo indica la acción y entidad)"
-}
-(Si no hay campos, "responseText": "Actualmente no hay campos registrados para este cliente.")
-
-Petición Usuario: "crear campo La Nueva Esperanza en Sinsacate"
-Respuesta JSON Esperada:
-{
-  "action": "CREATE",
-  "entity": "Field",
-  "data": { "name": "La Nueva Esperanza", "location": "Sinsacate" },
-  "responseText": "Campo 'La Nueva Esperanza' creado en Sinsacate."
-}
-
-Petición Usuario: "programar siembra de maíz"
-Respuesta JSON Esperada:
-{
-  "action": "CLARIFY",
-  "responseText": "Entendido, quieres programar una siembra de maíz. ¿En qué parcela y para qué fecha sería?",
-  "clarificationQuestion": "¿En qué parcela y para qué fecha quieres programar la siembra de maíz?"
-}
-
-Petición Usuario: "necesito saber las tareas en el campo San Isidro"
-Respuesta JSON Esperada:
-{
-  "action": "READ",
-  "entity": "JobEvent",
-  "data": { "filters": { "fieldName": "San Isidro" } },
-  "responseText": "Buscando tareas para el campo San Isidro... (El backend mostrará los resultados)"
-}
-
-Petición Usuario: "listar trabajos para el cliente 'Agro SRL' agrupados por campo y luego por lote"
-Respuesta JSON Esperada:
-{
-  "action": "READ",
-  "entity": "JobEvent",
-  "data": {
-    "filters": { "clientName": "Agro SRL" },
-    "grouping": {
-      "groupBy": ["fieldName", "lotName"],
-      "groupedData": [
-        {
-          "groupName": "Campo La Esperanza",
-          "items": [
-            {
-              "groupName": "Lote 1A",
-              "items": [
-                { "id": "job_001", "taskName": "Siembra Maíz", "status": "Completed", "parcelName":"Parcela Norte" },
-                { "id": "job_005", "taskName": "Cosecha Soja", "status": "Scheduled", "parcelName":"Parcela Sur" }
-              ]
-            }
-          ]
-        }
-      ]
-    }
-  },
-  "responseText": "Aquí están los trabajos para 'Agro SRL' agrupados por campo y lote. Los resultados se mostrarán en el panel lateral."
-}
-(El LLM NO debe generar los datos agrupados en sí, solo la estructura de "grouping" y los filtros. El backend hará la agrupación real. Si el LLM no puede determinar los campos para "groupBy" o considera que la agrupación no es viable, omitirá el objeto "grouping" y lo explicará en "responseText".)
-
-Petición Usuario: "ayuda para crear un nuevo campo"
-Respuesta JSON Esperada:
-{
-  "action": "HELP_COMMAND",
-  "entity": "Field",
-  "data": {
-    "commandName": "Crear Campo",
-    "description": "Registra un nuevo campo en el sistema.",
-    "usage": "crear campo [nombre] en [ubicación] de [hectáreas] hectáreas",
-    "parameters": [
-      { "name": "nombre", "required": true, "description": "Nombre del campo." },
-      { "name": "ubicación", "required": false, "description": "Dónde está el campo." },
-      { "name": "hectáreas", "required": false, "description": "Superficie en hectáreas." }
-    ],
-    "examples": ["crear campo La Margarita en Pergamino de 300 hectáreas"]
-  },
-  "responseText": "Ayuda para 'Crear Campo':\nDescripción: Registra un nuevo campo en el sistema.\nUso: crear campo [nombre] en [ubicación] de [hectáreas] hectáreas\nParámetros:\n- nombre (obligatorio): Nombre del campo.\n- ubicación (opcional): Dónde está el campo.\n- hectáreas (opcional): Superficie en hectáreas.\nEjemplo: crear campo La Margarita en Pergamino de 300 hectáreas"
-}
-
-Petición Usuario: "borrar el lote Lote Experimental del campo La Esperanza"
-Respuesta JSON Esperada:
-{
-  "action": "DELETE",
-  "entity": "Lot",
-  "data": { "criteria": { "name": "Lote Experimental", "fieldName": "La Esperanza" } },
-  "responseText": "Intentando borrar el lote 'Lote Experimental' del campo 'La Esperanza'."
-}
-
-Si la petición no es clara o no se relaciona con la gestión agrícola, usa "NOT_UNDERSTOOD".
-Ahora, procesa la siguiente petición del usuario. ¡Recuerda, SOLO JSON!
-`;
 
     // Estructura de `contents` para la API de Gemini:
     // El historial debe alternar roles user/model. El system prompt puede ir como primer mensaje de 'user'.
     let finalApiContents = [];
 
     // 1. System Prompt (como el primer mensaje con rol 'user', Gemini lo trata como instrucción)
-    finalApiContents.push({ role: "user", parts: [{ text: systemInstructionText }] });
+    finalApiContents.push({ role: "user", parts: [{ text: populatedSystemInstructionText }] });
     // 2. Historial de la conversación (model/user/model/user...)
     //    Asegurándonos que el contenido del historial sea string
     conversationHistoryLLM.forEach(turn => {
@@ -291,7 +173,7 @@ Ahora, procesa la siguiente petición del usuario. ¡Recuerda, SOLO JSON!
     // Si el historial está vacío, el primer mensaje es el system prompt + la pregunta del usuario.
     if (conversationHistoryLLM.length === 0) {
         finalApiContents = [
-            { role: "user", parts: [{ text: systemInstructionText + "\n\nUsuario: " + userInputText }] }
+            { role: "user", parts: [{ text: populatedSystemInstructionText + "\n\nUsuario: " + userInputText }] }
         ];
     } else {
         // Si hay historial, lo incluimos y añadimos la nueva pregunta del usuario.
@@ -309,10 +191,10 @@ Ahora, procesa la siguiente petición del usuario. ¡Recuerda, SOLO JSON!
         // ]
         //
         // Por ahora, vamos a simplificar y enviar el system prompt + el historial + el nuevo input,
-        // intentando que el `systemInstructionText` guíe el primer procesamiento.
+        // intentando que el `populatedSystemInstructionText` guíe el primer procesamiento.
         // La API de Gemini (especialmente los modelos más nuevos como 1.5) son buenos manejando esto en el `contents`.
 
-        finalApiContents.push({role: "user", parts: [{text: systemInstructionText}]});
+        finalApiContents.push({role: "user", parts: [{text: populatedSystemInstructionText}]});
         // Añadir el historial, asegurando alternancia. Si el historial ya empieza con 'user', está bien.
         // Si el historial empieza con 'model', eso también está bien después de nuestro 'user' system prompt.
         conversationHistoryLLM.forEach(turn => {

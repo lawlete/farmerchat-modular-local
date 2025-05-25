@@ -16,14 +16,19 @@ let db = {
     machineries: [],
     personnel: [],
     campaigns: [],
-    jobsEvents: [],
+    contractors: [],
+    tasks: [],
+    taskMachineriesLink: [],
+    taskPersonnelLink: [],
+    taskInsumesLink: [],
+    userAccess: [],
     config: { // Configuración por defecto, se intentará sobreescribir con datos de CSV/localStorage
         currentClientId: 'client_01', 
         currentUser: { id: 'user_admin_ama', name: 'Roberto Carlos', role: 'Administrator' } 
     }
 };
 
-const DB_STORAGE_KEY = 'farmerChatModularDB_v2'; // Cambié la key por si hay datos viejos
+const DB_STORAGE_KEY = 'farmerChatModularDB_v5'; // Cambié la key por si hay datos viejos
 
 function loadDbFromStorage() {
     const storedDb = localStorage.getItem(DB_STORAGE_KEY);
@@ -47,7 +52,7 @@ function loadDbFromStorage() {
     }
 
     // Asegurar que todas las colecciones esperadas existan, incluso si están vacías
-    const expectedCollections = ['clients', 'users', 'fields', 'lots', 'parcels', 'tasksList', 'productsInsumes', 'machineries', 'personnel', 'campaigns', 'jobsEvents'];
+    const expectedCollections = ['clients', 'users', 'fields', 'lots', 'parcels', 'tasksList', 'productsInsumes', 'machineries', 'personnel', 'campaigns', 'contractors', 'tasks', 'taskMachineriesLink', 'taskPersonnelLink', 'taskInsumesLink', 'userAccess'];
     expectedCollections.forEach(col => {
         if (!db[col] || !Array.isArray(db[col])) { // Verificar que sea un array
             console.warn(`Colección '${col}' no es un array o falta en DB, inicializando como array vacío.`);
@@ -134,9 +139,20 @@ function resolveEntityNamesToIds(dataFromLLM, entityType) {
     const resolvedData = { ...dataFromLLM }; 
     const currentClientId = db.config.currentClientId; // Usar para filtrar si es necesario
 
-    if (resolvedData.taskName && !resolvedData.taskId) {
+    // Resolve contractor name to contractor_id
+    if (resolvedData.contractorName && !resolvedData.contractor_id) {
+        resolvedData.contractor_id = findIdByName('Contractor', resolvedData.contractorName);
+    }
+
+    // Resolve taskName to task_id_ref (from TaskDefinition list) if entityType is Task
+    if (entityType === 'Task' && resolvedData.taskName && !resolvedData.task_id_ref) {
+        resolvedData.task_id_ref = findIdByName('TaskDefinition', resolvedData.taskName);
+    } else if (resolvedData.taskName && !resolvedData.taskId && entityType !== 'Task') { 
+        // Existing logic for other entity types if they use taskId for TaskDefinition
         resolvedData.taskId = findIdByName('TaskDefinition', resolvedData.taskName);
     }
+
+    // Resolve common location and campaign names to IDs
     if (resolvedData.fieldName && !resolvedData.fieldId) {
         // Asumimos que el campo debe pertenecer al cliente actual si no se especifica otro.
         // findIdByName para 'Field' ya no necesita parentContext aquí.
@@ -179,13 +195,31 @@ function resolveEntityNamesToIds(dataFromLLM, entityType) {
     };
 
     if (resolvedData.personnelNames) {
-        resolvedData.personnelInvolvedIds = resolveNameArray(resolvedData.personnelNames, 'Personnel');
+        resolvedData.personnel_ids = resolveNameArray(resolvedData.personnelNames, 'Personnel');
+        // delete resolvedData.personnelNames; // Opcional: limpiar el campo original
     }
     if (resolvedData.machineryNames) {
-        resolvedData.machineryUsedIds = resolveNameArray(resolvedData.machineryNames, 'Machinery');
+        resolvedData.machinery_ids = resolveNameArray(resolvedData.machineryNames, 'Machinery');
+        // delete resolvedData.machineryNames; // Opcional: limpiar el campo original
     }
     
-    if (resolvedData.productsUsed && Array.isArray(resolvedData.productsUsed)) {
+    // Resolve product names to product_insume_ids within insumesUsed array for Tasks
+    if (entityType === 'Task' && resolvedData.insumesUsed && Array.isArray(resolvedData.insumesUsed)) {
+        resolvedData.insumes_used = resolvedData.insumesUsed.map(insume => {
+            let product_insume_id = insume.product_insume_id;
+            if (insume.productName && !product_insume_id) {
+                product_insume_id = findIdByName('ProductInsume', insume.productName);
+            }
+            const quantity_used = parseFloat(insume.quantity_used); // Asegurar que sea número
+            return { 
+                product_insume_id, 
+                quantity_used: isNaN(quantity_used) ? 0 : quantity_used, 
+                unit_used: insume.unit_used 
+            };
+        }).filter(insume => insume.product_insume_id && insume.quantity_used > 0);
+        // delete resolvedData.insumesUsed; // Opcional, si se reemplaza completamente por insumes_used
+    } else if (resolvedData.productsUsed && Array.isArray(resolvedData.productsUsed)) {
+        // Mantener la lógica anterior para 'productsUsed' si no es una Task (compatibilidad)
         resolvedData.productsUsed = resolvedData.productsUsed.map(p => {
             let productId = p.productId;
             if (p.productName && !p.productId) {
@@ -233,7 +267,12 @@ function getCollectionNameForEntity(entity) { // Mapeo de Entidad a nombre de co
         case 'machinery': return 'machineries';
         case 'personnel': return 'personnel';
         case 'campaign': return 'campaigns';
-        case 'jobevent': return 'jobsEvents';
+        case 'contractor': return 'contractors';
+        case 'task': return 'tasks';
+        case 'taskmachinerylink': return 'taskMachineriesLink';
+        case 'taskpersonnellink': return 'taskPersonnelLink';
+        case 'taskinsumelink': return 'taskInsumesLink';
+        case 'useraccess': return 'userAccess';
         case 'client': return 'clients';
         case 'user': return 'users';
         default:
