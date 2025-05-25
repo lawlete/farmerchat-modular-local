@@ -19,7 +19,7 @@ const App: React.FC = () => {
   const [geminiService, setGeminiService] = useState<GoogleGenAI | null>(null);
   const [chatSession, setChatSession] = useState<Chat | null>(null);
   const [theme, setTheme] = useState<Theme>('dark');
-  const [isInteractiveVoiceMode, setIsInteractiveVoiceMode] = useState<boolean>(false);
+  const [isInteractiveVoiceMode, setIsInteractiveVoiceMode] = useState<boolean>(true); // Default to true
   const chatPanelRef = useRef<ChatPanelHandles>(null);
   const topBarRef = useRef<TopBarHandles>(null);
 
@@ -42,6 +42,22 @@ const App: React.FC = () => {
       document.documentElement.classList.add('dark'); // Default to dark
     }
   }, []);
+
+  // Effect to show initial voice mode message
+  useEffect(() => {
+    if (isInteractiveVoiceMode) {
+        addMessageToChat(
+            'Modo Voz Interactiva Activado. Las respuestas del AI se leerán en voz alta y el micrófono se activará automáticamente después.', 
+            'system',
+            false,      // isError
+            undefined,  // groupedData
+            undefined,  // rawLLMResponse
+            true        // isInitialGreeting flag
+        );
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run once on mount
+
 
   const toggleTheme = () => {
     setTheme(prevTheme => {
@@ -69,9 +85,13 @@ const App: React.FC = () => {
     setIsInteractiveVoiceMode(prev => {
       const newMode = typeof enable === 'boolean' ? enable : !prev;
       if (newMode) {
-        if (!prev) addMessageToChat('Modo Voz Interactiva Activado. Las respuestas del AI se leerán en voz alta y el micrófono se activará automáticamente después.', 'system');
+        if (!prev) {
+            addMessageToChat('Modo Voz Interactiva Activado. Las respuestas del AI se leerán en voz alta y el micrófono se activará automáticamente después.', 'system');
+        }
       } else {
-        if (prev) addMessageToChat('Modo Voz Interactiva Desactivado.', 'system');
+        if (prev) { 
+            addMessageToChat('Modo Voz Interactiva Desactivado.', 'system');
+        }
         if (window.speechSynthesis.speaking) {
           window.speechSynthesis.cancel();
         }
@@ -101,13 +121,19 @@ const App: React.FC = () => {
 
       const originalOnError = utterance.onerror;
       utterance.onerror = function(event: SpeechSynthesisErrorEvent) {
+        const isInitialGreetingUtterance = (utterance as any).isInitialGreeting === true;
+        isSpeakingRef.current = false;
+
         if (event.error === 'interrupted') {
           console.log('SpeechSynthesisUtterance: Speech was interrupted.', event);
+        } else if (event.error === 'not-allowed' && isInitialGreetingUtterance) {
+          console.warn('Initial greeting speech was not allowed by the browser (requires user interaction). Mode is active, greeting not spoken.', event);
+          // Do not add a chat message for this specific scenario.
         } else {
           console.error('SpeechSynthesisUtterance.onerror - Error reason:', event.error, 'Full event details:', event);
           addMessageToChat(`Error al reproducir voz: ${event.error}`, 'system', true);
         }
-        isSpeakingRef.current = false;
+        
         if (typeof originalOnError === 'function') {
             originalOnError.call(this, event); 
         }
@@ -119,7 +145,7 @@ const App: React.FC = () => {
     }
   };
 
-  const speakText = (text: string, onEndCallback?: () => void) => {
+  const speakText = (text: string, onEndCallback?: () => void, isInitialGreeting: boolean = false) => {
     if (!isInteractiveVoiceMode || !text) {
       if(onEndCallback) onEndCallback();
       return;
@@ -127,6 +153,8 @@ const App: React.FC = () => {
     
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'es-ES';
+    (utterance as any).isInitialGreeting = isInitialGreeting; // Tag the utterance
+
     if (onEndCallback) {
       utterance.onend = onEndCallback;
     }
@@ -235,7 +263,14 @@ const App: React.FC = () => {
     localStorage.setItem(LOCAL_STORAGE_DB_KEY, JSON.stringify(database));
   }, [database]);
 
-  const addMessageToChat = (text: string, sender: ChatMessage['sender'], isError: boolean = false, groupedData?: GroupedResult[], rawLLMResponse?: string) => {
+  const addMessageToChat = (
+    text: string, 
+    sender: ChatMessage['sender'], 
+    isError: boolean = false, 
+    groupedData?: GroupedResult[], 
+    rawLLMResponse?: string,
+    isInitialGreeting: boolean = false // New parameter
+  ) => {
     const newMessage: ChatMessage = { id: generateUUID(), text, sender, timestamp: new Date(), isError, groupedData, rawLLMResponse, isLoading: sender === 'ai' && !text };
     setChatMessages(prev => [...prev, newMessage]);
     
@@ -246,7 +281,7 @@ const App: React.FC = () => {
     }
 
     if (sender === 'system' && isInteractiveVoiceMode && text && !isError) {
-        speakText(text);
+        speakText(text, undefined, isInitialGreeting); // Pass the flag
     }
   };
 
@@ -260,7 +295,7 @@ const App: React.FC = () => {
       if (response.data && typeof response.data.enable === 'boolean') {
         toggleInteractiveVoiceMode(response.data.enable);
       } else {
-        toggleInteractiveVoiceMode(); // Toggle current state if enable not specified
+        toggleInteractiveVoiceMode(); 
       }
       if (onDbUpdated) onDbUpdated();
       return;
@@ -648,12 +683,12 @@ Comando del usuario: ${message}`;
         ref={topBarRef}
         onFileUpload={handleFileUpload}
         onFileExport={handleFileExport}
-        onExportToCsvs={handleExportToCsvs} // New prop
+        onExportToCsvs={handleExportToCsvs} 
         entityTypes={csvImportableEntities}
         currentTheme={theme}
         onToggleTheme={toggleTheme}
         isInteractiveVoiceMode={isInteractiveVoiceMode}
-        onToggleInteractiveVoiceMode={() => toggleInteractiveVoiceMode()} // Pass as a function
+        onToggleInteractiveVoiceMode={() => toggleInteractiveVoiceMode()} 
         onMultipleFileUploadRequest={handleMultipleFileUploadRequest}
       />
       <div className="flex flex-1 overflow-hidden">

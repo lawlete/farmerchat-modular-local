@@ -20,24 +20,79 @@ const normalizeString = (str: string): string => {
   return str.toLowerCase().replace(/[\s_-]+/g, '');
 };
 
-const suggestEntityType = (filename: string): EntityType | null => {
-  const normalizedFilename = normalizeString(filename.substring(0, filename.lastIndexOf('.'))); // remove extension
-  
-  for (const entity of ALL_ENTITY_TYPES) {
-    const displayName = ENTITY_DISPLAY_NAMES[entity];
-    if (normalizedFilename.includes(normalizeString(entity))) {
-      return entity;
+// Pre-sort entity types by length (descending) and then alphabetically
+// This prioritizes longer, more specific names.
+const SortedEntityTypes = [...ALL_ENTITY_TYPES].sort((a, b) => {
+  const normA = normalizeString(a);
+  const normB = normalizeString(b);
+  if (normA.length !== normB.length) {
+    return normB.length - normA.length; // Longer names first
+  }
+  return normA.localeCompare(normB); // Alphabetical for stability
+});
+
+const tryMatchVariations = (filenameToken: string, entityToken: string): boolean => {
+  if (!entityToken) return false;
+
+  const alternatives = new Set<string>();
+  const addWithSingular = (token: string) => {
+    if (!token) return;
+    alternatives.add(token);
+    // Basic singularization: remove 's' if it's the last char.
+    // More complex plural/singular (e.g., ies/y) handled by specific cases below or by display names.
+    if (token.endsWith('s') && token.length > 1) {
+       alternatives.add(token.slice(0, -1));
     }
-    if (displayName && normalizedFilename.includes(normalizeString(displayName))) {
-      return entity;
+  };
+
+  addWithSingular(entityToken);
+
+  // Specific handling for "machinery" vs "machineries"
+  if (entityToken.includes("machinery") && !entityToken.includes("machineries")) {
+    // entityToken has "machinery" (e.g., "taskmachinerylinks")
+    // Check if filename uses "machineries" (e.g., "taskmachinerieslink")
+    addWithSingular(entityToken.replace("machinery", "machineries"));
+  } else if (entityToken.includes("machineries")) {
+    // entityToken has "machineries" (e.g., "machineries")
+    // Check if filename uses "machinery"
+    addWithSingular(entityToken.replace("machineries", "machinery"));
+  }
+
+  for (const alt of alternatives) {
+    if (filenameToken.includes(alt)) {
+      return true;
     }
   }
-  // More specific suggestions common in filenames
+  return false;
+};
+
+
+const suggestEntityType = (filename: string): EntityType | null => {
+  const normalizedFilename = normalizeString(filename.substring(0, filename.lastIndexOf('.'))); // remove extension
+
+  for (const entity of SortedEntityTypes) {
+    const normEntityType = normalizeString(entity);
+    if (tryMatchVariations(normalizedFilename, normEntityType)) {
+      return entity;
+    }
+
+    const displayName = ENTITY_DISPLAY_NAMES[entity];
+    if (displayName) {
+        const normalizedDisplayName = normalizeString(displayName);
+        if (tryMatchVariations(normalizedFilename, normalizedDisplayName)) {
+            return entity;
+        }
+    }
+  }
+  
+  // Fallback keywords (less critical now, but kept for broader compatibility)
   if (normalizedFilename.includes("cliente")) return 'clients';
   if (normalizedFilename.includes("usuario")) return 'users';
   if (normalizedFilename.includes("contratista")) return 'contractors';
-  if (normalizedFilename.includes("personal") || normalizedFilename.includes("empleado")) return 'personnel';
-  if (normalizedFilename.includes("maquinaria") || normalizedFilename.includes("maquina")) return 'machineries';
+  // "personnel" is tricky as "personal" (display name) is very common.
+  // The tryMatchVariations with SortedEntityTypes should handle "taskPersonnelLinks" correctly.
+  if (normalizedFilename.includes("personal") && !normalizedFilename.includes("task")) return 'personnel';
+  if (normalizedFilename.includes("maquinaria") || (normalizedFilename.includes("maquina") && !normalizedFilename.includes("task"))) return 'machineries';
   if (normalizedFilename.includes("campo") || normalizedFilename.includes("finca")) return 'fields';
   if (normalizedFilename.includes("lote")) return 'lots';
   if (normalizedFilename.includes("parcela")) return 'parcels';
@@ -45,14 +100,15 @@ const suggestEntityType = (filename: string): EntityType | null => {
   if (normalizedFilename.includes("tipotarea") || normalizedFilename.includes("taskslist") || normalizedFilename.includes("tasklist")) return 'tasksList';
   if (normalizedFilename.includes("producto") || normalizedFilename.includes("insumo")) return 'productsInsumes';
   
-  return null;
+  return null; // If no suggestion found
 };
+
 
 export const MultipleCsvUploadModal: React.FC<MultipleCsvUploadModalProps> = ({
   files,
   onClose,
   onSubmit,
-  entityTypes,
+  entityTypes, // Note: This prop provides ALL_ENTITY_TYPES for the dropdown options
 }) => {
   const [fileMappings, setFileMappings] = useState<FileMapping[]>([]);
 
@@ -126,6 +182,7 @@ export const MultipleCsvUploadModal: React.FC<MultipleCsvUploadModalProps> = ({
                 className="w-full p-2 border border-gray-300 dark:border-gray-500 rounded-md bg-white dark:bg-gray-600 focus:ring-2 focus:ring-green-500 outline-none"
               >
                 <option value="">-- Seleccionar --</option>
+                {/* Use the passed entityTypes prop for dropdown options, which should be ALL_ENTITY_TYPES */}
                 {entityTypes.map(type => (
                   <option key={type} value={type}>
                     {ENTITY_DISPLAY_NAMES[type]}
