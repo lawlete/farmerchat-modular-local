@@ -1,8 +1,0 @@
-{
-  "name": "Movil FarmerChat IA",
-  "description": "Movil FarmerChat AI es una aplicación Android de simulación que actúa como un asistente virtual para la gestión de registros y tareas en el sector agropecuario, utilizando IA para procesar comandos en lenguaje natural.",
-  "requestFramePermissions": [
-    "microphone"
-  ],
-  "prompt": ""
-}
