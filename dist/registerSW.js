@@ -1,1 +1,0 @@
-if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/farmerchat-modular-local/sw.js', { scope: '/farmerchat-modular-local/' })})}

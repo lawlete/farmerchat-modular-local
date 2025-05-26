@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Movil FarmerChat IA</title>
-    <link rel="manifest" href="/farmerchat-modular-local/assets/manifest-BsjvVKBI.json">
+    <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#1f2937" />
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -37,12 +37,13 @@
       body {
         font-family: 'Inter', sans-serif; /* A modern sans-serif font */
       }
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
       /* Basic transition for color scheme changes */
       body, .bg-transition {
         transition: background-color 0.3s ease, color 0.3s ease;
       }
     </style>
-
   <script type="importmap">
 {
   "imports": {
@@ -53,10 +54,10 @@
   }
 }
 </script>
-  <script type="module" crossorigin src="/farmerchat-modular-local/assets/index-Qzd9avwl.js"></script>
-<link rel="manifest" href="/farmerchat-modular-local/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/farmerchat-modular-local/registerSW.js"></script></head>
+</head>
   <body class="bg-gray-100 dark:bg-gray-900 bg-transition">
     <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
@@ -72,3 +73,4 @@
     </script>
   </body>
 </html><link rel="stylesheet" href="index.css">
+<script src="index.tsx" type="module"></script>
