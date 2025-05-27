@@ -109,7 +109,7 @@ export const TopBar = forwardRef<TopBarHandles, TopBarProps>((
           <button
             onClick={handleJsonImportClick}
             className="flex items-center bg-blue-600 hover:bg-blue-700 text-white py-2 px-2 sm:px-3 rounded-md text-sm transition-colors"
-            title="Cargar Base de Datos Completa (JSON)"
+            title="Importar Base de Datos Completa desde Archivo"
           >
             <UploadIcon className="h-4 w-4 mr-0 sm:mr-1 md:mr-2" />
             <span className="hidden sm:inline">Cargar BD</span>
@@ -118,7 +118,7 @@ export const TopBar = forwardRef<TopBarHandles, TopBarProps>((
           <button
             onClick={() => onFileExport('json_db')}
             className="flex items-center bg-green-600 hover:bg-green-700 text-white py-2 px-2 sm:px-3 rounded-md text-sm transition-colors"
-            title="Guardar Base de Datos Completa (JSON) - Respaldo"
+            title="Exportar Base de Datos Completa a Archivo (Respaldo)"
           >
             <DownloadIcon className="h-4 w-4 mr-0 sm:mr-1 md:mr-2" />
             <span className="hidden sm:inline">Guardar BD</span>
@@ -130,7 +130,7 @@ export const TopBar = forwardRef<TopBarHandles, TopBarProps>((
           <button
             onClick={handleMultiCsvImportClick}
             className="flex items-center bg-purple-500 hover:bg-purple-600 text-white py-2 px-2 sm:px-3 rounded-md text-sm transition-colors"
-            title="Cargar Múltiples Tablas (CSV)"
+            title="Importar Múltiples Tablas desde Archivos"
           >
             <MultiFileIcon className="h-4 w-4 mr-0 sm:mr-1 md:mr-2" />
             <span className="hidden sm:inline">Tablas</span>
@@ -139,7 +139,7 @@ export const TopBar = forwardRef<TopBarHandles, TopBarProps>((
           <button
             onClick={onExportToCsvs}
             className="flex items-center bg-teal-500 hover:bg-teal-600 text-white py-2 px-2 sm:px-3 rounded-md text-sm transition-colors"
-            title="Guardar Todas las Tablas (CSV)"
+            title="Exportar Todas las Tablas a Archivos"
           >
             <ExportPackageIcon className="h-4 w-4 mr-0 sm:mr-1 md:mr-2" />
             <span className="hidden sm:inline">Tablas</span>
@@ -148,14 +148,14 @@ export const TopBar = forwardRef<TopBarHandles, TopBarProps>((
             <button
               onClick={() => setShowCsvImportOptions(!showCsvImportOptions)}
               className="flex items-center bg-yellow-500 hover:bg-yellow-600 text-gray-900 py-2 px-2 sm:px-3 rounded-md text-sm transition-colors"
-              title="Cargar Tabla Individual (CSV)"
+              title="Importar Tabla Individual desde Archivo"
             >
               <FileCsvIcon className="h-4 w-4 mr-0 sm:mr-1 md:mr-2" />
               <span className="hidden sm:inline">Tabla</span>
             </button>
             {showCsvImportOptions && (
               <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-700 rounded-md shadow-lg z-20 py-1 border dark:border-gray-600 max-h-60 overflow-y-auto">
-                <p className="text-xs text-gray-500 dark:text-gray-400 px-3 py-1">Cargar Tabla para:</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 px-3 py-1">Importar Tabla para:</p>
                 {entityTypes.map(entity => (
                   <a
                     key={entity}

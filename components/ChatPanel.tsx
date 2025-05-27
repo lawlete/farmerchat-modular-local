@@ -17,7 +17,16 @@ interface ChatPanelProps {
   onBeforeStartRecording?: () => void;
 }
 
-const SILENCE_THRESHOLD = 10; // Sensitivity for silence detection (0-255 for frequency data)
+// ###################################################################################
+// AJUSTA ESTE VALOR SEGÚN TU ENTORNO Y LOS LOGS DE LA CONSOLA
+// ###################################################################################
+// Mira los mensajes "Max audio level detected: X" en la consola cuando estás en SILENCIO.
+// SILENCE_THRESHOLD debe ser un POCO MÁS ALTO que el nivel máximo de ruido que ves en silencio.
+// Por ejemplo, si en silencio ves "Max audio level detected: 70", prueba con SILENCE_THRESHOLD = 75 o 80.
+// El valor original era 10, lo que puede ser muy bajo para muchos entornos.
+const SILENCE_THRESHOLD = 80; // <-- !!! AJUSTA ESTE NÚMERO !!! (Ej. si tu ruido es 70, prueba 75-80)
+// ###################################################################################
+
 const SILENCE_DURATION_MS = 3000; // 3 seconds of silence
 const SILENCE_CHECK_INTERVAL_MS = 500; // Check for silence every 500ms
 
@@ -70,12 +79,17 @@ export const ChatPanel = forwardRef<ChatPanelHandles, ChatPanelProps>((
     const dataArray = new Uint8Array(bufferLength);
     analyserRef.current.getByteFrequencyData(dataArray);
 
+    // --- TEMPORARY LOGGING FOR DIAGNOSIS ---
+    const maxLevel = dataArray.length > 0 ? Math.max(...dataArray) : 0;
+    console.log(`Max audio level detected: ${maxLevel}, Current SILENCE_THRESHOLD: ${SILENCE_THRESHOLD}`);
+    // --- END TEMPORARY LOGGING ---
+
     const isSilent = dataArray.every(value => value < SILENCE_THRESHOLD);
 
     if (isSilent) {
       if (!silenceTimeoutIdRef.current) { 
         silenceTimeoutIdRef.current = setTimeout(() => {
-          console.log("Silence detected for 3 seconds, stopping recording.");
+          console.log(`Silence detected for ${SILENCE_DURATION_MS / 1000} seconds, stopping recording.`);
           if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
             mediaRecorderRef.current.stop(); // This will trigger onstop
           }
@@ -285,6 +299,18 @@ export const ChatPanel = forwardRef<ChatPanelHandles, ChatPanelProps>((
           </button>
         </div>
       </div>
+      <footer className="bg-gray-100 dark:bg-gray-900 p-2 border-t border-gray-300 dark:border-gray-700 text-center text-xs text-gray-600 dark:text-gray-400">
+        <span>Instagram: @lawertechnology</span> | 
+        <a href="mailto:lawertechnology@gmail.com" className="hover:text-green-500 dark:hover:text-green-400 transition-colors px-1">Email: lawertechnology@gmail.com</a> | 
+        <a 
+          href="https://drive.google.com/drive/folders/1kwIgpwTdERhLveb97XGz-Epb1sqdP0HD?usp=drive_link" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="hover:text-green-500 dark:hover:text-green-400 transition-colors px-1"
+        >
+          Manual de FarmerChat
+        </a>
+      </footer>
     </div>
   );
 });

@@ -103,8 +103,6 @@ const App: React.FC = () => {
   const loadTestDatabase = useCallback(async (isAutoLoad: boolean = true) => {
     try {
       if(isAutoLoad) addMessageToChat('Verificando base de datos local...', 'system');
-      // This function is now primarily for auto-load, user-triggered "Load Test DB" is removed.
-      // If you need a manual "Load Test DB" for other purposes, its trigger point would change.
       
       const response = await fetch('/BD_testing.json'); 
       if (!response.ok) {
@@ -129,7 +127,7 @@ const App: React.FC = () => {
       localStorage.setItem(LOCAL_STORAGE_DB_KEY, JSON.stringify(testDb));
       setCurrentGroupedResults(null); 
       
-      const message = isAutoLoad ? 'Base de datos local no encontrada o inválida, se cargó la BD de prueba.' : 'Base de datos de prueba cargada exitosamente.'; // Kept generic for auto-load
+      const message = isAutoLoad ? 'Base de datos local no encontrada o inválida, se cargó la BD de prueba.' : 'Base de datos de prueba cargada exitosamente.';
       addMessageToChat(message, 'system');
     } catch (error) {
       console.error("Error cargando la base de datos de prueba:", error);
@@ -378,14 +376,14 @@ const App: React.FC = () => {
           for (const key of ALL_ENTITY_TYPES) {
             if (!Array.isArray(newDb[key as EntityType])) {
                 isValidDB = false;
-                addMessageToChat(`Error en archivo JSON importado: Falta o es inválida la entidad '${ENTITY_DISPLAY_NAMES[key as EntityType] || key}'.`, 'system', true);
+                addMessageToChat(`Error en archivo de base de datos importado: Falta o es inválida la entidad '${ENTITY_DISPLAY_NAMES[key as EntityType] || key}'.`, 'system', true);
                 break;
             }
           }
           if (isValidDB) {
             setDatabase(newDb);
             localStorage.setItem(LOCAL_STORAGE_DB_KEY, JSON.stringify(newDb));
-            addMessageToChat('Base de datos importada desde JSON correctamente.', 'system');
+            addMessageToChat('Base de datos importada correctamente desde el archivo.', 'system');
             setCurrentGroupedResults(null);
           }
         } else {
@@ -399,10 +397,10 @@ const App: React.FC = () => {
               localStorage.setItem(LOCAL_STORAGE_DB_KEY, JSON.stringify(updatedDb));
               return updatedDb;
             });
-            addMessageToChat(`Datos para '${ENTITY_DISPLAY_NAMES[type]}' importados desde CSV. ${processedData.length} registros cargados.`, 'system');
+            addMessageToChat(`Datos para '${ENTITY_DISPLAY_NAMES[type]}' importados desde el archivo de tabla. ${processedData.length} registros cargados.`, 'system');
             setCurrentGroupedResults(null);
           } else {
-            addMessageToChat(`No se pudieron procesar datos válidos del CSV para '${ENTITY_DISPLAY_NAMES[type]}'. Verifique el formato y encabezados.`, 'system', true);
+            addMessageToChat(`No se pudieron procesar datos válidos del archivo de tabla para '${ENTITY_DISPLAY_NAMES[type]}'. Verifique el formato y encabezados.`, 'system', true);
           }
         }
       } catch (err) {
@@ -425,7 +423,7 @@ const App: React.FC = () => {
         return;
     }
 
-    addMessageToChat(`Iniciando importación de ${filesToProcess.length} archivo(s) CSV...`, "system");
+    addMessageToChat(`Iniciando importación de ${filesToProcess.length} archivo(s) de tabla...`, "system");
     let currentDbSnapshot = { ...database }; 
     let changesMade = false;
     let allSuccessful = true;
@@ -440,14 +438,14 @@ const App: React.FC = () => {
                     [entityType]: processedData
                 };
                 changesMade = true;
-                addMessageToChat(`CSV '${file.name}' (${ENTITY_DISPLAY_NAMES[entityType]}): ${processedData.length} registros cargados.`, 'system');
+                addMessageToChat(`Archivo de tabla '${file.name}' (${ENTITY_DISPLAY_NAMES[entityType]}): ${processedData.length} registros cargados.`, 'system');
             } else {
-                addMessageToChat(`CSV '${file.name}' (${ENTITY_DISPLAY_NAMES[entityType]}): No se procesaron datos válidos.`, 'system', true);
+                addMessageToChat(`Archivo de tabla '${file.name}' (${ENTITY_DISPLAY_NAMES[entityType]}): No se procesaron datos válidos.`, 'system', true);
                 allSuccessful = false;
             }
         } catch (err) {
             console.error(`Error processing file ${file.name}:`, err);
-            addMessageToChat(`Error al procesar CSV '${file.name}': ${(err as Error).message}`, 'system', true);
+            addMessageToChat(`Error al procesar archivo de tabla '${file.name}': ${(err as Error).message}`, 'system', true);
             allSuccessful = false;
         }
     });
@@ -457,10 +455,10 @@ const App: React.FC = () => {
             setDatabase(currentDbSnapshot);
             localStorage.setItem(LOCAL_STORAGE_DB_KEY, JSON.stringify(currentDbSnapshot));
             setCurrentGroupedResults(null);
-            const summaryMessage = allSuccessful ? "Todos los CSVs seleccionados fueron procesados." : "Algunos CSVs tuvieron problemas durante el procesamiento. Revisa los mensajes anteriores.";
+            const summaryMessage = allSuccessful ? "Todos los archivos de tabla seleccionados fueron procesados." : "Algunos archivos de tabla tuvieron problemas durante el procesamiento. Revisa los mensajes anteriores.";
             addMessageToChat(`Importación Múltiple: ${summaryMessage}`, "system", !allSuccessful);
         } else if (!allSuccessful) {
-            addMessageToChat("Importación Múltiple: Ningún CSV pudo ser procesado exitosamente.", "system", true);
+            addMessageToChat("Importación Múltiple: Ningún archivo de tabla pudo ser procesado exitosamente.", "system", true);
         } else {
             addMessageToChat("Importación Múltiple: No se realizaron cambios en la base de datos.", "system");
         }
@@ -480,7 +478,7 @@ const App: React.FC = () => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      addMessageToChat('Base de datos exportada a JSON.', 'system');
+      addMessageToChat('Base de datos exportada a un archivo.', 'system');
     }
   };
 
@@ -506,14 +504,14 @@ const App: React.FC = () => {
           }
         } catch (error) {
             console.error(`Error exporting ${entityType} to CSV: `, error);
-            addMessageToChat(`Error al exportar ${ENTITY_DISPLAY_NAMES[entityType]} a CSV: ${(error as Error).message}`, "system", true);
+            addMessageToChat(`Error al exportar ${ENTITY_DISPLAY_NAMES[entityType]} como tabla (CSV): ${(error as Error).message}`, "system", true);
         }
       }
     });
     if (filesExportedCount > 0) {
-        addMessageToChat(`${filesExportedCount} tipo(s) de entidad exportados a archivos CSV.`, 'system');
+        addMessageToChat(`${filesExportedCount} tipo(s) de entidad exportados a archivos de tabla (formato CSV).`, 'system');
     } else {
-        addMessageToChat('No hay datos para exportar a CSVs.', 'system');
+        addMessageToChat('No hay datos para exportar como tablas.', 'system');
     }
   };
 
@@ -889,7 +887,7 @@ const App: React.FC = () => {
             <>
               <p className="mb-2">Está a punto de borrar COMPLETAMENTE la base de datos actual de la aplicación.</p>
               <p className="mb-2 font-semibold text-red-600 dark:text-red-400">¡TODOS LOS DATOS almacenados en la aplicación y en su navegador SE PERDERÁN PERMANENTEMENTE!</p>
-              <p>Esta acción no se puede deshacer. Asegúrese de haber respaldado sus datos si son importantes (botón 'Exportar JSON').</p>
+              <p>Esta acción no se puede deshacer. Asegúrese de haber respaldado sus datos si son importantes (botón 'Exportar BD').</p>
               <p className="mt-3">¿Está seguro de que desea borrar toda la base de datos?</p>
             </>
           }

@@ -101,7 +101,7 @@ export const MultipleCsvUploadModal: React.FC<MultipleCsvUploadModalProps> = ({
     >
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col text-gray-800 dark:text-gray-100">
         <h2 id="multi-csv-modal-title" className="text-xl font-semibold mb-4 text-green-600 dark:text-green-400">
-          Asignar Tipos de Entidad a CSVs
+          Asignar Tipos a Archivos de Tabla
         </h2>
         
         <div className="overflow-y-auto mb-4 pr-2 flex-grow">
