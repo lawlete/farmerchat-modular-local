@@ -1,0 +1,247 @@
+{
+  "clients": [
+    {
+      "id": "client_test_01",
+      "name": "Finca de Prueba Sol Radiante",
+      "phone": "123456789",
+      "email": "sol@radiante.test",
+      "contactPerson": "Juan Sol",
+      "address": "Camino Rural S/N"
+    },
+    {
+      "id": "client_test_02",
+      "name": "Agro Test del Sur",
+      "phone": "987654321",
+      "email": "info@agrotestsur.test",
+      "contactPerson": "Maria Luna",
+      "address": "Ruta 5 Km 100"
+    }
+  ],
+  "users": [
+    {
+      "id": "user_test_admin",
+      "name": "Admin de Prueba",
+      "role": "Administrator",
+      "clientId": "client_test_01"
+    },
+    {
+      "id": "user_test_eng",
+      "name": "Ingeniero Test",
+      "role": "Engineer",
+      "clientId": "client_test_02"
+    }
+  ],
+  "contractors": [
+    {
+      "id": "cont_test_int_01",
+      "name": "Servicios Agro Test Interno",
+      "contactPerson": "Ana Terra",
+      "address": "Parcela 42",
+      "phone": "555111222",
+      "isInternal": true
+    },
+    {
+      "id": "cont_test_ext_01",
+      "name": "Maquinaria Test Externa",
+      "contactPerson": "Carlos Campo",
+      "address": "El Trebol 123",
+      "phone": "555333444",
+      "isInternal": false
+    }
+  ],
+  "personnel": [
+    {
+      "id": "pers_test_op_01",
+      "name": "Operario Test Alfa",
+      "role": "Operator",
+      "phone": "666111222",
+      "clientId": "client_test_01",
+      "contractorId": "cont_test_int_01"
+    },
+    {
+      "id": "pers_test_op_02",
+      "name": "Operario Test Beta",
+      "role": "Operator",
+      "phone": "666333444",
+      "clientId": "client_test_02",
+      "contractorId": "cont_test_ext_01"
+    }
+  ],
+  "machineries": [
+    {
+      "id": "mach_test_tractor_01",
+      "name": "Tractor Test Verde",
+      "type": "Tractor",
+      "model": "TX-100",
+      "year": 2022,
+      "clientId": "client_test_01",
+      "contractorId": "cont_test_int_01"
+    },
+    {
+      "id": "mach_test_cosech_01",
+      "name": "Cosechadora Test Amarilla",
+      "type": "Cosechadora",
+      "model": "CX-500",
+      "year": 2023,
+      "clientId": "client_test_02",
+      "contractorId": "cont_test_ext_01"
+    }
+  ],
+  "fields": [
+    {
+      "id": "field_test_01",
+      "name": "Campo Test Norte",
+      "location": "Provincia Test, Cerca de Rio Test",
+      "clientId": "client_test_01",
+      "area": 150
+    },
+    {
+      "id": "field_test_02",
+      "name": "Campo Test Sur",
+      "location": "Provincia Test, Ruta Test 3",
+      "clientId": "client_test_02",
+      "area": 220
+    }
+  ],
+  "lots": [
+    {
+      "id": "lot_test_norte_01",
+      "name": "Lote Test N-01",
+      "fieldId": "field_test_01",
+      "area": 70
+    },
+    {
+      "id": "lot_test_sur_a",
+      "name": "Lote Test S-A",
+      "fieldId": "field_test_02",
+      "area": 120
+    }
+  ],
+  "parcels": [
+    {
+      "id": "parcel_test_n01_a",
+      "name": "Parcela Test N-01-A",
+      "lotId": "lot_test_norte_01",
+      "area": 30,
+      "crop": "Maíz de Prueba"
+    },
+    {
+      "id": "parcel_test_sa_1",
+      "name": "Parcela Test S-A-1",
+      "lotId": "lot_test_sur_a",
+      "area": 50,
+      "crop": "Soja de Prueba"
+    }
+  ],
+  "campaigns": [
+    {
+      "id": "camp_test_maiz24",
+      "name": "Campaña Maíz Test 2024",
+      "startDate": "2024-09-01",
+      "endDate": "2025-03-31",
+      "clientId": "client_test_01",
+      "description": "Campaña de prueba para maíz."
+    },
+    {
+      "id": "camp_test_soja24",
+      "name": "Campaña Soja Test 2024",
+      "startDate": "2024-11-01",
+      "endDate": "2025-04-30",
+      "clientId": "client_test_02",
+      "description": "Campaña de prueba para soja."
+    }
+  ],
+  "tasksList": [
+    {
+      "id": "task_test_siembra",
+      "taskName": "Siembra de Prueba",
+      "description": "Tarea de siembra para pruebas de desarrollo.",
+      "category": "Cultivo"
+    },
+    {
+      "id": "task_test_pulv",
+      "taskName": "Pulverización de Prueba",
+      "description": "Tarea de pulverización para pruebas.",
+      "category": "Cultivo"
+    }
+  ],
+  "productsInsumes": [
+    {
+      "id": "prod_test_semilla_maiz",
+      "name": "Semilla TestMaiz Supreme",
+      "type": "Seed",
+      "unit": "bolsa"
+    },
+    {
+      "id": "prod_test_herbicida_a",
+      "name": "Herbicida TestTotal",
+      "type": "Herbicide",
+      "unit": "litro"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task_entry_test_001",
+      "tasksListId": "task_test_siembra",
+      "createdByUserId": "user_test_admin",
+      "clientId": "client_test_01",
+      "contractorId": "cont_test_int_01",
+      "campaignId": "camp_test_maiz24",
+      "fieldId": "field_test_01",
+      "lotId": "lot_test_norte_01",
+      "parcelId": "parcel_test_n01_a",
+      "startDateTime": "2024-09-15T08:00:00.000Z",
+      "endDateTime": "2024-09-15T12:00:00.000Z",
+      "durationHours": 4,
+      "status": "Programada",
+      "costEstimated": 120,
+      "costActual": 0,
+      "resultDescription": "",
+      "notes": "Tarea de prueba inicial de siembra.",
+      "creationTimestamp": "2024-07-30T10:00:00.000Z",
+      "additionalInfo": "Revisar configuración de sembradora."
+    }
+  ],
+  "taskMachineryLinks": [
+     {
+      "id": "tml_test_001",
+      "taskId": "task_entry_test_001",
+      "machineryId": "mach_test_tractor_01",
+      "hoursUsed": 4,
+      "notes": "Tractor para siembra de prueba."
+    }
+  ],
+  "taskPersonnelLinks": [
+    {
+      "id": "tpl_test_001",
+      "taskId": "task_entry_test_001",
+      "personnelId": "pers_test_op_01",
+      "roleInTask": "Operador Principal",
+      "hoursWorked": 4
+    }
+  ],
+  "taskInsumeLinks": [
+    {
+      "id": "til_test_001",
+      "taskId": "task_entry_test_001",
+      "productInsumeId": "prod_test_semilla_maiz",
+      "quantityUsed": 5,
+      "unitUsed": "bolsa",
+      "applicationDetails": "Siembra a 5cm de profundidad."
+    }
+  ],
+  "userAccess": [
+    {
+      "id": "ua_test_001",
+      "userId": "user_test_admin",
+      "fieldId": "field_test_01",
+      "accessTotal": true
+    },
+    {
+      "id": "ua_test_002",
+      "userId": "user_test_eng",
+      "fieldId": "field_test_02",
+      "accessTotal": true
+    }
+  ]
+}

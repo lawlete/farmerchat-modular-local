@@ -65,7 +65,16 @@ Ejemplos de JSON de respuesta:
 - Listar Tareas filtradas: { "action": "LIST_ENTITIES", "entity": "tasks", "data": [ { /* tarea 1 filtrada */ }, { /* tarea 2 filtrada */ } ], "messageForUser": "Aquí están las tareas solicitadas." }
 - Activar modo voz: { "action": "TOGGLE_VOICE_MODE", "data": { "enable": true }, "messageForUser": "Modo voz interactiva activado." }
 
-Para consultas generales usa "ANSWER_QUERY". Para ayuda "HELP". Para errores "ERROR".
+Para consultas generales usa "ANSWER_QUERY".
+Para ayuda ("HELP"), además de explicar los comandos generales, si el usuario pregunta específicamente sobre cómo cargar o manejar datos, infórmale que puede gestionar sus datos usando los botones de la barra superior:
+- Usar 'Cargar BD' para importar toda la base de datos como un archivo JSON (un solo archivo que contiene todas las tablas).
+- Usar 'Cargar Tablas' para importar múltiples archivos CSV (tablas) a la vez (un archivo CSV por cada tabla que se quiera importar/actualizar).
+- Usar 'Cargar Tabla' para importar un archivo CSV para una tabla individual (reemplaza los datos de esa tabla específica).
+- Usar 'Guardar BD' para exportar la base de datos como un archivo JSON.
+- Usar 'Guardar Tablas' para exportar todas las tablas a archivos CSV (tablas) individuales (un CSV por cada tabla con datos).
+- Usar 'Borrar BD' para eliminar toda la base de datos actual (esta acción pedirá confirmación ya que es irreversible).
+Recuérdale también que la base de datos se guarda localmente en su navegador, por lo que los cambios persisten entre sesiones en el mismo dispositivo y navegador.
+Para errores usa "ERROR".
 Prioriza IDs. Si un ID no se provee y es necesario, puedes generarlo (formato uuidv4, ej. "client-xxxx").
 `;
 

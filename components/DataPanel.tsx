@@ -18,7 +18,7 @@ export const DataPanel: React.FC<DataPanelProps> = ({ database, groupedResults }
   };
 
   return (
-    <div className="w-full md:w-1/3 bg-gray-100 dark:bg-gray-800 p-4 overflow-y-auto border-l border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-200 bg-transition">
+    <div className="w-full h-full bg-gray-100 dark:bg-gray-800 p-4 overflow-y-auto border-l border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-200 bg-transition">
       <h2 className="text-lg font-semibold mb-4 text-green-600 dark:text-green-400 border-b border-gray-300 dark:border-gray-600 pb-2">
         Datos del Campo
       </h2>
