@@ -3,14 +3,14 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { TopBar, TopBarHandles } from './components/TopBar';
 import { ChatPanel, ChatPanelHandles } from './components/ChatPanel';
 import { DataPanel } from './components/DataPanel';
-import { Database, ChatMessage, LLMResponseAction, EntityType, GroupedResult, ALL_ENTITY_TYPES } from './types';
+import { Database, ChatMessage, LLMResponseAction, EntityType, GroupedResult, ALL_ENTITY_TYPES, Task } from './types';
 import { LOCAL_STORAGE_DB_KEY, INITIAL_DB, SYSTEM_PROMPT_HEADER, ENTITY_DISPLAY_NAMES, GEMINI_MODEL_TEXT } from './constants';
 import { GoogleGenAI, Chat, GenerateContentResponse, Part } from "@google/genai";
 import { processCsvData, generateUUID, convertEntityArrayToCsvString } from './services/dbService';
 import { MultipleCsvUploadModal } from './components/MultipleCsvUploadModal';
 import { ConfirmModal } from './components/ConfirmModal';
 import { WelcomeBanner } from './components/WelcomeBanner'; 
-import { FullScreenDataViewModal, FullScreenDataModalContent } from './components/FullScreenDataViewModal';
+import { FullScreenDataViewModal, FullScreenDataModalContent, getColumnOrderForDisplay } from './components/FullScreenDataViewModal';
 
 
 export type Theme = 'light' | 'dark';
@@ -251,7 +251,7 @@ const App: React.FC = () => {
       if (speechQueueRef.current.length === 0 && !isSpeakingRef.current && isInteractiveVoiceMode && chatPanelRef.current) {
           const lastMessage = chatMessages[chatMessages.length -1];
           if(lastMessage && (lastMessage.sender === 'ai' || lastMessage.sender === 'system') && !lastMessage.isError && !lastMessage.isLoading){
-            const aiSpeakingKeywords = ["¿qué más puedo hacer por ti?", "¿en qué más te puedo ayudar?", "¿algo más?", "sugerencias", "¿es correcto?", "¿quieres ver más?", "activado."];
+            const aiSpeakingKeywords = ["¿qué más puedo hacer por ti?", "¿en qué más te puedo ayudar?", "¿algo más?", "sugerencias", "¿es correcto?", "¿quieres ver más?", "activado.", "para poder continuar"];
             const shouldTriggerMic = aiSpeakingKeywords.some(keyword => lastMessage.text.toLowerCase().includes(keyword.toLowerCase()));
             if(shouldTriggerMic || lastMessage.groupedData){
                  console.log("Speech queue empty, last AI/System message seems to prompt for input. Triggering mic.");
@@ -318,19 +318,44 @@ const App: React.FC = () => {
       processSpeechQueue();
       return;
     }
-
+  
     let fullTextToSpeak = "";
     results.forEach(group => {
       fullTextToSpeak += `${group.groupTitle}. `;
       if (group.items.length > 0) {
         group.items.forEach(item => {
-          const itemName = item.name || item.taskName || item.id || "Elemento";
-          let details = `${itemName}. `;
-          if(item.type) details += `Tipo: ${item.type}. `;
-          if(item.status) details += `Estado: ${item.status}. `;
-          if(item.description) details += `Descripción: ${item.description.substring(0, 50)}. `;
-          if(item.additionalInfo) details += `Info adicional: ${item.additionalInfo.substring(0, 50)}. `;
-          fullTextToSpeak += details;
+          let itemDetails = "";
+          const itemKeys = getColumnOrderForDisplay([item]);
+          
+          const primaryName = item.name || item.taskName || (item.id && itemKeys.length <= 2 ? `ID ${item.id}`: null) ; // Use ID as primary if few other fields
+          if (primaryName) {
+            itemDetails += `${primaryName}. `;
+          } else if (item.id) {
+            itemDetails += `Elemento con ID ${item.id}. `;
+          } else {
+            itemDetails += `Siguiente elemento. `;
+          }
+  
+          itemKeys.forEach(key => {
+            const lowerKey = key.toLowerCase();
+            if ((lowerKey === 'name' || lowerKey === 'taskname' || lowerKey === 'title') && primaryName) return;
+            if (lowerKey === 'id' && (primaryName || item.id)) return; 
+  
+            if (item[key] !== undefined && item[key] !== null && String(item[key]).trim() !== '') {
+              const value = item[key];
+              let displayValue = '';
+              if (typeof value === 'boolean') {
+                displayValue = value ? 'Sí' : 'No';
+              } else if (typeof value === 'object') {
+                displayValue = 'tiene datos complejos asociados'; 
+              } else {
+                displayValue = String(value);
+              }
+              const speakableKey = key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').toLowerCase();
+              itemDetails += `${speakableKey}: ${displayValue}. `;
+            }
+          });
+          fullTextToSpeak += itemDetails.trim() + " "; 
         });
       } else {
         fullTextToSpeak += "No se encontraron elementos. ";
@@ -561,24 +586,22 @@ const App: React.FC = () => {
   };
 
   const handleLLMAction = (actionResponse: LLMResponseAction) => {
-    const { action, entity, data, query, messageForUser, groupedData, rawResponse } = actionResponse;
+    const { action, entity, data, query, messageForUser, groupedData, rawResponse, followUpAction } = actionResponse;
 
     addMessageToChat(messageForUser, 'ai', false, groupedData, rawResponse);
     if (isInteractiveVoiceMode) {
-      if (groupedData && groupedData.length > 0) {
-        speakGroupedResults(groupedData, () => {
-           if (!messageForUser.toLowerCase().includes("¿es correcto?") && !messageForUser.toLowerCase().includes("sugerencias")) {
-             speakText(messageForUser);
-           }
-        });
-      } else {
-        speakText(messageForUser);
-      }
+      // Speak messageForUser first, then speak grouped results if any.
+      // This order might feel more natural as messageForUser often introduces the results.
+      speakText(messageForUser, () => {
+        if (groupedData && groupedData.length > 0) {
+            // The onAllSpoken callback for speakGroupedResults will handle mic trigger if needed by processSpeechQueue
+            speakGroupedResults(groupedData);
+        }
+      });
     }
 
 
     setCurrentGroupedResults(groupedData || null);
-    // If new grouped data arrives, and fullscreen modal is open for old data, close it.
     if (groupedData && isFullScreenDataModalOpen && 
         JSON.stringify(fullScreenDataModalContent?.items) !== JSON.stringify(groupedData[0]?.items)) {
       handleCloseFullScreenDataModal();
@@ -591,12 +614,13 @@ const App: React.FC = () => {
           const newId = data.id || generateUUID(); 
           const newItem = { ...data, id: newId };
 
+          let dbAfterCreation = database; // To capture the state for followUpAction
+
           setDatabase(prevDb => {
             const currentEntityArray = prevDb[entity] || [];
             const updatedEntityArray = [...currentEntityArray, newItem];
-            const updatedDb = { ...prevDb, [entity]: updatedEntityArray };
-            localStorage.setItem(LOCAL_STORAGE_DB_KEY, JSON.stringify(updatedDb));
-
+            let updatedDb = { ...prevDb, [entity]: updatedEntityArray };
+            
             if (entity === 'tasks' && (newItem.machineryIds || newItem.personnelIds || newItem.productInsumeDetails)) {
                 const newLinks: Partial<Database> = {
                     taskMachineryLinks: [...(updatedDb.taskMachineryLinks || [])],
@@ -604,35 +628,36 @@ const App: React.FC = () => {
                     taskInsumeLinks: [...(updatedDb.taskInsumeLinks || [])]
                 };
                 (newItem.machineryIds as string[] | undefined)?.forEach(machId => {
-                    newLinks.taskMachineryLinks!.push({
-                        id: generateUUID(),
-                        taskId: newId,
-                        machineryId: machId,
-                    });
+                    newLinks.taskMachineryLinks!.push({ id: generateUUID(), taskId: newId, machineryId: machId });
                 });
                 (newItem.personnelIds as string[] | undefined)?.forEach(persId => {
-                     newLinks.taskPersonnelLinks!.push({
-                        id: generateUUID(),
-                        taskId: newId,
-                        personnelId: persId,
-                    });
+                     newLinks.taskPersonnelLinks!.push({ id: generateUUID(), taskId: newId, personnelId: persId });
                 });
                 (newItem.productInsumeDetails as {id: string, quantityUsed: number, unitUsed: string}[] | undefined)?.forEach(insumeDetail => {
                     newLinks.taskInsumeLinks!.push({
-                        id: generateUUID(),
-                        taskId: newId,
-                        productInsumeId: insumeDetail.id,
-                        quantityUsed: insumeDetail.quantityUsed,
-                        unitUsed: insumeDetail.unitUsed,
+                        id: generateUUID(), taskId: newId, productInsumeId: insumeDetail.id,
+                        quantityUsed: insumeDetail.quantityUsed, unitUsed: insumeDetail.unitUsed
                     });
                 });
-                
-                const finalDb = {...updatedDb, ...newLinks};
-                localStorage.setItem(LOCAL_STORAGE_DB_KEY, JSON.stringify(finalDb));
-                return finalDb;
+                updatedDb = {...updatedDb, ...newLinks};
             }
+            localStorage.setItem(LOCAL_STORAGE_DB_KEY, JSON.stringify(updatedDb));
+            dbAfterCreation = updatedDb; // Update reference
             return updatedDb;
           });
+          
+          // If there's a follow-up action, trigger it.
+          // This needs to happen after the state update has been processed, ideally.
+          // Using a timeout allows the state to settle before processing the next action.
+          if (followUpAction) {
+            setTimeout(() => {
+                // Add a small system message to indicate transition if not handled by AI's followUp message.
+                // Or, ensure AI's followUpAction.messageForUser is comprehensive.
+                // For now, directly process the followUpAction.
+                handleLLMAction(followUpAction);
+            }, 100); // Small delay
+          }
+
         } else {
           addMessageToChat(`Error de IA: Datos inválidos para crear entidad ${entity}.`, 'system', true);
         }
@@ -670,7 +695,6 @@ const App: React.FC = () => {
         break;
 
       case 'LIST_ENTITIES':
-         // Ensure entityType is propagated if not already present from LLM
         const resultsWithEntityType = (actionResponse.groupedData || []).map(group => ({
             ...group,
             entityType: group.entityType || entity 
@@ -689,16 +713,19 @@ const App: React.FC = () => {
         break;
 
       case 'GROUPED_QUERY':
-          // Ensure entityType is propagated if not already present from LLM
           const groupedResultsWithEntityType = (actionResponse.groupedData || []).map(group => ({
               ...group,
-              // If the group itself doesn't have an entityType, and there's a top-level entity, use that.
-              // This helps if the LLM provides entityType per group or one for the whole response.
               entityType: group.entityType || entity 
           }));
           setCurrentGroupedResults(groupedResultsWithEntityType);
         break;
         
+      case 'PROMPT_CREATE_MISSING_ENTITY':
+        // The messageForUser has been displayed by addMessageToChat.
+        // The user's next input will be sent to the AI, which will then decide the next step.
+        // No direct state change in the app here, AI drives the conversation.
+        break;
+
       case 'ANSWER_QUERY':
       case 'HELP':
       case 'ERROR':
@@ -746,7 +773,7 @@ const App: React.FC = () => {
 
     const currentDBStateString = JSON.stringify(database);
     const parts: Part[] = [
-        { text: `Contexto de Base de Datos (NO MOSTRAR AL USUARIO, USAR PARA REFERENCIA INTERNA):\n${currentDBStateString}\n\nComando del Usuario:` },
+        { text: `Contexto de Base de Datos (NO MOSTRAR AL USUARIO, USAR PARA REFERENCIA INTERNA):\n${currentDBStateString}\n\nHistorial de Conversación Reciente (últimos mensajes, para referencia contextual, NO MOSTRAR AL USUARIO):\n${chatMessages.slice(-6).map(m => `${m.sender}: ${m.text}`).join('\n')}\n\nComando del Usuario:` },
     ];
     
     if (audioBase64 && audioMimeType) {
@@ -761,7 +788,9 @@ const App: React.FC = () => {
     }
     
     try {
+      // Send message to the existing chat session
       const response: GenerateContentResponse = await chatSession.sendMessage({ message: parts });
+
       setIsLoading(false);
       setChatMessages(prev => prev.filter(msg => !(msg.sender === 'ai' && msg.isLoading)));
 
@@ -892,7 +921,7 @@ const App: React.FC = () => {
                   />
                 </div>
                 <div
-                  className="w-full md:w-auto h-[${SPLITTER_WIDTH_PX}px] md:h-full md:w-[${SPLITTER_WIDTH_PX}px] bg-gray-300 dark:bg-gray-700 cursor-col-resize flex-shrink-0 hover:bg-green-500 dark:hover:bg-green-600 transition-colors"
+                  className="w-full md:w-auto h-[8px] md:h-full md:w-[8px] bg-gray-300 dark:bg-gray-700 cursor-col-resize flex-shrink-0 hover:bg-green-500 dark:hover:bg-green-600 transition-colors"
                   onMouseDown={startResizing}
                   onTouchStart={startResizing}
                   role="separator"

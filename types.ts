@@ -109,6 +109,10 @@ export interface Task { // Formerly JobEvent, from tareas.csv
   notes?: string;
   creationTimestamp: string; // TIMESTAMP as string, NOT NULL
   additionalInfo?: string; // New field for additional task information
+  // Properties below are transient for AI interaction, not part of DB schema for Task
+  machineryIds?: string[]; 
+  personnelIds?: string[];
+  productInsumeDetails?: {id: string, quantityUsed: number, unitUsed: string}[];
 }
 
 export interface TaskMachineryLink { // from task_machineries_link.csv
@@ -192,11 +196,20 @@ export interface GroupedResult {
 export interface LLMResponseAction {
   action: 'CREATE_ENTITY' | 'UPDATE_ENTITY' | 'DELETE_ENTITY' | 'LIST_ENTITIES' | 
           'GROUPED_QUERY' | 'ANSWER_QUERY' | 'HELP' | 'ERROR' | 
-          'PROPOSE_OPTIONS' | 'CONFIRM_CREATION' | 'TOGGLE_VOICE_MODE'; // Added new actions
+          'PROPOSE_OPTIONS' | 'CONFIRM_CREATION' | 'TOGGLE_VOICE_MODE' |
+          'PROMPT_CREATE_MISSING_ENTITY'; // New action
   entity?: EntityType; 
-  data?: any | { enable?: boolean }; // Updated data type for TOGGLE_VOICE_MODE
+  data?: any | { enable?: boolean }; 
   query?: Record<string, any>; 
   messageForUser: string;
-  groupedData?: GroupedResult[]; // For LIST_ENTITIES or GROUPED_QUERY, should include entityType if applicable
+  groupedData?: GroupedResult[]; 
   rawResponse?: string;
+
+  // For PROMPT_CREATE_MISSING_ENTITY
+  entityToCreate?: EntityType; 
+  suggestedData?: Partial<any>; 
+  pendingTaskData?: Partial<Task>; 
+
+  // For CREATE_ENTITY that creates a missing entity and needs to continue with a task
+  followUpAction?: LLMResponseAction; 
 }
