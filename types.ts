@@ -257,3 +257,6 @@ export interface OfflineRequest {
   errorInfo?: OfflineRequestError;
   originalMessageId?: string; // ID of the user's ChatMessage if it was displayed
 }
+
+// Type for mapping internal field keys to Spanish display names
+export type FieldDisplayNames = Record<string, string>;

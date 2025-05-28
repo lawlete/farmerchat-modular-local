@@ -124,7 +124,8 @@ const App: React.FC = () => {
         text.startsWith('Si necesita una base de datos de prueba') ||
         text.startsWith('Historial de chat') || // For history load/save messages
         text.includes("solicitud encolada") || // For offline queue messages
-        text.includes("solicitudes pendientes")
+        text.includes("solicitudes pendientes") ||
+        text.includes("ubicación seleccionada") // For File System Access API save
     );
     if (!isInitialSystemMessage && showWelcomeBanner) {
         setShowWelcomeBanner(false);
@@ -389,21 +390,44 @@ const App: React.FC = () => {
 
 
   useEffect(() => {
-    const envApiKey = process.env.API_KEY;
+    let apiKey: string | undefined = undefined;
+    let apiKeySource: string = '';
 
-    if (!envApiKey || envApiKey === "YOUR_GEMINI_API_KEY_PLACEHOLDER" || envApiKey === "AQUI_VA_TU_CLAVE_API_DE_GEMINI") {
-      console.error("API Key for Gemini is missing or is a placeholder. Please ensure process.env.API_KEY is correctly set.");
-      addMessageToChat(
-        "Error de Configuración: La clave API para Gemini no está configurada. La funcionalidad de IA no estará disponible. Por favor, contacte al administrador. Puede guardar su historial de chat actual usando los botones de la barra superior.",
-        "system",
-        true
-      );
-      setIsLoading(false);
-      return;
+    // 1. Try Vite's environment variable
+    try {
+        // @ts-ignore
+        const viteApiKey = import.meta.env?.VITE_API_KEY;
+        if (viteApiKey && viteApiKey !== "YOUR_GEMINI_API_KEY_PLACEHOLDER" && viteApiKey !== "AQUI_VA_TU_CLAVE_API_DE_GEMINI" && String(viteApiKey).trim() !== '') {
+            apiKey = String(viteApiKey).trim();
+            apiKeySource = 'VITE_API_KEY (import.meta.env)';
+        }
+    } catch (e) {
+        console.warn("Could not access import.meta.env for VITE_API_KEY. This is expected in non-Vite environments.", e);
     }
     
+    // 2. If Vite's key wasn't found or valid, try process.env
+    if (!apiKey) {
+        const processEnvApiKey = process.env.API_KEY;
+        if (processEnvApiKey && processEnvApiKey !== "YOUR_GEMINI_API_KEY_PLACEHOLDER" && processEnvApiKey !== "AQUI_VA_TU_CLAVE_API_DE_GEMINI" && processEnvApiKey.trim() !== '') {
+            apiKey = processEnvApiKey.trim();
+            apiKeySource = 'process.env.API_KEY';
+        }
+    }
+
+    if (!apiKey) {
+        const errorMessage = "Error de Configuración: La clave API para Gemini no está configurada o es un placeholder. " +
+                             "Por favor, asegúrese de que VITE_API_KEY (para entornos Vite) o process.env.API_KEY (para otros entornos) esté correctamente configurada. " +
+                             "La funcionalidad de IA no estará disponible. Contacte al administrador. Puede guardar su historial de chat actual.";
+        console.error("API Key for Gemini is missing or is a placeholder. Checked import.meta.env.VITE_API_KEY and process.env.API_KEY.");
+        addMessageToChat(errorMessage, "system", true);
+        // setIsLoading(false); // isLoading state is primarily for chat operations, not initial setup failure.
+        return;
+    }
+
+    console.log(`Using API Key from: ${apiKeySource}`);
+    
     try {
-      const genAI = new GoogleGenAI({ apiKey: envApiKey });
+      const genAI = new GoogleGenAI({ apiKey: apiKey });
       setGeminiService(genAI);
        const newChat = genAI.chats.create({
          model: GEMINI_MODEL_TEXT,
@@ -420,7 +444,7 @@ const App: React.FC = () => {
         addMessageToChat(`Error al inicializar el servicio de IA: ${(error as Error).message}. Puede guardar su historial de chat actual.`, 'system', true);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); 
+  }, [addMessageToChat]); 
 
   const handleFileUpload = async (file: File, type: 'json_db' | EntityType) => {
     const reader = new FileReader();
@@ -577,22 +601,59 @@ const App: React.FC = () => {
     }
   };
 
-  const handleSaveChatHistory = () => {
+  const handleSaveChatHistory = async () => {
     if (chatMessages.length === 0) {
       addMessageToChat("No hay historial de chat para guardar.", "system");
+      if (isInteractiveVoiceMode) speakText("No hay historial de chat para guardar.");
       return;
     }
+
     const historyData = JSON.stringify(chatMessages, null, 2);
-    const blob = new Blob([historyData], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-    a.download = `farmerchat_historial_${timestamp}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    addMessageToChat('Historial de chat guardado exitosamente.', 'system');
+    const suggestedFilename = `farmerchat_historial_${timestamp}.json`;
+
+    // @ts-ignore
+    if (window.showSaveFilePicker) {
+      try {
+        const fileHandle = await (window as any).showSaveFilePicker({
+          suggestedName: suggestedFilename,
+          types: [
+            {
+              description: 'Archivos JSON',
+              accept: { 'application/json': ['.json'] },
+            },
+          ],
+        });
+        const writable = await fileHandle.createWritable();
+        await writable.write(historyData);
+        await writable.close();
+        addMessageToChat(`Historial de chat guardado en: ${fileHandle.name}`, 'system');
+        if (isInteractiveVoiceMode) speakText(`Historial de chat guardado en la ubicación seleccionada.`);
+      } catch (err) {
+        // User likely cancelled the save dialog or an error occurred
+        if ((err as Error).name !== 'AbortError') {
+          console.error("Error guardando historial con File System Access API:", err);
+          addMessageToChat(`Error al guardar historial: ${(err as Error).message}`, 'system', true);
+          if (isInteractiveVoiceMode) speakText(`Error al guardar historial.`);
+        } else {
+          addMessageToChat('Guardado de historial cancelado por el usuario.', 'system');
+        }
+      }
+    } else {
+      // Fallback for browsers that don't support showSaveFilePicker
+      const blob = new Blob([historyData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.download = suggestedFilename;
+      a.href = url;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      const userMessage = `Historial de chat guardado como '${suggestedFilename}'. Generalmente se encuentra en tu carpeta de Descargas.`;
+      addMessageToChat(userMessage, 'system');
+      if (isInteractiveVoiceMode) speakText(userMessage);
+    }
   };
 
   const handleLoadChatHistoryFile = (file: File) => {
@@ -630,7 +691,7 @@ const App: React.FC = () => {
           if (showWelcomeBanner) setShowWelcomeBanner(false);
           addMessageToChat('Historial de chat cargado exitosamente.', 'system');
         } else {
-          throw new Error("El archivo no contiene un historial de chat válido.");
+          throw new Error("Formato de archivo de historial inválido. Verifique que el archivo no esté corrupto y que sea un historial de FarmerChat.");
         }
       } catch (err) {
         console.error("Error cargando historial de chat:", err);

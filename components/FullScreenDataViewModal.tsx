@@ -3,39 +3,83 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { DataTable } from './DataTable';
 import { EntityType } from '../types'; 
 import { triggerCsvDownload } from '../services/dbService'; 
-import { CSV_HEADERS } from '../constants';
+import { CSV_HEADERS, FIELD_DISPLAY_NAMES_ES } from '../constants';
 import { MinimizeIcon, ZoomInIcon, ZoomOutIcon, SearchIcon } from './icons/ModalControlIcons';
 import { PrintIcon, CsvDownloadIcon, PdfFileIcon } from './icons/ActionIcons'; 
 import jsPDF from 'jspdf';
-import 'jspdf-autotable'; 
+import autoTable from 'jspdf-autotable'; // Import autoTable directly
 
 // Utility functions for data table display and filtering
 export const formatDisplayValue = (value: any): string => {
+  if (value === null || value === undefined || String(value).toUpperCase() === 'NULL') {
+    return 'Sin Datos';
+  }
   if (typeof value === 'boolean') {
     return value ? 'Sí' : 'No';
   }
-  if (typeof value === 'object' && value !== null) {
-    return JSON.stringify(value);
-  }
-  if (value === null || value === undefined) {
-    return '-';
+  if (typeof value === 'object') {
+    return JSON.stringify(value, null, 2); // Pretty print JSON objects
   }
   return String(value);
 };
 
 export const getColumnOrderForDisplay = (allItems: Record<string, any>[]): string[] => {
     if (!allItems || allItems.length === 0) return [];
+    
     const allKeys = allItems.reduce<string[]>((acc, item) => {
       Object.keys(item).forEach(key => {
         if (!acc.includes(key)) acc.push(key);
       });
       return acc;
     }, []);
-    const preferredOrder = ['id', 'name', 'description', 'taskName', 'type', 'status', 'date', 'crop', 'area', 'location', 'clientId', 'fieldId', 'lotId'];
-    return [...new Set([...preferredOrder.filter(k => allKeys.includes(k)), ...allKeys])];
+
+    // Prioritize descriptive fields, then IDs if they are primary, then other fields.
+    const preferredOrder = [
+      'name', 'taskName', 'description', 'type', 'status', 'role', 'availability', 
+      'crop', 'area', 'location', 'model', 'year', 'category', 'unit',
+      'startDate', 'endDate', 'startDateTime', 'endDateTime',
+      'contactPerson', 'phone', 'email',
+      // IDs are important but should come after primary descriptive fields if those exist
+      'id', 
+      // Foreign Keys might be less relevant in a general list if names are shown
+      'clientId', 'contractorId', 'fieldId', 'lotId', 'parcelId', 'campaignId', 
+      'tasksListId', 'createdByUserId', 'taskId', 'machineryId', 'personnelId', 'productInsumeId', 'userId'
+    ];
+    
+    const orderedKeys = [...new Set([...preferredOrder.filter(k => allKeys.includes(k)), ...allKeys])];
+    
+    // Special case: if 'id' is the only key or one of very few, ensure it's prominent.
+    if (orderedKeys.length <= 2 && orderedKeys.includes('id') && orderedKeys[0] !== 'id') {
+        const idIndex = orderedKeys.indexOf('id');
+        if (idIndex > 0) {
+            const idVal = orderedKeys.splice(idIndex, 1)[0];
+            orderedKeys.unshift(idVal);
+        }
+    } else if (orderedKeys.length > 2 && orderedKeys[0] === 'id' && (orderedKeys.includes('name') || orderedKeys.includes('taskName'))) {
+        // If 'id' is first but 'name' or 'taskName' exists, move 'id' after them or to a less prominent position.
+        // For simplicity, we'll just ensure 'name' or 'taskName' comes before 'id' if both exist.
+        const idIndex = orderedKeys.indexOf('id');
+        const nameIndex = orderedKeys.indexOf('name');
+        const taskNameIndex = orderedKeys.indexOf('taskName');
+
+        if (nameIndex !== -1 && idIndex > nameIndex) { /* name is already before id */ }
+        else if (taskNameIndex !== -1 && idIndex > taskNameIndex) { /* taskName is already before id */ }
+        else if (idIndex !== -1) { // id exists
+            const idVal = orderedKeys.splice(idIndex, 1)[0];
+            let insertPos = 0;
+            if (nameIndex !== -1) insertPos = nameIndex + 1;
+            else if (taskNameIndex !== -1) insertPos = taskNameIndex + 1;
+            else insertPos = 1; // after the first element if no name/taskName
+            orderedKeys.splice(Math.min(insertPos, orderedKeys.length), 0, idVal);
+        }
+    }
+    return orderedKeys;
 };
 
 export const formatHeaderForDisplay = (key: string): string => {
+    if (FIELD_DISPLAY_NAMES_ES[key]) {
+      return FIELD_DISPLAY_NAMES_ES[key];
+    }
     let result = key.replace(/([A-Z])/g, ' $1'); 
     result = result.replace(/_/g, ' '); 
     result = result.charAt(0).toUpperCase() + result.slice(1); 
@@ -156,7 +200,7 @@ export const FullScreenDataViewModal: React.FC<FullScreenDataViewModalProps> = (
     printFrame.setAttribute('aria-hidden', 'true');
     document.body.appendChild(printFrame);
 
-    let cleanupTimeoutId: number | null = null; // Changed NodeJS.Timeout to number
+    let cleanupTimeoutId: number | null = null; 
 
     try {
         const frameDoc = printFrame.contentWindow?.document;
@@ -168,7 +212,7 @@ export const FullScreenDataViewModal: React.FC<FullScreenDataViewModalProps> = (
         frameDoc.write(printContentHTML);
         frameDoc.close();
 
-        cleanupTimeoutId = window.setTimeout(() => { // Explicitly use window.setTimeout
+        cleanupTimeoutId = window.setTimeout(() => { 
             if (document.body.contains(printFrame)) {
                 console.warn("iframe onload fallback: Removing print frame for", title);
                 document.body.removeChild(printFrame);
@@ -193,7 +237,7 @@ export const FullScreenDataViewModal: React.FC<FullScreenDataViewModalProps> = (
                                 }
                             }, 1000);
                         }
-                    }, 100); // 100ms delay
+                    }, 100); 
                 } else {
                      throw new Error("iframe contentWindow is not available after load.");
                 }
@@ -234,7 +278,7 @@ export const FullScreenDataViewModal: React.FC<FullScreenDataViewModalProps> = (
 
       if (entityTypeForHeaders && CSV_HEADERS[entityTypeForHeaders]) {
         const csvHeaders = CSV_HEADERS[entityTypeForHeaders];
-        pdfDisplayHeaders = csvHeaders.map(formatHeaderForDisplay);
+        pdfDisplayHeaders = csvHeaders.map(header => FIELD_DISPLAY_NAMES_ES[header.replace(/_([a-z0-9])/g, (g) => g[1].toUpperCase())] || formatHeaderForDisplay(header));
         pdfDataKeys = csvHeaders.map(csvHeader => {
            let objectKey = csvHeader.replace(/_([a-z0-9])/g, (g) => g[1].toUpperCase());
             if (entityTypeForHeaders === 'contractors' && csvHeader === 'contractor_id') objectKey = 'id';
@@ -243,20 +287,20 @@ export const FullScreenDataViewModal: React.FC<FullScreenDataViewModalProps> = (
         });
       } else {
         pdfDataKeys = getColumnOrderForDisplay(filteredItems);
-        pdfDisplayHeaders = pdfDataKeys.map(formatHeaderForDisplay);
+        pdfDisplayHeaders = pdfDataKeys.map(key => FIELD_DISPLAY_NAMES_ES[key] || formatHeaderForDisplay(key));
       }
       headRows = [pdfDisplayHeaders];
 
       bodyRows = filteredItems.map(item => {
         return pdfDataKeys.map(key => {
           const rawValue = item[key];
-          if (rawValue === null || rawValue === undefined) return '';
+          if (rawValue === null || rawValue === undefined || String(rawValue).toUpperCase() === 'NULL') return 'Sin Datos';
           if (typeof rawValue === 'boolean') return rawValue ? 'Sí' : 'No';
           return String(rawValue);
         });
       });
 
-      (doc as any).autoTable({
+      autoTable(doc, { // Use autoTable as a function
         head: headRows,
         body: bodyRows,
         startY: 20, 

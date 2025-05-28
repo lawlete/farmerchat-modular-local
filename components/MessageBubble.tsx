@@ -6,34 +6,56 @@ import { ExpandIcon } from './icons/ModalControlIcons';
 import { PrintIcon, CsvDownloadIcon } from './icons/ActionIcons';
 import { triggerCsvDownload } from '../services/dbService';
 import { FullScreenDataModalContent } from './FullScreenDataViewModal';
-
+import { FIELD_DISPLAY_NAMES_ES } from '../constants'; // Import the new mapping
 
 interface MessageBubbleProps {
   message: ChatMessage;
   onViewFullScreen: (content: FullScreenDataModalContent) => void;
 }
 
+const formatValueForBubble = (value: any): string => {
+  if (value === null || value === undefined || String(value).toUpperCase() === 'NULL') {
+    return 'Sin Datos';
+  }
+  return String(value);
+};
+
 const renderItemDetails = (item: Record<string, any>): string => {
   const details: string[] = [];
-  if (item.name) details.push(`Nombre: ${item.name}`);
-  else if (item.taskName) details.push(`Tarea: ${item.taskName}`);
-  else if (item.description) details.push(`Desc: ${item.description?.substring(0,50)}${item.description && item.description.length > 50 ? '...' : ''}`);
   
-  if (item.id && details.length === 0) details.push(`ID: ${item.id}`); 
-
-  if (item.crop && !details.some(d => d.toLowerCase().includes('cultivo'))) details.push(`Cultivo: ${item.crop}`);
-  if (item.area && !details.some(d => d.toLowerCase().includes('área'))) details.push(`Área: ${item.area}`);
-  if (item.status && !details.some(d => d.toLowerCase().includes('estado'))) details.push(`Estado: ${item.status}`);
-  if (item.date && !details.some(d => d.toLowerCase().includes('fecha'))) details.push(`Fecha: ${item.date}`);
-  
-  if (details.length === 0) {
-    return Object.entries(item)
-      .filter(([key]) => key !== 'id') 
-      .slice(0, 2) 
-      .map(([key, value]) => `${key}: ${String(value)}`)
-      .join(', ') || `ID: ${item.id || 'N/A'}`;
+  // Prioritize descriptive fields
+  if (item.name) details.push(`${FIELD_DISPLAY_NAMES_ES['name'] || 'Nombre'}: ${formatValueForBubble(item.name)}`);
+  else if (item.taskName) details.push(`${FIELD_DISPLAY_NAMES_ES['taskName'] || 'Tarea'}: ${formatValueForBubble(item.taskName)}`);
+  else if (item.description) {
+    const desc = formatValueForBubble(item.description);
+    details.push(`${FIELD_DISPLAY_NAMES_ES['description'] || 'Desc'}: ${desc.substring(0,50)}${desc.length > 50 ? '...' : ''}`);
   }
-  return details.join(' | '); 
+
+  // Add ID if no primary descriptor was found, or if it's a very simple object
+  if (item.id && (details.length === 0 || Object.keys(item).length <= 2)) {
+    // Avoid adding ID if name/taskName is already present unless it's the only other field.
+    if (!details.some(d => d.toLowerCase().includes('nombre:') || d.toLowerCase().includes('tarea:'))) {
+       details.push(`${FIELD_DISPLAY_NAMES_ES['id'] || 'ID'}: ${formatValueForBubble(item.id)}`);
+    }
+  }
+  
+  const commonFieldsToShow: (keyof typeof FIELD_DISPLAY_NAMES_ES)[] = ['type', 'status', 'crop', 'area', 'availability', 'role'];
+  commonFieldsToShow.forEach(key => {
+    if (item[key] !== undefined && item[key] !== null && !details.some(d => d.toLowerCase().startsWith((FIELD_DISPLAY_NAMES_ES[key] || key).toLowerCase() + ':'))) {
+      details.push(`${FIELD_DISPLAY_NAMES_ES[key] || key}: ${formatValueForBubble(item[key])}`);
+    }
+  });
+
+
+  if (details.length === 0) { // Fallback if no specific fields were matched
+    return Object.entries(item)
+      .filter(([key, value]) => key !== 'id' && value !== null && value !== undefined && String(value).toUpperCase() !== 'NULL')
+      .slice(0, 2) 
+      .map(([key, value]) => `${FIELD_DISPLAY_NAMES_ES[key] || key}: ${formatValueForBubble(value)}`)
+      .join(' | ') || `${FIELD_DISPLAY_NAMES_ES['id'] || 'ID'}: ${formatValueForBubble(item.id) || 'N/A'}`;
+  }
+  
+  return details.slice(0, 3).join(' | '); // Show up to 3 details for brevity
 };
 
 
@@ -80,22 +102,17 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onViewFul
     }
 
     if (listElement) {
-      // Clone the list to keep its structure and styles if possible,
-      // then remove any elements that shouldn't be printed from the clone.
       const clonedList = listElement.cloneNode(true) as HTMLElement;
       clonedList.querySelectorAll('.no-print-in-section, button, [aria-hidden="true"]').forEach(el => el.remove());
-      // Further simplify li content if needed, e.g., just take innerText
       clonedList.querySelectorAll('li').forEach(li => {
-        // This ensures we print text content, stripping complex HTML within li if any
         const textContent = li.innerText || li.textContent || "";
-        li.innerHTML = textContent.trim();
+        li.innerHTML = textContent.trim().replace(/\n\s*\n/g, '\n'); // Clean up extra newlines
       });
       contentHTML += clonedList.outerHTML;
     } else {
-      // Fallback: if no ul, try to get some content, stripping known non-print elements
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = targetElement.innerHTML;
-      tempDiv.querySelectorAll('.no-print-in-section, button, [aria-hidden="true"], h4').forEach(el => el.remove()); // Remove title if already added
+      tempDiv.querySelectorAll('.no-print-in-section, button, [aria-hidden="true"], h4').forEach(el => el.remove()); 
       contentHTML += tempDiv.innerHTML.trim();
     }
 
@@ -104,12 +121,13 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onViewFul
         body { font-family: 'Inter', sans-serif; margin: 20px; color: #333; }
         h1.print-page-title { font-size: 16pt; text-align: center; margin-bottom: 15px; color: black !important; }
         h4 { font-size: 11pt; margin-bottom: 8px; color: black !important; font-weight: bold; }
-        ul { list-style-type: disc; padding-left: 20px; margin-top: 5px; font-size: 9pt; }
-        li { margin-bottom: 4px; color: black !important; page-break-inside: avoid; }
+        ul { list-style-type: none; padding-left: 0; margin-top: 5px; font-size: 9pt; }
+        li { margin-bottom: 6px; padding: 4px; border: 1px solid #eee; border-radius: 3px; color: black !important; page-break-inside: avoid; background-color: #f9f9f9; }
         .no-print-in-section { display: none !important; }
         .dark\\:bg-gray-800, .dark\\:bg-gray-700, .dark\\:bg-gray-600, .dark\\:bg-gray-500 { background-color: white !important; }
         .dark\\:text-gray-100, .dark\\:text-gray-200, .dark\\:text-gray-300, .dark\\:text-gray-400, .dark\\:text-yellow-300, .dark\\:text-yellow-600 { color: black !important; }
         .dark\\:border-gray-500, .dark\\:border-gray-400 { border-color: #ccc !important; }
+        .dark\\:bg-gray-100 { background-color: #f0f0f0 !important; } /* For li items in dark mode */
       </style>
     `;
     return `
@@ -148,12 +166,12 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onViewFul
     printFrame.style.width = '0'; 
     printFrame.style.height = '0';
     printFrame.style.border = '0';
-    printFrame.style.zIndex = '99999'; // Ensure iframe is on top
+    printFrame.style.zIndex = '99999'; 
     printFrame.setAttribute('title', 'Contenido de Impresión');
     printFrame.setAttribute('aria-hidden', 'true');
     document.body.appendChild(printFrame);
 
-    let cleanupTimeoutId: number | null = null; // Changed NodeJS.Timeout to number
+    let cleanupTimeoutId: number | null = null; 
 
     try {
         const frameDoc = printFrame.contentWindow?.document;
@@ -165,7 +183,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onViewFul
         frameDoc.write(printContentHTML);
         frameDoc.close(); 
 
-        cleanupTimeoutId = window.setTimeout(() => { // Explicitly use window.setTimeout
+        cleanupTimeoutId = window.setTimeout(() => { 
             if (document.body.contains(printFrame)) {
                 console.warn("iframe onload fallback: Removing print frame for", pageTitle);
                 document.body.removeChild(printFrame);
@@ -177,7 +195,6 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onViewFul
             try {
                 if (printFrame.contentWindow) {
                     printFrame.contentWindow.focus();
-                    // A small delay before print can sometimes help ensure rendering.
                     setTimeout(() => {
                         try {
                              printFrame.contentWindow?.print();
@@ -191,14 +208,14 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onViewFul
                                 }
                             }, 1000);
                         }
-                    }, 100); // 100ms delay before print
+                    }, 100); 
                 } else {
                      throw new Error("iframe contentWindow is not available after load.");
                 }
             } catch (printError) {
                 console.error(`Error during print operation for ${pageTitle}:`, printError);
                 alert(`Ocurrió un error al intentar imprimir: ${(printError as Error).message}`);
-                 setTimeout(() => { // Ensure cleanup even if print fails
+                 setTimeout(() => { 
                     if (document.body.contains(printFrame)) {
                         document.body.removeChild(printFrame);
                     }

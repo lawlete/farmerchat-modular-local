@@ -1,5 +1,5 @@
 
-import { Database, EntityType } from './types';
+import { Database, EntityType, FieldDisplayNames } from './types';
 
 export const GEMINI_MODEL_TEXT = 'gemini-2.5-flash-preview-04-17';
 export const LOCAL_STORAGE_DB_KEY = 'farmerChatDB_v5'; // Updated key for new schema
@@ -69,6 +69,7 @@ El JSON debe seguir esta estructura general:
 
 IMPORTANTE: El campo "messageForUser" DEBE ser SIEMPRE un texto plano, simple y amigable para el usuario. NUNCA debe contener cadenas JSON, ni bloques de código JSON.
 MUY IMPORTANTE para "LIST_ENTITIES": El campo "data" en tu respuesta JSON DEBE OBLIGATORIAMENTE contener el array de entidades que coinciden con la solicitud del usuario, YA FILTRADO POR TI.
+Cuando generes groupedData para LIST_ENTITIES o GROUPED_QUERY, especialmente si los items son listas de entidades relacionadas (como maquinaria o personal de un cliente), prioriza incluir en items solo los campos más relevantes y amigables para el usuario (ej. name, type, role, status). Omite los campos de ID internos (id) si hay un name u otro identificador más descriptivo, a menos que el ID sea el único identificador del registro.
 
 VALIDACIONES DE SENTIDO COMÚN PARA CREACIÓN DE TAREAS:
 Antes de usar "CONFIRM_CREATION" o "CREATE_ENTITY" para una nueva "Task", DEBES realizar las siguientes validaciones:
@@ -284,4 +285,103 @@ export const CSV_HEADERS: Record<EntityType, string[]> = {
   taskPersonnelLinks: ['task_personnel_link_id', 'task_entry_id', 'personnel_id', 'role_in_task', 'hours_worked'],
   taskInsumeLinks: ['task_insume_link_id', 'task_entry_id', 'product_insume_id', 'quantity_used', 'unit_used', 'application_details'],
   userAccess: ['user_id', 'campo_id', 'acceso_total'],
+};
+
+
+export const FIELD_DISPLAY_NAMES_ES: FieldDisplayNames = {
+  // General
+  id: "ID",
+  name: "Nombre",
+  description: "Descripción",
+  notes: "Notas",
+  type: "Tipo",
+  status: "Estado",
+  category: "Categoría",
+  unit: "Unidad",
+  area: "Área", // ha or other unit
+  location: "Ubicación",
+  phone: "Teléfono",
+  email: "Correo Electrónico",
+  address: "Dirección",
+  contactPerson: "Persona de Contacto",
+  creationTimestamp: "Fecha Creación",
+  additionalInfo: "Info. Adicional",
+  
+  // Client specific (already covered by general)
+  
+  // User specific
+  role: "Rol",
+  clientId: "ID Cliente", // Might want "Cliente" if resolved, but key is clientId
+  
+  // Contractor specific
+  isInternal: "Interno",
+  contractor_id: "ID Contratista", // CSV header mapping
+  
+  // Personnel specific
+  availability: "Disponibilidad",
+  contractorId: "ID Contratista", // Might want "Contratista" if resolved
+
+  // Machinery specific
+  model: "Modelo",
+  year: "Año",
+
+  // Field specific (covered by general)
+
+  // Lot specific
+  fieldId: "ID Campo", // Might want "Campo" if resolved
+
+  // Parcel specific
+  lotId: "ID Lote", // Might want "Lote" if resolved
+  crop: "Cultivo",
+
+  // Campaign specific
+  startDate: "Fecha Inicio",
+  endDate: "Fecha Fin",
+
+  // TasksList specific
+  taskName: "Nombre de Tarea",
+
+  // ProductInsume specific (covered by general)
+
+  // Task specific
+  tasksListId: "ID Tipo Tarea", // Might want "Tipo de Tarea" if resolved
+  createdByUserId: "ID Usuario Creador",
+  campaignId: "ID Campaña", // Might want "Campaña" if resolved
+  // fieldId, lotId, parcelId already covered
+  startDateTime: "Fecha/Hora Inicio",
+  endDateTime: "Fecha/Hora Fin",
+  durationHours: "Duración (Horas)",
+  costEstimated: "Costo Estimado",
+  costActual: "Costo Real",
+  resultDescription: "Descripción Resultado",
+  machineryIds: "IDs Maquinaria", // Display "Maquinaria Asignada" if resolved list
+  personnelIds: "IDs Personal",   // Display "Personal Asignado" if resolved list
+  productInsumeDetails: "Detalles Insumos", // Display "Insumos Utilizados" if resolved list
+
+  // TaskMachineryLink specific
+  taskId: "ID Tarea",
+  machineryId: "ID Maquinaria",
+  hoursUsed: "Horas Usadas",
+
+  // TaskPersonnelLink specific
+  personnelId: "ID Personal",
+  roleInTask: "Rol en Tarea",
+  hoursWorked: "Horas Trabajadas",
+
+  // TaskInsumeLink specific
+  productInsumeId: "ID Producto/Insumo",
+  quantityUsed: "Cantidad Usada",
+  unitUsed: "Unidad Usada",
+  applicationDetails: "Detalles Aplicación",
+
+  // UserAccess specific
+  userId: "ID Usuario",
+  // fieldId already covered
+  accessTotal: "Acceso Total",
+
+  // GroupedData specific (if keys appear directly)
+  groupTitle: "Título del Grupo",
+  items: "Elementos",
+  count: "Cantidad",
+  entityType: "Tipo de Entidad"
 };
