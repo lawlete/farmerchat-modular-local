@@ -2,7 +2,7 @@
 import React, { useState, useRef, useImperativeHandle, forwardRef } from 'react';
 import { EntityType } from '../types';
 import { ENTITY_DISPLAY_NAMES } from '../constants';
-import { DownloadIcon, UploadIcon, FileCsvIcon, MultiFileIcon, ExportPackageIcon, DeleteDatabaseIcon, SaveHistoryIcon, LoadHistoryIcon } from './icons/FileIcons';
+import { DownloadIcon, UploadIcon, FileCsvIcon, MultiFileIcon, ExportPackageIcon, DeleteDatabaseIcon, SaveHistoryIcon, LoadHistoryIcon, OfflineQueueIcon } from './icons/FileIcons';
 import { Theme } from '../App';
 import { SunIcon, MoonIcon } from './icons/ThemeIcons';
 import { VoiceOnIcon, VoiceOffIcon } from './icons/VoiceModeIcons';
@@ -25,6 +25,7 @@ interface TopBarProps {
   onDeleteDatabaseRequest: () => void;
   onSaveChatHistory: () => void;
   onLoadChatHistoryFile: (file: File) => void;
+  pendingOfflineRequestCount: number;
 }
 
 export const TopBar = forwardRef<TopBarHandles, TopBarProps>((
@@ -40,7 +41,8 @@ export const TopBar = forwardRef<TopBarHandles, TopBarProps>((
     onMultipleFileUploadRequest,
     onDeleteDatabaseRequest,
     onSaveChatHistory,
-    onLoadChatHistoryFile
+    onLoadChatHistoryFile,
+    pendingOfflineRequestCount
   },
   ref
 ) => {
@@ -113,6 +115,16 @@ export const TopBar = forwardRef<TopBarHandles, TopBarProps>((
       </div>
       
       <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-3">
+        {pendingOfflineRequestCount > 0 && (
+            <div 
+              className="flex items-center bg-yellow-500 text-yellow-900 dark:bg-yellow-400 dark:text-yellow-900 py-1 px-2 sm:px-3 rounded-md text-xs sm:text-sm transition-colors animate-pulse"
+              title={`${pendingOfflineRequestCount} solicitud(es) pendientes de procesar`}
+            >
+              <OfflineQueueIcon className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="hidden xxs:inline">{pendingOfflineRequestCount} Pendiente{pendingOfflineRequestCount > 1 ? 's' : ''}</span>
+              <span className="xxs:hidden">{pendingOfflineRequestCount}</span>
+            </div>
+          )}
         <button
           onClick={onDeleteDatabaseRequest}
           className="flex items-center bg-red-500 hover:bg-red-600 text-white py-2 px-2 sm:px-3 rounded-md text-sm transition-colors"

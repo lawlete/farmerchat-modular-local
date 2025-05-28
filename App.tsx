@@ -3,10 +3,11 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { TopBar, TopBarHandles } from './components/TopBar';
 import { ChatPanel, ChatPanelHandles } from './components/ChatPanel';
 import { DataPanel } from './components/DataPanel';
-import { Database, ChatMessage, LLMResponseAction, EntityType, GroupedResult, ALL_ENTITY_TYPES, Task } from './types';
-import { LOCAL_STORAGE_DB_KEY, INITIAL_DB, SYSTEM_PROMPT_HEADER, ENTITY_DISPLAY_NAMES, GEMINI_MODEL_TEXT } from './constants';
+import { Database, ChatMessage, LLMResponseAction, EntityType, GroupedResult, ALL_ENTITY_TYPES, Task, OfflineRequest, OfflineRequestPayload, ErrorClassification } from './types';
+import { LOCAL_STORAGE_DB_KEY, INITIAL_DB, SYSTEM_PROMPT_HEADER, ENTITY_DISPLAY_NAMES, GEMINI_MODEL_TEXT, LOCAL_STORAGE_OFFLINE_QUEUE_KEY, MAX_OFFLINE_REQUEST_ATTEMPTS, INITIAL_RETRY_DELAY_MS, MAX_RETRY_DELAY_MS, OFFLINE_PROCESSING_INTERVAL_MS } from './constants';
 import { GoogleGenAI, Chat, GenerateContentResponse, Part } from "@google/genai";
 import { processCsvData, generateUUID, convertEntityArrayToCsvString } from './services/dbService';
+import { classifyError, isQueuableError, addRequestToOfflineQueue as addRequestToQueueUtil, attemptProcessRequest as attemptProcessRequestUtil, getOfflineQueueFromStorage, saveOfflineQueueToStorage } from './services/offlineService';
 import { MultipleCsvUploadModal } from './components/MultipleCsvUploadModal';
 import { ConfirmModal } from './components/ConfirmModal';
 import { WelcomeBanner } from './components/WelcomeBanner'; 
@@ -51,6 +52,17 @@ const App: React.FC = () => {
   const [isFullScreenDataModalOpen, setIsFullScreenDataModalOpen] = useState(false);
   const [fullScreenDataModalContent, setFullScreenDataModalContent] = useState<FullScreenDataModalContent | null>(null);
 
+  // Offline Queue State
+  const [offlineRequestQueue, setOfflineRequestQueue] = useState<OfflineRequest[]>([]);
+  const processingRequestIdRef = useRef<string | null>(null);
+  const offlineRequestQueueRef = useRef<OfflineRequest[]>([]); // Ref for interval access
+
+  useEffect(() => {
+    saveOfflineQueueToStorage(offlineRequestQueue);
+    offlineRequestQueueRef.current = offlineRequestQueue;
+  }, [offlineRequestQueue]);
+
+
   const handleOpenFullScreenDataModal = (content: FullScreenDataModalContent) => {
     setFullScreenDataModalContent(content);
     setIsFullScreenDataModalOpen(true);
@@ -89,15 +101,14 @@ const App: React.FC = () => {
     }
   }, []);
 
-  const addMessageToChat = useCallback((text: string, sender: ChatMessage['sender'], isError: boolean = false, groupedData?: GroupedResult[], rawLLMResponse?: string) => {
-    const newMessage: ChatMessage = { id: generateUUID(), text, sender, timestamp: new Date(), isError, groupedData, rawLLMResponse, isLoading: sender === 'ai' && !text };
+  const addMessageToChat = useCallback((text: string, sender: ChatMessage['sender'], isError: boolean = false, groupedData?: GroupedResult[], rawLLMResponse?: string, relatedOfflineRequestId?: string) => {
+    const newMessage: ChatMessage = { id: generateUUID(), text, sender, timestamp: new Date(), isError, groupedData, rawLLMResponse, isLoading: sender === 'ai' && !text, relatedOfflineRequestId };
     setChatMessages(prev => [...prev, newMessage]);
     
     if (groupedData) {
       setCurrentGroupedResults(groupedData);
     } else if (sender === 'user') { 
       setCurrentGroupedResults(null);
-      // If user sends a message, implicitly close any open fullscreen modal for old data
       if (isFullScreenDataModalOpen) handleCloseFullScreenDataModal();
     }
 
@@ -111,7 +122,9 @@ const App: React.FC = () => {
         text.startsWith('Se corrigió la estructura') ||
         text.startsWith('Base de datos borrada exitosamente') ||
         text.startsWith('Si necesita una base de datos de prueba') ||
-        text.startsWith('Historial de chat') // For history load/save messages
+        text.startsWith('Historial de chat') || // For history load/save messages
+        text.includes("solicitud encolada") || // For offline queue messages
+        text.includes("solicitudes pendientes")
     );
     if (!isInitialSystemMessage && showWelcomeBanner) {
         setShowWelcomeBanner(false);
@@ -190,7 +203,6 @@ const App: React.FC = () => {
       console.log("LocalStorage vacío, cargando BD_testing.json");
       loadTestDatabase(true);
     }
-    // Load initial welcome message if chat is empty
     if (chatMessages.length === 0) {
         addMessageToChat("¡Bienvenido a FarmerChat AI! Escribe 'Ayuda' para ver ejemplos de comandos o utiliza los botones superiores para gestionar tus datos.", 'system');
     }
@@ -256,7 +268,7 @@ const App: React.FC = () => {
       if (speechQueueRef.current.length === 0 && !isSpeakingRef.current && isInteractiveVoiceMode && chatPanelRef.current) {
           const lastMessage = chatMessages[chatMessages.length -1];
           if(lastMessage && (lastMessage.sender === 'ai' || lastMessage.sender === 'system') && !lastMessage.isError && !lastMessage.isLoading){
-            const aiSpeakingKeywords = ["¿qué más puedo hacer por ti?", "¿en qué más te puedo ayudar?", "¿algo más?", "sugerencias", "¿es correcto?", "¿quieres ver más?", "activado.", "para poder continuar"];
+            const aiSpeakingKeywords = ["¿qué más puedo hacer por ti?", "¿en qué más te puedo ayudar?", "¿algo más?", "sugerencias", "¿es correcto?", "¿quieres ver más?", "activado.", "para poder continuar", "encolado", "procesada con éxito", "falló"];
             const shouldTriggerMic = aiSpeakingKeywords.some(keyword => lastMessage.text.toLowerCase().includes(keyword.toLowerCase()));
             if(shouldTriggerMic || lastMessage.groupedData){
                  console.log("Speech queue empty, last AI/System message seems to prompt for input. Triggering mic.");
@@ -332,7 +344,7 @@ const App: React.FC = () => {
           let itemDetails = "";
           const itemKeys = getColumnOrderForDisplay([item]);
           
-          const primaryName = item.name || item.taskName || (item.id && itemKeys.length <= 2 ? `ID ${item.id}`: null) ; // Use ID as primary if few other fields
+          const primaryName = item.name || item.taskName || (item.id && itemKeys.length <= 2 ? `ID ${item.id}`: null) ; 
           if (primaryName) {
             itemDetails += `${primaryName}. `;
           } else if (item.id) {
@@ -540,7 +552,7 @@ const App: React.FC = () => {
         try {
           const csvString = convertEntityArrayToCsvString(dataArray, entityType);
           if (csvString) {
-            const blob = new Blob(['\uFEFF' + csvString], { type: 'text/csv;charset=utf-8;' }); // Added BOM
+            const blob = new Blob(['\uFEFF' + csvString], { type: 'text/csv;charset=utf-8;' }); 
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -597,12 +609,12 @@ const App: React.FC = () => {
         )) {
           const typedHistory: ChatMessage[] = parsedHistory.map((msg: any) => ({
             ...msg,
-            timestamp: new Date(msg.timestamp), // Convert string back to Date
-            // Ensure optional fields are handled
+            timestamp: new Date(msg.timestamp), 
             isLoading: msg.isLoading || false,
             isError: msg.isError || false,
             groupedData: msg.groupedData || undefined,
             rawLLMResponse: msg.rawLLMResponse || undefined,
+            relatedOfflineRequestId: msg.relatedOfflineRequestId || undefined,
           }));
 
           setChatMessages(typedHistory);
@@ -649,10 +661,10 @@ const App: React.FC = () => {
     }
   };
 
-  const handleLLMAction = (actionResponse: LLMResponseAction) => {
+  const handleLLMAction = useCallback((actionResponse: LLMResponseAction, relatedOfflineRequestId?: string) => {
     const { action, entity, data, query, messageForUser, groupedData, rawResponse, followUpAction } = actionResponse;
 
-    addMessageToChat(messageForUser, 'ai', false, groupedData, rawResponse);
+    addMessageToChat(messageForUser, 'ai', false, groupedData, rawResponse, relatedOfflineRequestId);
     if (isInteractiveVoiceMode) {
       speakText(messageForUser, () => {
         if (groupedData && groupedData.length > 0) {
@@ -674,8 +686,6 @@ const App: React.FC = () => {
         if (entity && data && !Array.isArray(data)) {
           const newId = data.id || generateUUID(); 
           const newItem = { ...data, id: newId };
-
-          // let dbAfterCreation = database; // To capture the state for followUpAction
 
           setDatabase(prevDb => {
             const currentEntityArray = prevDb[entity] || [];
@@ -703,18 +713,17 @@ const App: React.FC = () => {
                 updatedDb = {...updatedDb, ...newLinks};
             }
             localStorage.setItem(LOCAL_STORAGE_DB_KEY, JSON.stringify(updatedDb));
-            // dbAfterCreation = updatedDb; 
             return updatedDb;
           });
           
           if (followUpAction) {
             setTimeout(() => {
-                handleLLMAction(followUpAction);
+                handleLLMAction(followUpAction, relatedOfflineRequestId);
             }, 100); 
           }
 
         } else {
-          addMessageToChat(`Error de IA: Datos inválidos para crear entidad ${entity}.`, 'system', true);
+          addMessageToChat(`Error de IA: Datos inválidos para crear entidad ${entity}.`, 'system', true, undefined, undefined, relatedOfflineRequestId);
         }
         break;
       
@@ -750,15 +759,13 @@ const App: React.FC = () => {
         break;
 
       case 'LIST_ENTITIES':
-        // Fallthrough intended
       case 'GROUPED_QUERY':
           const resultsWithEntityType = (actionResponse.groupedData || []).map(group => ({
               ...group,
-              entityType: group.entityType || entity // Ensure entityType is set for DataTable headers
+              entityType: group.entityType || entity 
           }));
           setCurrentGroupedResults(resultsWithEntityType);
   
-          // Handle case where 'data' array is provided directly by LLM for LIST_ENTITIES
           if (action === 'LIST_ENTITIES' && actionResponse.data && Array.isArray(actionResponse.data) && (!resultsWithEntityType || resultsWithEntityType.length === 0)) {
                const inferredEntityType = entity;
                setCurrentGroupedResults([{ 
@@ -789,12 +796,13 @@ const App: React.FC = () => {
 
       default:
         console.warn("Unknown LLM action:", action);
-        addMessageToChat(`Acción desconocida recibida de la IA: ${action}`, 'system', true);
+        addMessageToChat(`Acción desconocida recibida de la IA: ${action}`, 'system', true, undefined, undefined, relatedOfflineRequestId);
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [addMessageToChat, isInteractiveVoiceMode, speakText, speakGroupedResults, isFullScreenDataModalOpen, fullScreenDataModalContent]);
 
 
-  const sendMessageToAI = async (messageText: string, audioBase64?: string, audioMimeType?: string) => {
+  const sendMessageToAI = async (messageText: string, audioBase64?: string, audioMimeType?: string, originalUserMessageId?: string) => {
     if (showWelcomeBanner) setShowWelcomeBanner(false); 
 
     if (!geminiService || !chatSession) {
@@ -802,14 +810,22 @@ const App: React.FC = () => {
       if (isInteractiveVoiceMode) speakText("El servicio de IA no está disponible. Revisa la configuración. Puedes guardar tu historial de chat actual.");
       return;
     }
-
-    addMessageToChat(messageText, 'user');
-    setIsLoading(true);
     
+    // If it's not a retry, add the user message. Retries will have specific system messages.
+    if(!originalUserMessageId) { // originalUserMessageId implies it's a retry from queue.
+        const userMsgId = generateUUID();
+        addMessageToChat(messageText, 'user', false, undefined, undefined, userMsgId);
+        // Placeholder for the actual ID that will be used if this msg is queued
+        originalUserMessageId = userMsgId; 
+    }
+
+
+    setIsLoading(true); // Global loading for direct attempt
+    const loadingAiMessageId = generateUUID();
     setChatMessages(prev => {
         const newMessages = [...prev];
         const loadingAiMessage: ChatMessage = { 
-            id: generateUUID(), 
+            id: loadingAiMessageId, 
             text: 'Procesando...', 
             sender: 'ai', 
             timestamp: new Date(), 
@@ -827,7 +843,7 @@ const App: React.FC = () => {
     if (audioBase64 && audioMimeType) {
         parts.push({ inlineData: { data: audioBase64, mimeType: audioMimeType } });
         if (messageText === "Comando de voz grabado (procesando...)") {
-          // If it's only audio, don't add empty text part.
+          // Don't add empty text part.
         } else {
            parts.push({ text: messageText }); 
         }
@@ -839,8 +855,7 @@ const App: React.FC = () => {
       const response: GenerateContentResponse = await chatSession.sendMessage({ message: parts });
 
       setIsLoading(false);
-      setChatMessages(prev => prev.filter(msg => !(msg.sender === 'ai' && msg.isLoading)));
-
+      setChatMessages(prev => prev.filter(msg => msg.id !== loadingAiMessageId));
 
       const llmResponseText = response.text;
       const actionResponse = parseLLMResponse(llmResponseText);
@@ -859,21 +874,172 @@ const App: React.FC = () => {
       }
     } catch (error) {
       console.error("Error sending message to Gemini:", error);
-      setIsLoading(false);
-      setChatMessages(prev => prev.filter(msg => !(msg.sender === 'ai' && msg.isLoading)));
-      
-      let errorMessage = `Error al comunicarse con la IA: ${(error as Error).message}.`;
-      if ((error as any).message?.includes('API key not valid')) {
-          errorMessage = "Error de API Key: La clave proporcionada no es válida. Por favor, verifique la configuración.";
-      } else if ((error as any).message?.includes('quota')) {
-          errorMessage = "Error de Cuota: Se ha excedido la cuota de la API. Intente más tarde.";
+      setIsLoading(false); // Stop global loading if direct attempt fails
+      setChatMessages(prev => prev.filter(msg => msg.id !== loadingAiMessageId));
+
+      const classified = classifyError(error);
+      const requestPayload: OfflineRequestPayload = { messageText, audioBase64, audioMimeType };
+
+      if (isQueuableError(classified.type) && chatSession) {
+        const queuedRequest = addRequestToQueueUtil(requestPayload, classified.type, classified.message, setOfflineRequestQueue);
+        queuedRequest.originalMessageId = originalUserMessageId; // Link the queued request to the original user message
+        setOfflineRequestQueue(prev => prev.map(r => r.id === queuedRequest.id ? queuedRequest : r)); // Save updated queue
+
+        addMessageToChat(
+          `⚠️ Tu mensaje "${messageText.substring(0,30)}..." fue ENCOLADO. Razón: ${classified.message}. Se reintentará automáticamente.`,
+          'system',
+          true,
+          undefined,
+          undefined,
+          queuedRequest.id 
+        );
+        if (isInteractiveVoiceMode) speakText(`Tu mensaje fue encolado debido a: ${classified.message}. Se reintentará automáticamente.`);
+      } else {
+        let userErrorMessage = `Error al comunicarse con la IA: ${classified.message}.`;
+         if (classified.type === 'API_KEY_INVALID') {
+            userErrorMessage = `Error de Configuración (API Key): ${classified.message}. Por favor, contacte al administrador.`;
+        } else if (!chatSession) {
+            userErrorMessage = "Error: La sesión de chat con la IA no está inicializada. Intenta recargar la aplicación.";
+        }
+        addMessageToChat(userErrorMessage, 'system', true);
+        if (isInteractiveVoiceMode) speakText(userErrorMessage);
       }
-      errorMessage += " Puedes guardar tu historial de chat actual usando el botón correspondiente en la barra superior.";
-      
-      addMessageToChat(errorMessage, 'system', true);
-      if (isInteractiveVoiceMode) speakText(errorMessage);
     }
   };
+  
+  const processQueue = useCallback(async () => {
+    if (processingRequestIdRef.current) return;
+
+    const currentQueue = offlineRequestQueueRef.current;
+    const requestToProcess = currentQueue.find(req => req.status === 'pending');
+
+    if (!requestToProcess) {
+      return;
+    }
+
+    if (!navigator.onLine) {
+      // Log locally or briefly mention if needed, but primary feedback is via online/offline events
+      console.log("Offline queue processing paused: No internet connection.");
+      return;
+    }
+    if (!chatSession) {
+      addMessageToChat("Intentando procesar cola, pero la sesión de IA no está lista.", "system", true, undefined, undefined, requestToProcess.id);
+      return;
+    }
+
+    processingRequestIdRef.current = requestToProcess.id;
+    
+    setOfflineRequestQueue(prev => prev.map(r => r.id === requestToProcess.id ? {...r, status: 'processing', lastAttemptTimestamp: new Date()} : r));
+    
+    addMessageToChat(`🔄 Intentando procesar solicitud encolada: "${requestToProcess.payload.messageText.substring(0, 30)}..." (Intento ${requestToProcess.attempts + 1})`, 'system', false, undefined, undefined, requestToProcess.id);
+    if (isInteractiveVoiceMode) speakText(`Intentando procesar una solicitud encolada.`);
+
+    await attemptProcessRequestUtil(
+      requestToProcess,
+      chatSession,
+      database,
+      chatMessages, // Pass current chat messages
+      (requestId, responseText, llmResponseObject) => { // onSuccess
+        addMessageToChat(`✅ Solicitud encolada "${requestToProcess.payload.messageText.substring(0,30)}..." procesada con éxito.`, 'system', false, undefined, undefined, requestId);
+        if (isInteractiveVoiceMode) speakText(`Solicitud encolada procesada con éxito.`);
+        
+        const actionResponse = parseLLMResponse(responseText);
+        if (actionResponse) {
+          handleLLMAction({ ...actionResponse, rawResponse: responseText }, requestId);
+        } else {
+          addMessageToChat(`IA (respuesta de cola): ${responseText}`, 'ai', false, undefined, responseText, requestId);
+          if (isInteractiveVoiceMode) speakText(responseText);
+        }
+
+        setOfflineRequestQueue(prev => prev.map(r => r.id === requestId ? {...r, status: 'processed'} : r));
+        processingRequestIdRef.current = null;
+        setTimeout(processQueue, 1000); // Check for next
+      },
+      (requestId, errorInfo) => { // onFailure (retryable)
+        const req = offlineRequestQueueRef.current.find(r => r.id === requestId);
+        const currentAttempts = req ? req.attempts : requestToProcess.attempts; // Use fresh attempt count
+        const nextAttemptDelay = Math.min(INITIAL_RETRY_DELAY_MS * Math.pow(2, currentAttempts + 1), MAX_RETRY_DELAY_MS);
+        
+        addMessageToChat(
+          `⚠️ Falló el reintento para "${requestToProcess.payload.messageText.substring(0,30)}...". Razón: ${errorInfo.message}. Se reintentará en ${Math.round(nextAttemptDelay/1000)}s. (Intento ${currentAttempts + 1}/${MAX_OFFLINE_REQUEST_ATTEMPTS})`,
+          'system', true, undefined, undefined, requestId
+        );
+        if (isInteractiveVoiceMode) speakText(`Falló el reintento. Se intentará más tarde.`);
+
+        setOfflineRequestQueue(prev => prev.map(r => r.id === requestId ? {
+            ...r,
+            status: 'pending',
+            attempts: r.attempts + 1,
+            errorInfo: {
+                type: errorInfo.type,
+                message: errorInfo.message,
+                history: [...(r.errorInfo?.history || []), {timestamp: new Date(), type: errorInfo.type, message: errorInfo.message}]
+            }
+        } : r));
+        processingRequestIdRef.current = null;
+        // Rely on interval for next attempt with implicit backoff due to not processing immediately
+      },
+      (requestId, errorInfo) => { // onPermanentFailure
+         addMessageToChat(
+          `❌ Falló permanentemente la solicitud encolada "${requestToProcess.payload.messageText.substring(0,30)}..." después de ${MAX_OFFLINE_REQUEST_ATTEMPTS} intentos. Error final: ${errorInfo.message}`,
+          'system', true, undefined, undefined, requestId
+        );
+        if (isInteractiveVoiceMode) speakText(`Una solicitud encolada falló permanentemente.`);
+
+        setOfflineRequestQueue(prev => prev.map(r => r.id === requestId ? {
+            ...r,
+            status: 'failed',
+            errorInfo: {
+                type: errorInfo.type,
+                message: errorInfo.message,
+                history: [...(r.errorInfo?.history || []), {timestamp: new Date(), type: errorInfo.type, message: errorInfo.message}]
+            }
+        } : r));
+        processingRequestIdRef.current = null;
+        setTimeout(processQueue, 1000); // Check for next
+      }
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chatSession, database, chatMessages, isInteractiveVoiceMode, addMessageToChat, handleLLMAction, parseLLMResponse]); 
+
+
+  useEffect(() => {
+    const loadedQueue = getOfflineQueueFromStorage();
+    setOfflineRequestQueue(loadedQueue);
+    offlineRequestQueueRef.current = loadedQueue;
+
+    const handleOnline = () => {
+      addMessageToChat("Conexión a internet restablecida. Intentando procesar solicitudes pendientes...", "system");
+      if (offlineRequestQueueRef.current.some(req => req.status === 'pending')) {
+          processQueue();
+      }
+    };
+    const handleOffline = () => {
+      addMessageToChat("Se ha perdido la conexión a internet. Las nuevas solicitudes se guardarán para procesar más tarde.", "system", true);
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    if (navigator.onLine && loadedQueue.some(req => req.status === 'pending')) {
+        addMessageToChat("Detectadas solicitudes pendientes. Intentando procesar...", "system");
+        processQueue();
+    }
+
+    const intervalId = setInterval(() => {
+      if (navigator.onLine && offlineRequestQueueRef.current.some(req => req.status === 'pending' && !processingRequestIdRef.current)) {
+          processQueue();
+      }
+    }, OFFLINE_PROCESSING_INTERVAL_MS);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      clearInterval(intervalId);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [processQueue]); // processQueue is now a dependency
+
 
   const startResizing = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     if (!isMdScreen) return; 
@@ -955,6 +1121,7 @@ const App: React.FC = () => {
             onDeleteDatabaseRequest={handleRequestDeleteDb}
             onSaveChatHistory={handleSaveChatHistory}
             onLoadChatHistoryFile={handleLoadChatHistoryFile}
+            pendingOfflineRequestCount={offlineRequestQueue.filter(r => r.status === 'pending').length}
           />
           <div ref={resizableContainerRef} className="flex-1 flex flex-col md:flex-row min-h-0">
             {isMdScreen ? (

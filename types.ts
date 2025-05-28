@@ -186,6 +186,7 @@ export interface ChatMessage {
   isError?: boolean;
   groupedData?: GroupedResult[];
   rawLLMResponse?: string;
+  relatedOfflineRequestId?: string; // Link to an offline request
 }
 
 export interface GroupedResult {
@@ -214,4 +215,45 @@ export interface LLMResponseAction {
 
   // For CREATE_ENTITY that creates a missing entity and needs to continue with a task
   followUpAction?: LLMResponseAction; 
+}
+
+
+// Types for Offline Request Queue
+export type ErrorClassification =
+  | 'NO_CONNECTION'
+  | 'API_KEY_INVALID'
+  | 'QUOTA_EXCEEDED'
+  | 'MODEL_UNAVAILABLE'
+  | 'GEMINI_API_ERROR'
+  | 'MAX_ATTEMPTS_REACHED'
+  | 'UNKNOWN';
+
+export interface OfflineRequestPayload {
+  messageText: string;
+  audioBase64?: string;
+  audioMimeType?: string;
+  // We will reconstruct context (DB state, recent messages) at the time of retry processing.
+}
+
+export interface ErrorInfoHistoryItem {
+    timestamp: Date;
+    type: ErrorClassification;
+    message: string;
+}
+export interface OfflineRequestError {
+    type: ErrorClassification;
+    message: string;
+    history?: ErrorInfoHistoryItem[];
+}
+
+export interface OfflineRequest {
+  id: string;
+  timestamp: Date; // When originally attempted by user / added to queue
+  type: 'sendMessageToAI'; // For now, only this type
+  payload: OfflineRequestPayload;
+  status: 'pending' | 'processing' | 'processed' | 'failed';
+  attempts: number;
+  lastAttemptTimestamp?: Date;
+  errorInfo?: OfflineRequestError;
+  originalMessageId?: string; // ID of the user's ChatMessage if it was displayed
 }

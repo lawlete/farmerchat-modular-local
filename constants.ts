@@ -3,6 +3,12 @@ import { Database, EntityType } from './types';
 
 export const GEMINI_MODEL_TEXT = 'gemini-2.5-flash-preview-04-17';
 export const LOCAL_STORAGE_DB_KEY = 'farmerChatDB_v5'; // Updated key for new schema
+export const LOCAL_STORAGE_OFFLINE_QUEUE_KEY = 'farmerChatOfflineQueue_v2';
+export const MAX_OFFLINE_REQUEST_ATTEMPTS = 5;
+export const INITIAL_RETRY_DELAY_MS = 5 * 1000; // 5 seconds
+export const MAX_RETRY_DELAY_MS = 5 * 60 * 1000; // 5 minutes
+export const OFFLINE_PROCESSING_INTERVAL_MS = 30 * 1000; // Check queue every 30s
+
 
 export const SYSTEM_PROMPT_HEADER = `Eres FarmerChat, un asistente virtual experto en agricultura para gestionar registros y tareas.
 Tu objetivo es comprender los comandos del usuario en lenguaje natural (Español) y traducirlos en acciones estructuradas o consultas relacionadas con las siguientes entidades del campo.
