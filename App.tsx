@@ -110,7 +110,8 @@ const App: React.FC = () => {
         text.startsWith('Base de datos de prueba cargada') || 
         text.startsWith('Se corrigió la estructura') ||
         text.startsWith('Base de datos borrada exitosamente') ||
-        text.startsWith('Si necesita una base de datos de prueba')
+        text.startsWith('Si necesita una base de datos de prueba') ||
+        text.startsWith('Historial de chat') // For history load/save messages
     );
     if (!isInitialSystemMessage && showWelcomeBanner) {
         setShowWelcomeBanner(false);
@@ -188,6 +189,10 @@ const App: React.FC = () => {
     } else {
       console.log("LocalStorage vacío, cargando BD_testing.json");
       loadTestDatabase(true);
+    }
+    // Load initial welcome message if chat is empty
+    if (chatMessages.length === 0) {
+        addMessageToChat("¡Bienvenido a FarmerChat AI! Escribe 'Ayuda' para ver ejemplos de comandos o utiliza los botones superiores para gestionar tus datos.", 'system');
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); 
@@ -372,16 +377,12 @@ const App: React.FC = () => {
 
 
   useEffect(() => {
-    let envApiKey = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_API_KEY : undefined;
-
-    if (!envApiKey) {
-      envApiKey = process.env.API_KEY;
-    }
+    const envApiKey = process.env.API_KEY;
 
     if (!envApiKey || envApiKey === "YOUR_GEMINI_API_KEY_PLACEHOLDER" || envApiKey === "AQUI_VA_TU_CLAVE_API_DE_GEMINI") {
-      console.error("API Key for Gemini is missing or is a placeholder. Please set VITE_API_KEY in your .env file.");
+      console.error("API Key for Gemini is missing or is a placeholder. Please ensure process.env.API_KEY is correctly set.");
       addMessageToChat(
-        "Error de Configuración: La clave API para Gemini no está configurada. La funcionalidad de IA no estará disponible. Por favor, contacte al administrador.",
+        "Error de Configuración: La clave API para Gemini no está configurada. La funcionalidad de IA no estará disponible. Por favor, contacte al administrador. Puede guardar su historial de chat actual usando los botones de la barra superior.",
         "system",
         true
       );
@@ -404,7 +405,7 @@ const App: React.FC = () => {
       setChatSession(newChat);
     } catch (error) {
         console.error("Error initializing Gemini Service:", error);
-        addMessageToChat(`Error al inicializar el servicio de IA: ${(error as Error).message}`, 'system', true);
+        addMessageToChat(`Error al inicializar el servicio de IA: ${(error as Error).message}. Puede guardar su historial de chat actual.`, 'system', true);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); 
@@ -564,6 +565,69 @@ const App: React.FC = () => {
     }
   };
 
+  const handleSaveChatHistory = () => {
+    if (chatMessages.length === 0) {
+      addMessageToChat("No hay historial de chat para guardar.", "system");
+      return;
+    }
+    const historyData = JSON.stringify(chatMessages, null, 2);
+    const blob = new Blob([historyData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    a.download = `farmerchat_historial_${timestamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    addMessageToChat('Historial de chat guardado exitosamente.', 'system');
+  };
+
+  const handleLoadChatHistoryFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const content = event.target?.result as string;
+        const parsedHistory = JSON.parse(content);
+
+        if (Array.isArray(parsedHistory) && parsedHistory.every(
+          (msg: any) => typeof msg === 'object' && msg !== null &&
+                        'id' in msg && 'sender' in msg && 
+                        'text' in msg && 'timestamp' in msg
+        )) {
+          const typedHistory: ChatMessage[] = parsedHistory.map((msg: any) => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp), // Convert string back to Date
+            // Ensure optional fields are handled
+            isLoading: msg.isLoading || false,
+            isError: msg.isError || false,
+            groupedData: msg.groupedData || undefined,
+            rawLLMResponse: msg.rawLLMResponse || undefined,
+          }));
+
+          setChatMessages(typedHistory);
+          if (typedHistory.length > 0) {
+            const lastMessage = typedHistory[typedHistory.length - 1];
+            if (lastMessage.groupedData) {
+              setCurrentGroupedResults(lastMessage.groupedData);
+            } else {
+              setCurrentGroupedResults(null);
+            }
+            if (isFullScreenDataModalOpen) handleCloseFullScreenDataModal();
+          }
+          if (showWelcomeBanner) setShowWelcomeBanner(false);
+          addMessageToChat('Historial de chat cargado exitosamente.', 'system');
+        } else {
+          throw new Error("El archivo no contiene un historial de chat válido.");
+        }
+      } catch (err) {
+        console.error("Error cargando historial de chat:", err);
+        addMessageToChat(`Error al cargar el historial de chat: ${(err as Error).message}`, 'system', true);
+      }
+    };
+    reader.readAsText(file);
+  };
+
 
   const parseLLMResponse = (responseText: string): LLMResponseAction | null => {
     let jsonStr = responseText.trim();
@@ -590,11 +654,8 @@ const App: React.FC = () => {
 
     addMessageToChat(messageForUser, 'ai', false, groupedData, rawResponse);
     if (isInteractiveVoiceMode) {
-      // Speak messageForUser first, then speak grouped results if any.
-      // This order might feel more natural as messageForUser often introduces the results.
       speakText(messageForUser, () => {
         if (groupedData && groupedData.length > 0) {
-            // The onAllSpoken callback for speakGroupedResults will handle mic trigger if needed by processSpeechQueue
             speakGroupedResults(groupedData);
         }
       });
@@ -614,7 +675,7 @@ const App: React.FC = () => {
           const newId = data.id || generateUUID(); 
           const newItem = { ...data, id: newId };
 
-          let dbAfterCreation = database; // To capture the state for followUpAction
+          // let dbAfterCreation = database; // To capture the state for followUpAction
 
           setDatabase(prevDb => {
             const currentEntityArray = prevDb[entity] || [];
@@ -642,20 +703,14 @@ const App: React.FC = () => {
                 updatedDb = {...updatedDb, ...newLinks};
             }
             localStorage.setItem(LOCAL_STORAGE_DB_KEY, JSON.stringify(updatedDb));
-            dbAfterCreation = updatedDb; // Update reference
+            // dbAfterCreation = updatedDb; 
             return updatedDb;
           });
           
-          // If there's a follow-up action, trigger it.
-          // This needs to happen after the state update has been processed, ideally.
-          // Using a timeout allows the state to settle before processing the next action.
           if (followUpAction) {
             setTimeout(() => {
-                // Add a small system message to indicate transition if not handled by AI's followUp message.
-                // Or, ensure AI's followUpAction.messageForUser is comprehensive.
-                // For now, directly process the followUpAction.
                 handleLLMAction(followUpAction);
-            }, 100); // Small delay
+            }, 100); 
           }
 
         } else {
@@ -695,35 +750,27 @@ const App: React.FC = () => {
         break;
 
       case 'LIST_ENTITIES':
-        const resultsWithEntityType = (actionResponse.groupedData || []).map(group => ({
-            ...group,
-            entityType: group.entityType || entity 
-        }));
-        setCurrentGroupedResults(resultsWithEntityType);
-
-        if (actionResponse.data && Array.isArray(actionResponse.data) && (!resultsWithEntityType || resultsWithEntityType.length === 0)) {
-             const inferredEntityType = entity;
-             setCurrentGroupedResults([{ 
-                 groupTitle: `Listado: ${ENTITY_DISPLAY_NAMES[inferredEntityType!] || inferredEntityType}`, 
-                 items: actionResponse.data, 
-                 count: actionResponse.data.length,
-                 entityType: inferredEntityType
-             }]);
-        }
-        break;
-
+        // Fallthrough intended
       case 'GROUPED_QUERY':
-          const groupedResultsWithEntityType = (actionResponse.groupedData || []).map(group => ({
+          const resultsWithEntityType = (actionResponse.groupedData || []).map(group => ({
               ...group,
-              entityType: group.entityType || entity 
+              entityType: group.entityType || entity // Ensure entityType is set for DataTable headers
           }));
-          setCurrentGroupedResults(groupedResultsWithEntityType);
-        break;
+          setCurrentGroupedResults(resultsWithEntityType);
+  
+          // Handle case where 'data' array is provided directly by LLM for LIST_ENTITIES
+          if (action === 'LIST_ENTITIES' && actionResponse.data && Array.isArray(actionResponse.data) && (!resultsWithEntityType || resultsWithEntityType.length === 0)) {
+               const inferredEntityType = entity;
+               setCurrentGroupedResults([{ 
+                   groupTitle: `Listado: ${ENTITY_DISPLAY_NAMES[inferredEntityType!] || inferredEntityType}`, 
+                   items: actionResponse.data, 
+                   count: actionResponse.data.length,
+                   entityType: inferredEntityType
+               }]);
+          }
+          break;
         
       case 'PROMPT_CREATE_MISSING_ENTITY':
-        // The messageForUser has been displayed by addMessageToChat.
-        // The user's next input will be sent to the AI, which will then decide the next step.
-        // No direct state change in the app here, AI drives the conversation.
         break;
 
       case 'ANSWER_QUERY':
@@ -751,7 +798,8 @@ const App: React.FC = () => {
     if (showWelcomeBanner) setShowWelcomeBanner(false); 
 
     if (!geminiService || !chatSession) {
-      addMessageToChat("El servicio de IA no está disponible. Revisa la configuración.", 'system', true);
+      addMessageToChat("El servicio de IA no está disponible. Revisa la configuración. Puedes guardar tu historial de chat actual.", 'system', true);
+      if (isInteractiveVoiceMode) speakText("El servicio de IA no está disponible. Revisa la configuración. Puedes guardar tu historial de chat actual.");
       return;
     }
 
@@ -788,7 +836,6 @@ const App: React.FC = () => {
     }
     
     try {
-      // Send message to the existing chat session
       const response: GenerateContentResponse = await chatSession.sendMessage({ message: parts });
 
       setIsLoading(false);
@@ -815,12 +862,13 @@ const App: React.FC = () => {
       setIsLoading(false);
       setChatMessages(prev => prev.filter(msg => !(msg.sender === 'ai' && msg.isLoading)));
       
-      let errorMessage = `Error al comunicarse con la IA: ${(error as Error).message}`;
+      let errorMessage = `Error al comunicarse con la IA: ${(error as Error).message}.`;
       if ((error as any).message?.includes('API key not valid')) {
           errorMessage = "Error de API Key: La clave proporcionada no es válida. Por favor, verifique la configuración.";
       } else if ((error as any).message?.includes('quota')) {
           errorMessage = "Error de Cuota: Se ha excedido la cuota de la API. Intente más tarde.";
       }
+      errorMessage += " Puedes guardar tu historial de chat actual usando el botón correspondiente en la barra superior.";
       
       addMessageToChat(errorMessage, 'system', true);
       if (isInteractiveVoiceMode) speakText(errorMessage);
@@ -905,6 +953,8 @@ const App: React.FC = () => {
             }}
             onMultipleFileUploadRequest={handleMultipleFileUploadRequest}
             onDeleteDatabaseRequest={handleRequestDeleteDb}
+            onSaveChatHistory={handleSaveChatHistory}
+            onLoadChatHistoryFile={handleLoadChatHistoryFile}
           />
           <div ref={resizableContainerRef} className="flex-1 flex flex-col md:flex-row min-h-0">
             {isMdScreen ? (

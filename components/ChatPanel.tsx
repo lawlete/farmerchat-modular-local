@@ -49,8 +49,8 @@ export const ChatPanel = forwardRef<ChatPanelHandles, ChatPanelProps>((
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
-  const silenceCheckIntervalIdRef = useRef<NodeJS.Timeout | null>(null);
-  const silenceTimeoutIdRef = useRef<NodeJS.Timeout | null>(null);
+  const silenceCheckIntervalIdRef = useRef<number | null>(null); // Changed NodeJS.Timeout to number
+  const silenceTimeoutIdRef = useRef<number | null>(null); // Changed NodeJS.Timeout to number
   const activeStreamRef = useRef<MediaStream | null>(null);
 
 
@@ -91,7 +91,7 @@ export const ChatPanel = forwardRef<ChatPanelHandles, ChatPanelProps>((
 
     if (isSilent) {
       if (!silenceTimeoutIdRef.current) { 
-        silenceTimeoutIdRef.current = setTimeout(() => {
+        silenceTimeoutIdRef.current = window.setTimeout(() => { // Explicitly use window.setTimeout for browser
           console.log(`Silence detected for ${SILENCE_DURATION_MS / 1000} seconds, stopping recording.`);
           if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
             mediaRecorderRef.current.stop(); // This will trigger onstop
@@ -128,7 +128,7 @@ export const ChatPanel = forwardRef<ChatPanelHandles, ChatPanelProps>((
       sourceRef.current.connect(analyserRef.current);
       // Note: Do NOT connect analyser to audioContext.destination if only monitoring
 
-      silenceCheckIntervalIdRef.current = setInterval(checkSilence, SILENCE_CHECK_INTERVAL_MS);
+      silenceCheckIntervalIdRef.current = window.setInterval(checkSilence, SILENCE_CHECK_INTERVAL_MS); // Explicitly use window.setInterval
 
       mediaRecorderRef.current.ondataavailable = (event) => {
         audioChunksRef.current.push(event.data);

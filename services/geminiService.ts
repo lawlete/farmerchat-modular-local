@@ -1,7 +1,8 @@
+
 // Fix: Import GoogleGenAI, GenerateContentResponse, and Content from "@google/genai"
 // Fix: Removed GenerateContentStreamResult as it's not an exported member of @google/genai.
 // The return type of generateContentStream is AsyncIterable<GenerateContentResponse>.
-import { GoogleGenAI, GenerateContentResponse, Content } from "@google/genai";
+import { GoogleGenAI, GenerateContentResponse, Content, Part } from "@google/genai"; // Added Part for clarity, though Content implies it
 import { GEMINI_MODEL_TEXT } from '../constants';
 
 // The GeminiService class is removed as per the thought process to directly use GoogleGenAI instance in App.tsx
@@ -13,7 +14,7 @@ export async function generateTextWithGoogleAI(ai: GoogleGenAI, prompt: string):
     // Fix: Use ai.models.generateContent and provide prompt directly in contents
     const response: GenerateContentResponse = await ai.models.generateContent({
       model: GEMINI_MODEL_TEXT,
-      contents: prompt, // For simple text prompts, 'contents' can be a string
+      contents: [{ parts: [{ text: prompt }] }], // Ensure contents is an array of Content objects
       config: {
         temperature: 0.5,
         topP: 0.9,
@@ -35,13 +36,13 @@ export async function generateContentWithImageAndTextWithGoogleAI(
   mimeType: string
 ): Promise<string> {
   try {
-    const imagePart = {
+    const imagePart: Part = { // Explicit Part type
       inlineData: {
         mimeType: mimeType,
         data: base64ImageData,
       },
     };
-    const textPart = { text: textPrompt };
+    const textPart: Part = { text: textPrompt }; // Explicit Part type
     
     // Fix: Structure 'contents' as an array of Content objects for multimodal input
     const contents: Content[] = [{ parts: [textPart, imagePart] }];
@@ -70,7 +71,7 @@ export async function generateTextStreamWithGoogleAI(ai: GoogleGenAI, prompt: st
     // Fix: Updated type to AsyncIterable<GenerateContentResponse>
     const responseStream: AsyncIterable<GenerateContentResponse> = await ai.models.generateContentStream({
       model: GEMINI_MODEL_TEXT,
-      contents: prompt, // For simple text prompts, 'contents' can be a string
+      contents: [{ parts: [{ text: prompt }] }], // Ensure contents is an array of Content objects
     });
 
     for await (const chunk of responseStream) {

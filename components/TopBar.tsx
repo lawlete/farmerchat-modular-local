@@ -2,7 +2,7 @@
 import React, { useState, useRef, useImperativeHandle, forwardRef } from 'react';
 import { EntityType } from '../types';
 import { ENTITY_DISPLAY_NAMES } from '../constants';
-import { DownloadIcon, UploadIcon, FileCsvIcon, MultiFileIcon, ExportPackageIcon, DeleteDatabaseIcon } from './icons/FileIcons';
+import { DownloadIcon, UploadIcon, FileCsvIcon, MultiFileIcon, ExportPackageIcon, DeleteDatabaseIcon, SaveHistoryIcon, LoadHistoryIcon } from './icons/FileIcons';
 import { Theme } from '../App';
 import { SunIcon, MoonIcon } from './icons/ThemeIcons';
 import { VoiceOnIcon, VoiceOffIcon } from './icons/VoiceModeIcons';
@@ -23,6 +23,8 @@ interface TopBarProps {
   onToggleInteractiveVoiceMode: () => void;
   onMultipleFileUploadRequest: (files: File[]) => void;
   onDeleteDatabaseRequest: () => void;
+  onSaveChatHistory: () => void;
+  onLoadChatHistoryFile: (file: File) => void;
 }
 
 export const TopBar = forwardRef<TopBarHandles, TopBarProps>((
@@ -36,7 +38,9 @@ export const TopBar = forwardRef<TopBarHandles, TopBarProps>((
     isInteractiveVoiceMode,
     onToggleInteractiveVoiceMode,
     onMultipleFileUploadRequest,
-    onDeleteDatabaseRequest
+    onDeleteDatabaseRequest,
+    onSaveChatHistory,
+    onLoadChatHistoryFile
   },
   ref
 ) => {
@@ -44,6 +48,7 @@ export const TopBar = forwardRef<TopBarHandles, TopBarProps>((
   const jsonFileInputRef = useRef<HTMLInputElement>(null);
   const csvFileInputRef = useRef<HTMLInputElement>(null);
   const multiCsvFileInputRef = useRef<HTMLInputElement>(null);
+  const chatHistoryInputRef = useRef<HTMLInputElement>(null);
   const [selectedCsvEntityType, setSelectedCsvEntityType] = useState<EntityType | null>(null);
 
   useImperativeHandle(ref, () => ({
@@ -89,15 +94,25 @@ export const TopBar = forwardRef<TopBarHandles, TopBarProps>((
     event.target.value = '';
   };
 
+  const handleLoadHistoryClick = () => {
+    chatHistoryInputRef.current?.click();
+  };
+
+  const handleChatHistoryFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      onLoadChatHistoryFile(file);
+    }
+    event.target.value = ''; // Reset file input
+  };
+
   return (
     <div className="bg-gray-200 dark:bg-gray-800 p-3 shadow-md flex items-center justify-between border-b border-gray-300 dark:border-gray-700 bg-transition">
       <div className="flex items-center">
-        {/* Logo removed from here */}
         <h1 className="text-xl font-semibold text-green-600 dark:text-green-400">FarmerChat AI v10.0</h1>
       </div>
       
-      <div className="flex items-center space-x-2 md:space-x-3">
-        {/* Delete DB Button - Isolated */}
+      <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-3">
         <button
           onClick={onDeleteDatabaseRequest}
           className="flex items-center bg-red-500 hover:bg-red-600 text-white py-2 px-2 sm:px-3 rounded-md text-sm transition-colors"
@@ -107,7 +122,6 @@ export const TopBar = forwardRef<TopBarHandles, TopBarProps>((
           <span className="hidden sm:inline">Borrar BD</span>
         </button>
 
-        {/* JSON Operations Group (now BD Operations) */}
         <div className="flex items-center space-x-1 sm:space-x-2 p-1.5 border border-gray-300 dark:border-gray-600 rounded-lg">
           <button
             onClick={handleJsonImportClick}
@@ -128,7 +142,6 @@ export const TopBar = forwardRef<TopBarHandles, TopBarProps>((
           </button>
         </div>
 
-        {/* CSV Operations Group (now Table Operations) */}
         <div className="flex items-center space-x-1 sm:space-x-2 p-1.5 border border-gray-300 dark:border-gray-600 rounded-lg">
           <button
             onClick={handleMultiCsvImportClick}
@@ -147,7 +160,7 @@ export const TopBar = forwardRef<TopBarHandles, TopBarProps>((
             <ExportPackageIcon className="h-4 w-4 mr-0 sm:mr-1 md:mr-2" />
             <span className="hidden sm:inline">Tablas</span>
           </button>
-          <div className="relative"> {/* CSV Import Dropdown (now Table Import) */}
+          <div className="relative">
             <button
               onClick={() => setShowCsvImportOptions(!showCsvImportOptions)}
               className="flex items-center bg-yellow-500 hover:bg-yellow-600 text-gray-900 py-2 px-2 sm:px-3 rounded-md text-sm transition-colors"
@@ -176,8 +189,24 @@ export const TopBar = forwardRef<TopBarHandles, TopBarProps>((
           </div>
         </div>
 
-        {/* App Controls Group */}
         <div className="flex items-center space-x-1 sm:space-x-2 p-1.5 border border-gray-300 dark:border-gray-600 rounded-lg">
+          <button
+            onClick={onSaveChatHistory}
+            className="flex items-center bg-sky-500 hover:bg-sky-600 text-white py-2 px-2 sm:px-3 rounded-md text-sm transition-colors"
+            title="Guardar Historial de Chat"
+          >
+            <SaveHistoryIcon className="h-4 w-4 mr-0 sm:mr-1 md:mr-2" />
+            <span className="hidden sm:inline">G. Hist.</span>
+          </button>
+          <button
+            onClick={handleLoadHistoryClick}
+            className="flex items-center bg-orange-500 hover:bg-orange-600 text-white py-2 px-2 sm:px-3 rounded-md text-sm transition-colors"
+            title="Cargar Historial de Chat"
+          >
+            <LoadHistoryIcon className="h-4 w-4 mr-0 sm:mr-1 md:mr-2" />
+            <span className="hidden sm:inline">C. Hist.</span>
+            <input type="file" ref={chatHistoryInputRef} onChange={handleChatHistoryFileChange} accept=".json" className="hidden" />
+          </button>
           <button
             onClick={onToggleInteractiveVoiceMode}
             className={`p-2 rounded-full transition-colors ${

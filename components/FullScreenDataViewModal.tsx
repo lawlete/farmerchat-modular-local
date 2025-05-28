@@ -156,7 +156,7 @@ export const FullScreenDataViewModal: React.FC<FullScreenDataViewModalProps> = (
     printFrame.setAttribute('aria-hidden', 'true');
     document.body.appendChild(printFrame);
 
-    let cleanupTimeoutId: NodeJS.Timeout | null = null;
+    let cleanupTimeoutId: number | null = null; // Changed NodeJS.Timeout to number
 
     try {
         const frameDoc = printFrame.contentWindow?.document;
@@ -168,7 +168,7 @@ export const FullScreenDataViewModal: React.FC<FullScreenDataViewModalProps> = (
         frameDoc.write(printContentHTML);
         frameDoc.close();
 
-        cleanupTimeoutId = setTimeout(() => {
+        cleanupTimeoutId = window.setTimeout(() => { // Explicitly use window.setTimeout
             if (document.body.contains(printFrame)) {
                 console.warn("iframe onload fallback: Removing print frame for", title);
                 document.body.removeChild(printFrame);
