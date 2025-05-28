@@ -31,6 +31,7 @@ export interface Personnel {
   phone?: string;
   clientId: string; // FK to Client - indicates client this resource serves
   contractorId: string; // FK to Contractor
+  availability?: 'disponible' | 'de licencia' | 'ocupado' | 'fuera de turno' | 'reunión' | string; // Added for common sense validation
 }
 
 export interface Machinery {
@@ -41,6 +42,7 @@ export interface Machinery {
   year?: number;
   clientId: string; // FK to Client - similar to personnel.clientId
   contractorId: string; // FK to Contractor
+  status?: 'operativa' | 'en reparación' | 'mantenimiento' | 'fuera de servicio' | string; // Added for common sense validation
 }
 
 export interface Field {

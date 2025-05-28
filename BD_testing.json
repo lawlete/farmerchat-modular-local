@@ -1,3 +1,4 @@
+
 {
   "clients": [
     {
@@ -56,7 +57,8 @@
       "role": "Operator",
       "phone": "666111222",
       "clientId": "client_test_01",
-      "contractorId": "cont_test_int_01"
+      "contractorId": "cont_test_int_01",
+      "availability": "disponible"
     },
     {
       "id": "pers_test_op_02",
@@ -64,7 +66,17 @@
       "role": "Operator",
       "phone": "666333444",
       "clientId": "client_test_02",
-      "contractorId": "cont_test_ext_01"
+      "contractorId": "cont_test_ext_01",
+      "availability": "ocupado"
+    },
+    {
+      "id": "pers_test_eng_01",
+      "name": "Ingeniero Test Gamma",
+      "role": "Engineer",
+      "phone": "666555666",
+      "clientId": "client_test_01",
+      "contractorId": "cont_test_int_01",
+      "availability": "de licencia"
     }
   ],
   "machineries": [
@@ -75,7 +87,8 @@
       "model": "TX-100",
       "year": 2022,
       "clientId": "client_test_01",
-      "contractorId": "cont_test_int_01"
+      "contractorId": "cont_test_int_01",
+      "status": "operativa"
     },
     {
       "id": "mach_test_cosech_01",
@@ -84,7 +97,18 @@
       "model": "CX-500",
       "year": 2023,
       "clientId": "client_test_02",
-      "contractorId": "cont_test_ext_01"
+      "contractorId": "cont_test_ext_01",
+      "status": "en reparación"
+    },
+    {
+      "id": "mach_test_pulv_01",
+      "name": "Pulverizadora Test Azul",
+      "type": "Pulverizadora",
+      "model": "SprayMax 2000",
+      "year": 2021,
+      "clientId": "client_test_01",
+      "contractorId": "cont_test_int_01",
+      "status": "mantenimiento"
     }
   ],
   "fields": [
@@ -163,6 +187,12 @@
       "taskName": "Pulverización de Prueba",
       "description": "Tarea de pulverización para pruebas.",
       "category": "Cultivo"
+    },
+    {
+      "id": "task_test_cosecha",
+      "taskName": "Cosecha de Prueba",
+      "description": "Tarea de cosecha para pruebas.",
+      "category": "Cultivo"
     }
   ],
   "productsInsumes": [
@@ -177,6 +207,12 @@
       "name": "Herbicida TestTotal",
       "type": "Herbicide",
       "unit": "litro"
+    },
+    {
+      "id": "prod_test_fertilizante_b",
+      "name": "Fertilizante TestGro",
+      "type": "Fertilizer",
+      "unit": "kg"
     }
   ],
   "tasks": [
@@ -200,6 +236,27 @@
       "notes": "Tarea de prueba inicial de siembra.",
       "creationTimestamp": "2024-07-30T10:00:00.000Z",
       "additionalInfo": "Revisar configuración de sembradora."
+    },
+    {
+      "id": "task_entry_test_002",
+      "tasksListId": "task_test_pulv",
+      "createdByUserId": "user_test_eng",
+      "clientId": "client_test_02",
+      "contractorId": "cont_test_ext_01",
+      "campaignId": "camp_test_soja24",
+      "fieldId": "field_test_02",
+      "lotId": "lot_test_sur_a",
+      "parcelId": "parcel_test_sa_1",
+      "startDateTime": "2024-11-20T10:00:00.000Z",
+      "endDateTime": "2024-11-20T14:00:00.000Z",
+      "durationHours": 4,
+      "status": "Finalizada",
+      "costEstimated": 250,
+      "costActual": 240,
+      "resultDescription": "Aplicación exitosa, sin deriva.",
+      "notes": "Pulverización de prueba con herbicida.",
+      "creationTimestamp": "2024-07-30T11:00:00.000Z",
+      "additionalInfo": "Condiciones climáticas óptimas."
     }
   ],
   "taskMachineryLinks": [
@@ -209,6 +266,13 @@
       "machineryId": "mach_test_tractor_01",
       "hoursUsed": 4,
       "notes": "Tractor para siembra de prueba."
+    },
+    {
+      "id": "tml_test_002",
+      "taskId": "task_entry_test_002",
+      "machineryId": "mach_test_pulv_01", 
+      "hoursUsed": 3.5,
+      "notes": "Pulverizadora utilizada para aplicación."
     }
   ],
   "taskPersonnelLinks": [
@@ -217,6 +281,13 @@
       "taskId": "task_entry_test_001",
       "personnelId": "pers_test_op_01",
       "roleInTask": "Operador Principal",
+      "hoursWorked": 4
+    },
+    {
+      "id": "tpl_test_002",
+      "taskId": "task_entry_test_002",
+      "personnelId": "pers_test_op_02",
+      "roleInTask": "Operador Pulverizadora",
       "hoursWorked": 4
     }
   ],
@@ -228,6 +299,14 @@
       "quantityUsed": 5,
       "unitUsed": "bolsa",
       "applicationDetails": "Siembra a 5cm de profundidad."
+    },
+    {
+      "id": "til_test_002",
+      "taskId": "task_entry_test_002",
+      "productInsumeId": "prod_test_herbicida_a",
+      "quantityUsed": 20,
+      "unitUsed": "litro",
+      "applicationDetails": "Dosis recomendada 1L/ha."
     }
   ],
   "userAccess": [

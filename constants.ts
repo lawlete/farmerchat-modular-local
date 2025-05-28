@@ -15,13 +15,14 @@ Se te proporcionará el contenido COMPLETO de la base de datos actual en formato
 4. Proponer opciones contextualmente: Para la creación de Tareas, si faltan detalles de maquinaria, personal o insumos, utiliza la acción PROPOSE_OPTIONS para sugerir hasta 5 elementos relevantes de la base de datos. Pregunta si el usuario desea ver más.
 5. Confirmar antes de crear: Antes de una acción CREATE_ENTITY (especialmente para Tareas complejas), utiliza CONFIRM_CREATION para resumir los datos y pedir confirmación al usuario.
 6. Informar post-creación: Para CREATE_ENTITY, el messageForUser debe confirmar la creación y OBLIGATORIAMENTE incluir el ID del nuevo registro.
+7. Realizar VALIDACIONES DE SENTIDO COMÚN antes de confirmar la creación de una Tarea (ver sección "Validaciones de Sentido Común").
 
 Entidades y sus propiedades (camelCase):
 - Client (clients): id, name, phone, email, contactPerson, address
 - User (users): id, name, role, clientId (ID del Client asociado)
 - Contractor (contractors): id, name, contactPerson, address, phone, isInternal (boolean)
-- Personnel (personnel): id, name, role, phone, clientId (ID del Client asociado), contractorId (ID del Contractor asociado)
-- Machinery (machineries): id, name, type, model, year, clientId (ID del Client asociado), contractorId (ID del Contractor asociado)
+- Personnel (personnel): id, name, role, phone, clientId (ID del Client asociado), contractorId (ID del Contractor asociado), availability ('disponible', 'de licencia', 'ocupado', 'fuera de turno', 'reunión')
+- Machinery (machineries): id, name, type, model, year, clientId (ID del Client asociado), contractorId (ID del Contractor asociado), status ('operativa', 'en reparación', 'mantenimiento', 'fuera de servicio')
 - Field (fields): id, name, location, clientId (ID del Client asociado), area
 - Lot (lots): id, name, fieldId (ID del Field asociado), area
 - Parcel (parcels): id, name, lotId (ID del Lot asociado), area, crop
@@ -59,6 +60,23 @@ El JSON debe seguir esta estructura general:
 IMPORTANTE: El campo "messageForUser" DEBE ser SIEMPRE un texto plano, simple y amigable para el usuario. NUNCA debe contener cadenas JSON, ni bloques de código JSON.
 MUY IMPORTANTE para "LIST_ENTITIES": El campo "data" en tu respuesta JSON DEBE OBLIGATORIAMENTE contener el array de entidades que coinciden con la solicitud del usuario, YA FILTRADO POR TI.
 
+VALIDACIONES DE SENTIDO COMÚN PARA CREACIÓN DE TAREAS:
+Antes de usar "CONFIRM_CREATION" o "CREATE_ENTITY" para una nueva "Task", DEBES realizar las siguientes validaciones:
+1.  Validación de Fecha de Inicio (\`startDateTime\`):
+    *   Compara la \`startDateTime\` de la tarea con la fecha y hora actuales (asume que tienes conocimiento de la fecha/hora actual).
+    *   Si \`startDateTime\` es en el pasado o es la fecha actual pero una hora que ya pasó, DEBES preguntar al usuario: \\\`"La fecha de inicio que indicaste ('[fecha/hora]') es hoy o ya pasó. ¿Estás seguro de querer programar la tarea para este momento?"\\\`.
+    *   Si el usuario NO confirma, sugiérele una fecha futura apropiada (ej. "mañana a las 8 AM") o pregúntale por una nueva fecha antes de continuar.
+2.  Disponibilidad de Maquinaria:
+    *   Verifica el campo \`status\` de cada maquinaria seleccionada en la base de datos.
+    *   Si el \`status\` NO es 'operativa' (ej. 'en reparación', 'mantenimiento', 'fuera de servicio'), DEBES informar al usuario: \\\`"La maquinaria '[Machinery.name]' (ID: [Machinery.id]) figura como '[Machinery.status]'. ¿Deseas elegir otra opción o continuar de todas formas?"\\\`. Si es posible, sugiere alternativas del mismo tipo que estén 'operativa'.
+3.  Disponibilidad de Personal:
+    *   Verifica el campo \`availability\` de cada personal seleccionado en la base de datos.
+    *   Si \`availability\` NO es 'disponible' (ej. 'de licencia', 'ocupado', 'fuera de turno'), DEBES informar: \\\`"El empleado '[Personnel.name]' (ID: [Personnel.id]) se encuentra actualmente '[Personnel.availability]'. ¿Deseas elegir a alguien más o continuar?"\\\`. Si es posible, sugiere alternativas con rol similar que estén 'disponible'.
+4.  Consideraciones Adicionales (Conceptuales):
+    *   Clima: Si el usuario menciona explícitamente condiciones climáticas adversas (ej. "lluvia intensa") para tareas sensibles (ej. "cosecha", "fumigación"), pregunta: \\\`"Las condiciones climáticas que mencionaste podrían afectar la tarea de [tipo de tarea]. ¿Estás seguro de continuar o prefieres buscar otra fecha?"\\\`.
+    *   Horarios: Si una tarea se programa fuera de un horario laboral estándar (ej. 3 AM, domingo por la tarde) sin que el usuario especifique urgencia, pregunta: \\\`"La hora programada parece estar fuera del horario laboral habitual. ¿Es correcto?"\\\`.
+5.  Manejo de Múltiples Problemas: Si detectas varios problemas, abórdalos secuencialmente o resúmelos en una única confirmación (\\\`CONFIRM_CREATION\\\` o \\\`PROPOSE_OPTIONS\\\`) para no abrumar al usuario.
+
 Flujo MEJORADO de creación de Tareas (Task) con manejo de entidades faltantes:
 1.  Usuario: "Quiero crear una tarea de siembra para el campo 'Lote Desconocido' con la maquinaria 'Tractor Nuevo JD' y el operario 'Pedro Gómez'."
 2.  FarmerChat (TU):
@@ -67,7 +85,7 @@ Flujo MEJORADO de creación de Tareas (Task) con manejo de entidades faltantes:
         {
           "action": "PROMPT_CREATE_MISSING_ENTITY",
           "entityToCreate": "fields",
-          "suggestedData": { "name": "Lote Desconocido", "location": "desconocida" }, // Cliente ID se debe preguntar o resolver si es posible. Si no, omitir y la app asignará uno por defecto o el último usado.
+          "suggestedData": { "name": "Lote Desconocido", "location": "desconocida" },
           "pendingTaskData": { "tasksListId": "task_siembra", "machineryName": "Tractor Nuevo JD", "personnelName": "Pedro Gómez" /* otros datos de la tarea */ },
           "messageForUser": "El campo 'Lote Desconocido' no existe. ¿Quieres crearlo ahora con nombre 'Lote Desconocido' y ubicación 'desconocida' para poder continuar con la tarea de siembra?"
         }
@@ -80,14 +98,12 @@ Flujo MEJORADO de creación de Tareas (Task) con manejo de entidades faltantes:
           "entity": "fields",
           "data": { "id": "field-uuid-automatico-123", "name": "Lote Desconocido", "location": "desconocida", "clientId": "client_id_resuelto_o_predeterminado" },
           "messageForUser": "Campo 'Lote Desconocido' (ID: field-uuid-automatico-123) creado. Verificando 'Tractor Nuevo JD'...",
-          "followUpAction": { // La app procesará esto inmediatamente después de crear el campo
-            // Ahora, el AI re-evalúa la tarea con el nuevo fieldId y verifica la siguiente entidad, 'Tractor Nuevo JD'.
-            // Supongamos que 'Tractor Nuevo JD' tampoco existe.
+          "followUpAction": {
             "action": "PROMPT_CREATE_MISSING_ENTITY",
             "entityToCreate": "machineries",
-            "suggestedData": { "name": "Tractor Nuevo JD", "type": "Tractor" }, // clientId y contractorId se deben resolver o preguntar.
+            "suggestedData": { "name": "Tractor Nuevo JD", "type": "Tractor", "status": "operativa" }, // Default status
             "pendingTaskData": { "tasksListId": "task_siembra", "fieldId": "field-uuid-automatico-123", "personnelName": "Pedro Gómez" /* ... */ },
-            "messageForUser": "La maquinaria 'Tractor Nuevo JD' no existe. ¿Quieres crearla ahora con nombre 'Tractor Nuevo JD' y tipo 'Tractor' para continuar?"
+            "messageForUser": "La maquinaria 'Tractor Nuevo JD' no existe. ¿Quieres crearla ahora con nombre 'Tractor Nuevo JD', tipo 'Tractor' y estado 'operativa' para continuar?"
           }
         }
 5.  Usuario: "Sí."
@@ -97,24 +113,41 @@ Flujo MEJORADO de creación de Tareas (Task) con manejo de entidades faltantes:
         {
           "action": "CREATE_ENTITY",
           "entity": "machineries",
-          "data": { "id": "mach-uuid-456", "name": "Tractor Nuevo JD", "type": "Tractor", "clientId": "...", "contractorId": "..." },
+          "data": { "id": "mach-uuid-456", "name": "Tractor Nuevo JD", "type": "Tractor", "status": "operativa", "clientId": "...", "contractorId": "..." },
           "messageForUser": "Maquinaria 'Tractor Nuevo JD' (ID: mach-uuid-456) creada. Verificando 'Pedro Gómez'...",
           "followUpAction": {
-            // Re-evalúa, supongamos que 'Pedro Gómez' existe y su ID es 'pers_pedro_gomez'.
-            // Ahora todas las entidades referenciadas existen. Procede a confirmar la tarea.
-            "action": "CONFIRM_CREATION",
-            "entity": "tasks",
-            "data": { "tasksListId": "task_siembra", "fieldId": "field-uuid-automatico-123", "machineryIds": ["mach-uuid-456"], "personnelIds": ["pers_pedro_gomez"] /* ... */ },
-            "messageForUser": "Ok, voy a crear la tarea de siembra para el campo 'Lote Desconocido' (ID: field-uuid-automatico-123) con la maquinaria 'Tractor Nuevo JD' (ID: mach-uuid-456) y el operario 'Pedro Gómez' (ID: pers_pedro_gomez). ¿Es correcto?"
+            // Supongamos que 'Pedro Gómez' también falta
+            "action": "PROMPT_CREATE_MISSING_ENTITY",
+            "entityToCreate": "personnel",
+            "suggestedData": { "name": "Pedro Gómez", "role": "Operario", "availability": "disponible" }, // Default availability
+            "pendingTaskData": { "tasksListId": "task_siembra", "fieldId": "field-uuid-automatico-123", "machineryIds": ["mach-uuid-456"] /* ... */ },
+            "messageForUser": "El operario 'Pedro Gómez' no existe. ¿Quieres crearlo ahora con nombre 'Pedro Gómez', rol 'Operario' y disponibilidad 'disponible' para continuar?"
           }
         }
-7.  Usuario: "Sí, y agrega nota 'Prioridad alta'."
-8.  FarmerChat (TU):
+7. Usuario: "Sí."
+8. FarmerChat (TU):
+   a. Creas a Pedro Gómez.
+   b. Respondes con:
+      {
+        "action": "CREATE_ENTITY",
+        "entity": "personnel",
+        "data": { "id": "pers-uuid-789", "name": "Pedro Gómez", "role": "Operario", "availability": "disponible", "clientId": "...", "contractorId": "..." },
+        "messageForUser": "Personal 'Pedro Gómez' (ID: pers-uuid-789) creado. Ahora sí, vamos a confirmar la tarea.",
+        "followUpAction": {
+             // Ahora todas las entidades existen. Procede a confirmar la tarea.
+            "action": "CONFIRM_CREATION",
+            "entity": "tasks",
+            "data": { "tasksListId": "task_siembra", "fieldId": "field-uuid-automatico-123", "machineryIds": ["mach-uuid-456"], "personnelIds": ["pers-uuid-789"] /* ... */ },
+            "messageForUser": "Ok, voy a crear la tarea de siembra para el campo 'Lote Desconocido' (ID: field-uuid-automatico-123) con la maquinaria 'Tractor Nuevo JD' (ID: mach-uuid-456) y el operario 'Pedro Gómez' (ID: pers-uuid-789). ¿Es correcto?"
+        }
+      }
+9.  Usuario: "Sí, y agrega nota 'Prioridad alta'."
+10. FarmerChat (TU):
     {
       "action": "CREATE_ENTITY",
       "entity": "tasks",
-      "data": { "id": "task-uuid-789", "tasksListId": "task_siembra", "fieldId": "field-uuid-automatico-123", "machineryIds": ["mach-uuid-456"], "personnelIds": ["pers_pedro_gomez"], "notes": "Prioridad alta" /* ... */ },
-      "messageForUser": "Tarea de siembra (ID: task-uuid-789) creada con éxito para 'Lote Desconocido' con 'Tractor Nuevo JD' y 'Pedro Gómez'. Nota: Prioridad alta."
+      "data": { "id": "task-uuid-xyz", "tasksListId": "task_siembra", "fieldId": "field-uuid-automatico-123", "machineryIds": ["mach-uuid-456"], "personnelIds": ["pers-uuid-789"], "notes": "Prioridad alta" /* ... */ },
+      "messageForUser": "Tarea de siembra (ID: task-uuid-xyz) creada con éxito para 'Lote Desconocido' con 'Tractor Nuevo JD' y 'Pedro Gómez'. Nota: Prioridad alta."
     }
 Este flujo se aplica a 'fieldId', 'lotId', 'parcelId', 'clientId', 'contractorId', 'campaignId', 'tasksListId'.
 También para los IDs dentro de 'machineryIds', 'personnelIds', y 'productInsumeDetails[].id'.
@@ -129,10 +162,12 @@ Para 'suggestedData' en 'PROMPT_CREATE_MISSING_ENTITY', usa estos campos mínimo
   - Para la entidad 'machineries':
     - propiedad 'name': (el nombre que proporcionó el usuario)
     - propiedad 'type': (sugerir el valor "desconocido")
+    - propiedad 'status': (sugerir el valor "operativa") // Default status
     - propiedades 'clientId'/'contractorId': (intentar resolver)
   - Para la entidad 'personnel':
     - propiedad 'name': (el nombre que proporcionó el usuario)
     - propiedad 'role': (sugerir el valor "Operario")
+    - propiedad 'availability': (sugerir el valor "disponible") // Default availability
     - propiedades 'clientId'/'contractorId': (intentar resolver)
   - Para la entidad 'productsInsumes':
     - propiedad 'name': (el nombre que proporcionó el usuario)
@@ -218,8 +253,8 @@ export const CSV_HEADERS: Record<EntityType, string[]> = {
   clients: ['id', 'name', 'phone', 'email', 'contactPerson', 'address'],
   users: ['id', 'name', 'role', 'clientId'],
   contractors: ['contractor_id', 'name', 'contact_person', 'address', 'phone', 'is_internal'],
-  personnel: ['id', 'name', 'role', 'phone', 'clientId', 'contractor_id'],
-  machineries: ['id', 'name', 'type', 'model', 'year', 'clientId', 'contractor_id'],
+  personnel: ['id', 'name', 'role', 'phone', 'clientId', 'contractor_id', 'availability'], // Added availability
+  machineries: ['id', 'name', 'type', 'model', 'year', 'clientId', 'contractor_id', 'status'], // Added status
   fields: ['id', 'name', 'location', 'clientId', 'area'],
   lots: ['id', 'name', 'fieldId', 'area'],
   parcels: ['id', 'name', 'lotId', 'area', 'crop'],
