@@ -125,7 +125,9 @@ const App: React.FC = () => {
         text.startsWith('Historial de chat') || // For history load/save messages
         text.includes("solicitud encolada") || // For offline queue messages
         text.includes("solicitudes pendientes") ||
-        text.includes("ubicación seleccionada") // For File System Access API save
+        text.includes("ubicación seleccionada") || // For File System Access API save
+        text.includes("Error de Configuración (API Key)") || // For API key error messages
+        text.includes("ha sido guardado") // For API key queue confirmation
     );
     if (!isInitialSystemMessage && showWelcomeBanner) {
         setShowWelcomeBanner(false);
@@ -866,22 +868,40 @@ const App: React.FC = () => {
   const sendMessageToAI = async (messageText: string, audioBase64?: string, audioMimeType?: string, originalUserMessageId?: string) => {
     if (showWelcomeBanner) setShowWelcomeBanner(false); 
 
-    if (!geminiService || !chatSession) {
-      addMessageToChat("El servicio de IA no está disponible. Revisa la configuración. Puedes guardar tu historial de chat actual.", 'system', true);
-      if (isInteractiveVoiceMode) speakText("El servicio de IA no está disponible. Revisa la configuración. Puedes guardar tu historial de chat actual.");
+    if (!geminiService) { // Check geminiService first, as chatSession depends on it.
+      const initErrorMessage = "El servicio de IA no está disponible (falló la inicialización). Revisa la configuración de API Key. Puedes guardar tu historial de chat actual.";
+      addMessageToChat(initErrorMessage, 'system', true);
+      if (isInteractiveVoiceMode) speakText(initErrorMessage);
+      return;
+    }
+    if (!chatSession) {
+      const chatErrorMessage = "La sesión de chat con la IA no está disponible. Esto puede ser un problema temporal o de configuración. Intenta recargar la aplicación o contacta al administrador. Puedes guardar tu historial de chat actual.";
+      addMessageToChat(chatErrorMessage, 'system', true);
+      if (isInteractiveVoiceMode) speakText(chatErrorMessage);
+      // Attempt to queue if chatSession is the only issue but geminiService exists (though less likely path for API Key error)
+      const classifiedIfNoChat = classifyError(new Error("Chat session not available"));
+      if (isQueuableError(classifiedIfNoChat.type)) {
+          const requestPayload: OfflineRequestPayload = { messageText, audioBase64, audioMimeType };
+          const userMsgIdForQueue = originalUserMessageId || generateUUID(); // Use existing or generate one if this is the first pass
+          if (!originalUserMessageId) addMessageToChat(messageText, 'user', false, undefined, undefined, userMsgIdForQueue);
+
+          const queuedRequest = addRequestToQueueUtil(requestPayload, classifiedIfNoChat.type, classifiedIfNoChat.message, setOfflineRequestQueue, userMsgIdForQueue);
+          const queueConfirmMsg = `⚠️ Tu comando '${messageText.substring(0, 30)}...' fue ENCOLADO debido a un problema con la sesión de chat. Se reintentará automáticamente.`;
+          addMessageToChat(queueConfirmMsg, 'system', true, undefined, undefined, queuedRequest.id);
+          if (isInteractiveVoiceMode) speakText(queueConfirmMsg);
+      }
       return;
     }
     
-    // If it's not a retry, add the user message. Retries will have specific system messages.
-    if(!originalUserMessageId) { // originalUserMessageId implies it's a retry from queue.
+    let currentOriginalUserMessageId = originalUserMessageId;
+    if(!currentOriginalUserMessageId) { 
         const userMsgId = generateUUID();
         addMessageToChat(messageText, 'user', false, undefined, undefined, userMsgId);
-        // Placeholder for the actual ID that will be used if this msg is queued
-        originalUserMessageId = userMsgId; 
+        currentOriginalUserMessageId = userMsgId; 
     }
 
 
-    setIsLoading(true); // Global loading for direct attempt
+    setIsLoading(true); 
     const loadingAiMessageId = generateUUID();
     setChatMessages(prev => {
         const newMessages = [...prev];
@@ -935,35 +955,49 @@ const App: React.FC = () => {
       }
     } catch (error) {
       console.error("Error sending message to Gemini:", error);
-      setIsLoading(false); // Stop global loading if direct attempt fails
+      setIsLoading(false); 
       setChatMessages(prev => prev.filter(msg => msg.id !== loadingAiMessageId));
 
       const classified = classifyError(error);
       const requestPayload: OfflineRequestPayload = { messageText, audioBase64, audioMimeType };
 
-      if (isQueuableError(classified.type) && chatSession) {
-        const queuedRequest = addRequestToQueueUtil(requestPayload, classified.type, classified.message, setOfflineRequestQueue);
-        queuedRequest.originalMessageId = originalUserMessageId; // Link the queued request to the original user message
-        setOfflineRequestQueue(prev => prev.map(r => r.id === queuedRequest.id ? queuedRequest : r)); // Save updated queue
+      if (classified.type === 'API_KEY_INVALID') {
+          const apiKeyErrorMessage = `Error de Configuración (API Key): ${classified.message}. Por favor, contacta al administrador.`;
+          addMessageToChat(apiKeyErrorMessage, 'system', true);
+          let spokenMessage = apiKeyErrorMessage;
 
-        addMessageToChat(
-          `⚠️ Tu mensaje "${messageText.substring(0,30)}..." fue ENCOLADO. Razón: ${classified.message}. Se reintentará automáticamente.`,
-          'system',
-          true,
-          undefined,
-          undefined,
-          queuedRequest.id 
-        );
-        if (isInteractiveVoiceMode) speakText(`Tu mensaje fue encolado debido a: ${classified.message}. Se reintentará automáticamente.`);
-      } else {
-        let userErrorMessage = `Error al comunicarse con la IA: ${classified.message}.`;
-         if (classified.type === 'API_KEY_INVALID') {
-            userErrorMessage = `Error de Configuración (API Key): ${classified.message}. Por favor, contacte al administrador.`;
-        } else if (!chatSession) {
-            userErrorMessage = "Error: La sesión de chat con la IA no está inicializada. Intenta recargar la aplicación.";
-        }
-        addMessageToChat(userErrorMessage, 'system', true);
-        if (isInteractiveVoiceMode) speakText(userErrorMessage);
+          if (chatSession && isQueuableError(classified.type)) { // API_KEY_INVALID is queuable
+              const queuedRequest = addRequestToQueueUtil(requestPayload, classified.type, classified.message, setOfflineRequestQueue, currentOriginalUserMessageId);
+              const queueConfirmationMessage = `Tu comando '${messageText.substring(0, 30)}...' ha sido guardado y se intentará procesar automáticamente cuando la configuración de la API Key sea corregida.`;
+              addMessageToChat(queueConfirmationMessage, 'system', false, undefined, undefined, queuedRequest.id); 
+              spokenMessage += ` ${queueConfirmationMessage}`;
+          } else if (!chatSession) {
+              const notQueuedMessage = "El comando no pudo ser encolado porque la sesión de chat no está disponible.";
+              addMessageToChat(notQueuedMessage, "system", true);
+              spokenMessage += ` ${notQueuedMessage}`;
+          }
+          if (isInteractiveVoiceMode) speakText(spokenMessage);
+
+      } else if (isQueuableError(classified.type) && chatSession) {
+          // Handle other queuable errors
+          const specificErrorMsg = `Error al comunicarse con la IA: ${classified.message}.`;
+          addMessageToChat(specificErrorMsg, 'system', true); // Show specific error first
+
+          const queuedRequest = addRequestToQueueUtil(requestPayload, classified.type, classified.message, setOfflineRequestQueue, currentOriginalUserMessageId);
+          const enqueuedMessage = `⚠️ Tu mensaje "${messageText.substring(0,30)}..." fue ENCOLADO. Se reintentará automáticamente.`;
+          addMessageToChat(enqueuedMessage, 'system', true, undefined, undefined, queuedRequest.id ); // isError: true to make it stand out
+          
+          if (isInteractiveVoiceMode) speakText(specificErrorMsg + " " + enqueuedMessage.replace("⚠️ ", ""));
+
+      } else { // Non-queuable errors or chatSession is null for other queuable ones
+          let userErrorMessage = `Error al comunicarse con la IA: ${classified.message}.`;
+          if (!chatSession && isQueuableError(classified.type)) { // Should not happen for API_KEY_INVALID as it's handled above
+               userErrorMessage = `Error: La sesión de chat con la IA no está inicializada. Tu comando no pudo ser encolado. Razón: ${classified.message}`;
+          } else if (!chatSession) { // General case if chatSession is null
+              userErrorMessage = "Error: La sesión de chat con la IA no está inicializada. Intenta recargar la aplicación.";
+          }
+          addMessageToChat(userErrorMessage, 'system', true);
+          if (isInteractiveVoiceMode) speakText(userErrorMessage);
       }
     }
   };
