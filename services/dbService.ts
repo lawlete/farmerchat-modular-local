@@ -29,53 +29,84 @@ const parseCSV = (csvText: string): Record<string, string>[] => {
 };
 
 const camelToSnakeCase = (str: string) => str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+const sanitizeFilename = (name: string) => name.replace(/[^a-z0-9_.-]/gi, '_').toLowerCase();
 
-export const convertEntityArrayToCsvString = (dataArray: any[], entityType: EntityType): string => {
+
+export const convertEntityArrayToCsvString = (dataArray: Record<string, any>[], entityTypeForHeaders?: EntityType): string => {
   if (!dataArray || dataArray.length === 0) {
     return "";
   }
 
-  const csvHeadersDef = CSV_HEADERS[entityType];
-  if (!csvHeadersDef) {
-    console.warn(`No CSV headers defined for exporting entity type: ${entityType}`);
-    // Fallback: use object keys from first item, converted to snake_case
-    const firstItemKeys = Object.keys(dataArray[0]);
-    const headerRow = firstItemKeys.map(camelToSnakeCase).join(',');
-    const dataRows = dataArray.map(row => {
-      return firstItemKeys.map(key => {
-        let value = row[key];
-        if (value === null || value === undefined) value = '';
-        if (typeof value === 'string' && value.includes(',')) return `"${value}"`; // Basic quoting
-        return value;
-      }).join(',');
-    });
-    return [headerRow, ...dataRows].join('\r\n');
-  }
+  let headersToUse: string[];
+  let keysForDataExtraction: string[];
 
-  // Use defined CSV_HEADERS for order and naming
-  const headerRow = csvHeadersDef.join(',');
+  if (entityTypeForHeaders && CSV_HEADERS[entityTypeForHeaders]) {
+    headersToUse = CSV_HEADERS[entityTypeForHeaders];
+    // Prepare camelCase keys for data extraction based on snake_case CSV headers
+    keysForDataExtraction = headersToUse.map(csvHeader => {
+      let objectKey = csvHeader.replace(/_([a-z0-9])/g, (g) => g[1].toUpperCase());
+      // Handle specific ID mappings if necessary (as done in original export logic)
+      if (entityTypeForHeaders === 'contractors' && csvHeader === 'contractor_id') objectKey = 'id';
+      else if (entityTypeForHeaders === 'tasks' && csvHeader === 'task_entry_id') objectKey = 'id';
+      // ... add other specific mappings if needed
+      return objectKey;
+    });
+  } else {
+    // Fallback: infer headers from the first item, convert to snake_case for display
+    keysForDataExtraction = Object.keys(dataArray[0]);
+    headersToUse = keysForDataExtraction.map(camelToSnakeCase);
+  }
+  
+  const headerRow = headersToUse.join(',');
 
   const dataRows = dataArray.map(row => {
-    return csvHeadersDef.map(csvHeader => {
-      // Convert snake_case CSV header to camelCase to find the property in the object
-      let objectKey = csvHeader.replace(/_([a-z0-9])/g, (g) => g[1].toUpperCase());
-
-      // Special handling for primary keys that are different in CSV vs object's 'id'
-      if (entityType === 'contractors' && csvHeader === 'contractor_id') objectKey = 'id';
-      else if (entityType === 'tasks' && csvHeader === 'task_entry_id') objectKey = 'id';
-      else if (entityType === 'taskMachineryLinks' && csvHeader === 'task_machinery_link_id') objectKey = 'id';
-      else if (entityType === 'taskPersonnelLinks' && csvHeader === 'task_personnel_link_id') objectKey = 'id';
-      else if (entityType === 'taskInsumeLinks' && csvHeader === 'task_insume_link_id') objectKey = 'id';
-      // userAccess special PK handling might be needed if export is enabled for it
-
-      let value = row[objectKey];
+    return keysForDataExtraction.map(key => {
+      let value = row[key];
       if (value === null || value === undefined) value = '';
-      if (typeof value === 'string' && value.includes(',')) return `"${value}"`; // Basic CSV quoting
+      if (typeof value === 'boolean') value = value ? 'true' : 'false';
+      if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
+        return `"${value.replace(/"/g, '""')}"`; // CSV quoting for problematic characters
+      }
       return value;
     }).join(',');
   });
 
   return [headerRow, ...dataRows].join('\r\n');
+};
+
+
+export const triggerCsvDownload = (items: Record<string, any>[], groupTitle: string, entityTypeForHeaders?: EntityType) => {
+    if (!items || items.length === 0) {
+        alert("No hay datos para exportar.");
+        return;
+    }
+    try {
+        const csvString = convertEntityArrayToCsvString(items, entityTypeForHeaders);
+        if (csvString) {
+            const blob = new Blob(['\uFEFF' + csvString], { type: 'text/csv;charset=utf-8;' }); // UTF-8 BOM
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            
+            let fileNameBase = "listado";
+            if (entityTypeForHeaders) {
+                 fileNameBase = `listado_${sanitizeFilename(entityTypeForHeaders)}`;
+            } else if (groupTitle) {
+                fileNameBase = sanitizeFilename(groupTitle.split(':')[0] === 'Listado' && groupTitle.split(':')[1] ? groupTitle.split(':')[1].trim() : groupTitle);
+            }
+
+            a.download = `${fileNameBase}_${new Date().toISOString().slice(0,10)}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } else {
+            alert("No se pudo generar el archivo CSV.");
+        }
+    } catch (error) {
+        console.error("Error al descargar CSV:", error);
+        alert(`Error al descargar CSV: ${(error as Error).message}`);
+    }
 };
 
 

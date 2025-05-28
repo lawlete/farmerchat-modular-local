@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { TractorIcon, TreeIcon, WorkersIcon } from './icons/WelcomeIcons';
+// Removed TractorIcon, TreeIcon, WorkersIcon imports as they are no longer used
 import { VoiceOnIcon, VoiceOffIcon } from './icons/VoiceModeIcons'; 
-import { UploadIcon, MultiFileIcon, FileCsvIcon, DownloadIcon, ExportPackageIcon } from './icons/FileIcons'; // Added DownloadIcon, ExportPackageIcon for completeness
+import { UploadIcon, MultiFileIcon, FileCsvIcon, DownloadIcon, ExportPackageIcon } from './icons/FileIcons'; 
 
 interface WelcomeBannerProps {
   isVoiceModeActive: boolean;
@@ -17,21 +17,26 @@ export const WelcomeBanner: React.FC<WelcomeBannerProps> = ({
 }) => {
   return (
     <div 
-        className="fixed inset-0 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 dark:from-blue-700 dark:via-blue-800 dark:to-indigo-900 flex items-center justify-center z-50 p-4 sm:p-6 md:p-8"
+        className="fixed inset-0 flex items-center justify-center z-50 p-4 sm:p-6 md:p-8"
+        style={{
+          backgroundImage: "url('/images/Asistente_Virtual_IA.png')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
         role="dialog"
         aria-modal="true"
         aria-labelledby="welcome-banner-title"
     >
-      <div className="bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-3xl text-center transform transition-all duration-500 ease-out scale-100 opacity-100 max-h-[95vh] overflow-y-auto">
-        <div className="flex justify-center space-x-4 sm:space-x-6 mb-6">
-          <TractorIcon className="h-12 w-12 sm:h-16 sm:w-16 text-green-500 dark:text-green-400" />
-          <TreeIcon className="h-12 w-12 sm:h-16 sm:w-16 text-lime-500 dark:text-lime-400" />
-          <WorkersIcon className="h-12 w-12 sm:h-16 sm:w-16 text-yellow-500 dark:text-yellow-400" />
+      <div className="bg-white dark:bg-gray-800 bg-opacity-90 dark:bg-opacity-90 p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-3xl text-center transform transition-all duration-500 ease-out scale-100 opacity-100 max-h-[95vh] overflow-y-auto">
+        
+        {/* Title Section (Logo Removed) */}
+        <div className="flex items-center justify-center mb-6">
+            {/* Logo removed from here */}
+            <h1 id="welcome-banner-title" className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white">
+              ¡Bienvenido a FarmerChat AI! <span role="img" aria-label="rocket">🚀</span>
+            </h1>
         </div>
-
-        <h1 id="welcome-banner-title" className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white mb-3">
-          ¡Bienvenido a FarmerChat AI! <span role="img" aria-label="rocket">🚀</span>
-        </h1>
         
         <p className="text-gray-600 dark:text-gray-300 mb-6 text-sm sm:text-base leading-relaxed">
           Soy tu asistente virtual para ayudarte a gestionar los registros y tareas de tu actividad agropecuaria de forma sencilla.

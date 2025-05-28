@@ -91,7 +91,10 @@ export const TopBar = forwardRef<TopBarHandles, TopBarProps>((
 
   return (
     <div className="bg-gray-200 dark:bg-gray-800 p-3 shadow-md flex items-center justify-between border-b border-gray-300 dark:border-gray-700 bg-transition">
-      <h1 className="text-xl font-semibold text-green-600 dark:text-green-400">FarmerChat AI</h1>
+      <div className="flex items-center">
+        {/* Logo removed from here */}
+        <h1 className="text-xl font-semibold text-green-600 dark:text-green-400">FarmerChat AI</h1>
+      </div>
       
       <div className="flex items-center space-x-2 md:space-x-3">
         {/* Delete DB Button - Isolated */}

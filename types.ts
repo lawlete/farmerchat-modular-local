@@ -186,6 +186,7 @@ export interface GroupedResult {
   groupTitle: string;
   items: Record<string, any>[]; // Array of entities or aggregated data
   count?: number;
+  entityType?: EntityType; // Optional: to help with specific CSV/PDF header mapping
 }
 
 export interface LLMResponseAction {
@@ -196,6 +197,6 @@ export interface LLMResponseAction {
   data?: any | { enable?: boolean }; // Updated data type for TOGGLE_VOICE_MODE
   query?: Record<string, any>; 
   messageForUser: string;
-  groupedData?: GroupedResult[];
+  groupedData?: GroupedResult[]; // For LIST_ENTITIES or GROUPED_QUERY, should include entityType if applicable
   rawResponse?: string;
 }

@@ -1,8 +1,10 @@
 
 import React, { useState, useRef, useEffect, useImperativeHandle, forwardRef, useCallback } from 'react';
-import { ChatMessage, Database } from '../types';
+import { ChatMessage, Database, GroupedResult, EntityType } from '../types';
 import { MessageBubble } from './MessageBubble';
 import { SendIcon, MicrophoneIcon, StopIcon, LoadingIcon } from './icons/ChatIcons';
+import { FullScreenDataModalContent } from './FullScreenDataViewModal';
+
 
 export interface ChatPanelHandles {
   triggerStartRecording: () => void;
@@ -15,6 +17,7 @@ interface ChatPanelProps {
   isLoading: boolean;
   currentDb: Database; 
   onBeforeStartRecording?: () => void;
+  onViewFullScreen: (content: FullScreenDataModalContent) => void;
 }
 
 // ###################################################################################
@@ -31,7 +34,7 @@ const SILENCE_DURATION_MS = 3000; // 3 seconds of silence
 const SILENCE_CHECK_INTERVAL_MS = 500; // Check for silence every 500ms
 
 export const ChatPanel = forwardRef<ChatPanelHandles, ChatPanelProps>((
-  { messages, onSendMessage, isLoading, onBeforeStartRecording }, 
+  { messages, onSendMessage, isLoading, onBeforeStartRecording, onViewFullScreen }, 
   ref
 ) => {
   const [inputText, setInputText] = useState('');
@@ -246,10 +249,22 @@ export const ChatPanel = forwardRef<ChatPanelHandles, ChatPanelProps>((
   };
 
   return (
-    <div className="flex flex-col h-full w-full bg-gray-50 dark:bg-gray-800 shadow-xl dark:border-gray-700 bg-transition">
+    <div 
+      className="flex flex-col h-full w-full shadow-xl dark:border-gray-700 bg-transition"
+      style={{
+        backgroundImage: "url('/images/Asistente_Virtual_IA.png')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
       <div className="flex-1 p-4 md:p-6 space-y-4 overflow-y-auto min-h-0">
         {messages.map((msg) => (
-          <MessageBubble key={msg.id} message={msg} />
+          <MessageBubble 
+            key={msg.id} 
+            message={msg} 
+            onViewFullScreen={onViewFullScreen} 
+          />
         ))}
         {isLoading && messages[messages.length -1]?.sender !== 'ai' && ( // Show loading bubble if general isLoading is true and last message isn't already an AI loading bubble
             <MessageBubble key="loading-indicator" message={{
@@ -258,12 +273,14 @@ export const ChatPanel = forwardRef<ChatPanelHandles, ChatPanelProps>((
                 text: 'Procesando...',
                 timestamp: new Date(),
                 isLoading: true
-            }}/>
+            }}
+            onViewFullScreen={onViewFullScreen} 
+            />
         )}
         <div ref={messagesEndRef} />
       </div>
-      {permissionError && <p className="text-red-500 dark:text-red-400 text-xs px-4 md:px-6 pb-2">{permissionError}</p>}
-      <div className="bg-gray-200 dark:bg-gray-700 p-3 md:p-4 border-t border-gray-300 dark:border-gray-600 bg-transition">
+      {permissionError && <p className="text-red-500 bg-white dark:bg-gray-800 bg-opacity-80 dark:bg-opacity-80 p-1 rounded text-xs px-4 md:px-6 pb-2">{permissionError}</p>}
+      <div className="bg-gray-200 dark:bg-gray-700 bg-opacity-90 dark:bg-opacity-90 p-3 md:p-4 border-t border-gray-300 dark:border-gray-600 bg-transition">
         <div className="flex items-end space-x-2">
           <textarea
             ref={textareaRef}
@@ -299,7 +316,7 @@ export const ChatPanel = forwardRef<ChatPanelHandles, ChatPanelProps>((
           </button>
         </div>
       </div>
-      <footer className="bg-gray-100 dark:bg-gray-900 p-2 border-t border-gray-300 dark:border-gray-700 text-center text-xs text-gray-600 dark:text-gray-400">
+      <footer className="bg-gray-100 dark:bg-gray-900 bg-opacity-90 dark:bg-opacity-90 p-2 border-t border-gray-300 dark:border-gray-700 text-center text-xs text-gray-600 dark:text-gray-400">
         <span>Instagram: @lawertechnology</span> | 
         <a href="mailto:lawertechnology@gmail.com" className="hover:text-green-500 dark:hover:text-green-400 transition-colors px-1">Email: lawertechnology@gmail.com</a> | 
         <a 

@@ -10,6 +10,8 @@ import { processCsvData, generateUUID, convertEntityArrayToCsvString } from './s
 import { MultipleCsvUploadModal } from './components/MultipleCsvUploadModal';
 import { ConfirmModal } from './components/ConfirmModal';
 import { WelcomeBanner } from './components/WelcomeBanner'; 
+import { FullScreenDataViewModal, FullScreenDataModalContent } from './components/FullScreenDataViewModal';
+
 
 export type Theme = 'light' | 'dark';
 
@@ -46,6 +48,20 @@ const App: React.FC = () => {
   const [showDeleteDbConfirm, setShowDeleteDbConfirm] = useState(false);
   const [showWelcomeBanner, setShowWelcomeBanner] = useState(true); 
 
+  const [isFullScreenDataModalOpen, setIsFullScreenDataModalOpen] = useState(false);
+  const [fullScreenDataModalContent, setFullScreenDataModalContent] = useState<FullScreenDataModalContent | null>(null);
+
+  const handleOpenFullScreenDataModal = (content: FullScreenDataModalContent) => {
+    setFullScreenDataModalContent(content);
+    setIsFullScreenDataModalOpen(true);
+  };
+
+  const handleCloseFullScreenDataModal = () => {
+    setIsFullScreenDataModalOpen(false);
+    setFullScreenDataModalContent(null);
+  };
+
+
   useEffect(() => {
     const checkScreenSize = () => {
       const mdScreen = window.innerWidth >= 768;
@@ -81,6 +97,8 @@ const App: React.FC = () => {
       setCurrentGroupedResults(groupedData);
     } else if (sender === 'user') { 
       setCurrentGroupedResults(null);
+      // If user sends a message, implicitly close any open fullscreen modal for old data
+      if (isFullScreenDataModalOpen) handleCloseFullScreenDataModal();
     }
 
     if (sender === 'system' && isInteractiveVoiceMode && text && !isError) {
@@ -98,7 +116,7 @@ const App: React.FC = () => {
         setShowWelcomeBanner(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isInteractiveVoiceMode, showWelcomeBanner]); 
+  }, [isInteractiveVoiceMode, showWelcomeBanner, isFullScreenDataModalOpen]); 
 
   const loadTestDatabase = useCallback(async (isAutoLoad: boolean = true) => {
     try {
@@ -126,6 +144,7 @@ const App: React.FC = () => {
       setDatabase(testDb);
       localStorage.setItem(LOCAL_STORAGE_DB_KEY, JSON.stringify(testDb));
       setCurrentGroupedResults(null); 
+      if (isFullScreenDataModalOpen) handleCloseFullScreenDataModal();
       
       const message = isAutoLoad ? 'Base de datos local no encontrada o inválida, se cargó la BD de prueba.' : 'Base de datos de prueba cargada exitosamente.';
       addMessageToChat(message, 'system');
@@ -133,7 +152,8 @@ const App: React.FC = () => {
       console.error("Error cargando la base de datos de prueba:", error);
       addMessageToChat(`Error al cargar la base de datos de prueba: ${(error as Error).message}`, 'system', true);
     }
-  }, [addMessageToChat]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [addMessageToChat, isFullScreenDataModalOpen]);
 
   useEffect(() => {
     const storedDB = localStorage.getItem(LOCAL_STORAGE_DB_KEY);
@@ -181,6 +201,7 @@ const App: React.FC = () => {
     setDatabase(INITIAL_DB);
     localStorage.removeItem(LOCAL_STORAGE_DB_KEY);
     setCurrentGroupedResults(null);
+    if (isFullScreenDataModalOpen) handleCloseFullScreenDataModal();
     addMessageToChat('Base de datos borrada exitosamente.', 'system');
     setShowDeleteDbConfirm(false);
   };
@@ -385,6 +406,7 @@ const App: React.FC = () => {
             localStorage.setItem(LOCAL_STORAGE_DB_KEY, JSON.stringify(newDb));
             addMessageToChat('Base de datos importada correctamente desde el archivo.', 'system');
             setCurrentGroupedResults(null);
+            if (isFullScreenDataModalOpen) handleCloseFullScreenDataModal();
           }
         } else {
           const processedData = processCsvData(content, type);
@@ -399,6 +421,7 @@ const App: React.FC = () => {
             });
             addMessageToChat(`Datos para '${ENTITY_DISPLAY_NAMES[type]}' importados desde el archivo de tabla. ${processedData.length} registros cargados.`, 'system');
             setCurrentGroupedResults(null);
+             if (isFullScreenDataModalOpen) handleCloseFullScreenDataModal();
           } else {
             addMessageToChat(`No se pudieron procesar datos válidos del archivo de tabla para '${ENTITY_DISPLAY_NAMES[type]}'. Verifique el formato y encabezados.`, 'system', true);
           }
@@ -455,6 +478,7 @@ const App: React.FC = () => {
             setDatabase(currentDbSnapshot);
             localStorage.setItem(LOCAL_STORAGE_DB_KEY, JSON.stringify(currentDbSnapshot));
             setCurrentGroupedResults(null);
+            if (isFullScreenDataModalOpen) handleCloseFullScreenDataModal();
             const summaryMessage = allSuccessful ? "Todos los archivos de tabla seleccionados fueron procesados." : "Algunos archivos de tabla tuvieron problemas durante el procesamiento. Revisa los mensajes anteriores.";
             addMessageToChat(`Importación Múltiple: ${summaryMessage}`, "system", !allSuccessful);
         } else if (!allSuccessful) {
@@ -490,7 +514,7 @@ const App: React.FC = () => {
         try {
           const csvString = convertEntityArrayToCsvString(dataArray, entityType);
           if (csvString) {
-            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+            const blob = new Blob(['\uFEFF' + csvString], { type: 'text/csv;charset=utf-8;' }); // Added BOM
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -554,6 +578,12 @@ const App: React.FC = () => {
 
 
     setCurrentGroupedResults(groupedData || null);
+    // If new grouped data arrives, and fullscreen modal is open for old data, close it.
+    if (groupedData && isFullScreenDataModalOpen && 
+        JSON.stringify(fullScreenDataModalContent?.items) !== JSON.stringify(groupedData[0]?.items)) {
+      handleCloseFullScreenDataModal();
+    }
+
 
     switch (action) {
       case 'CREATE_ENTITY':
@@ -640,12 +670,33 @@ const App: React.FC = () => {
         break;
 
       case 'LIST_ENTITIES':
-        if (actionResponse.data && Array.isArray(actionResponse.data) && (!groupedData || groupedData.length === 0)) {
-             setCurrentGroupedResults([{ groupTitle: `Listado: ${ENTITY_DISPLAY_NAMES[entity!] || entity}`, items: actionResponse.data, count: actionResponse.data.length }]);
+         // Ensure entityType is propagated if not already present from LLM
+        const resultsWithEntityType = (actionResponse.groupedData || []).map(group => ({
+            ...group,
+            entityType: group.entityType || entity 
+        }));
+        setCurrentGroupedResults(resultsWithEntityType);
+
+        if (actionResponse.data && Array.isArray(actionResponse.data) && (!resultsWithEntityType || resultsWithEntityType.length === 0)) {
+             const inferredEntityType = entity;
+             setCurrentGroupedResults([{ 
+                 groupTitle: `Listado: ${ENTITY_DISPLAY_NAMES[inferredEntityType!] || inferredEntityType}`, 
+                 items: actionResponse.data, 
+                 count: actionResponse.data.length,
+                 entityType: inferredEntityType
+             }]);
         }
         break;
 
       case 'GROUPED_QUERY':
+          // Ensure entityType is propagated if not already present from LLM
+          const groupedResultsWithEntityType = (actionResponse.groupedData || []).map(group => ({
+              ...group,
+              // If the group itself doesn't have an entityType, and there's a top-level entity, use that.
+              // This helps if the LLM provides entityType per group or one for the whole response.
+              entityType: group.entityType || entity 
+          }));
+          setCurrentGroupedResults(groupedResultsWithEntityType);
         break;
         
       case 'ANSWER_QUERY':
@@ -837,6 +888,7 @@ const App: React.FC = () => {
                     isLoading={isLoading}
                     currentDb={database}
                     onBeforeStartRecording={handleBeforeStartRecording}
+                    onViewFullScreen={handleOpenFullScreenDataModal}
                   />
                 </div>
                 <div
@@ -847,7 +899,11 @@ const App: React.FC = () => {
                   aria-label="Resize panels"
                 />
                 <div style={{ width: `${100 - chatPanelWidthPercent}%`}} className="h-1/2 md:h-full md:min-w-[300px] md:max-w-[calc(100%-300px)]">
-                  <DataPanel database={database} groupedResults={currentGroupedResults} />
+                  <DataPanel 
+                    database={database} 
+                    groupedResults={currentGroupedResults} 
+                    onViewFullScreen={handleOpenFullScreenDataModal}
+                  />
                 </div>
               </>
             ) : (
@@ -860,11 +916,16 @@ const App: React.FC = () => {
                         isLoading={isLoading}
                         currentDb={database}
                         onBeforeStartRecording={handleBeforeStartRecording}
+                        onViewFullScreen={handleOpenFullScreenDataModal}
                     />
                  </div>
               ) : (
                 <div className="h-full w-full">
-                    <DataPanel database={database} groupedResults={currentGroupedResults} />
+                    <DataPanel 
+                        database={database} 
+                        groupedResults={currentGroupedResults} 
+                        onViewFullScreen={handleOpenFullScreenDataModal}
+                    />
                 </div>
               )
             )}
@@ -895,6 +956,15 @@ const App: React.FC = () => {
           onCancel={handleCancelDeleteDb}
           confirmText="Sí, Borrar Todo"
           cancelText="Cancelar"
+        />
+      )}
+      {isFullScreenDataModalOpen && fullScreenDataModalContent && (
+        <FullScreenDataViewModal
+            isOpen={isFullScreenDataModalOpen}
+            onClose={handleCloseFullScreenDataModal}
+            title={fullScreenDataModalContent.title}
+            items={fullScreenDataModalContent.items}
+            entityTypeForHeaders={fullScreenDataModalContent.entityType}
         />
       )}
     </div>

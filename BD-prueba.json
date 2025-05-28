@@ -1,0 +1,88 @@
+{
+  "clients": [
+    {
+      "id": "client_01",
+      "name": "Agropecuaria El Amanecer S.A.",
+      "phone": "+549351000001",
+      "email": "contacto@elamanecer.com"
+    },
+    {
+      "id": "client_02",
+      "name": "Estancia La Sureña",
+      "phone": "+549299000002",
+      "email": "admin@lasurena.net"
+    },
+    {
+      "id": "client_03",
+      "name": "Finca Los Viñedos del Sol",
+      "phone": "+549261000003",
+      "email": "info@vinedosdelsol.com.ar"
+    },
+    {
+      "id": "client_04",
+      "name": "Productores del Norte Asociados",
+      "phone": "+549387000004",
+      "email": "norteagro@email.com"
+    }
+  ],
+  "users": [
+    {
+      "id": "user_admin_ama",
+      "name": "Roberto Carlos",
+      "role": "Administrator",
+      "clientId": "client_01"
+    },
+    {
+      "id": "user_ing_sur",
+      "name": "Juan Martinez",
+      "role": "Engineer",
+      "clientId": "client_02"
+    },
+    {
+      "id": "user_admin_vin",
+      "name": "Miguel Angel Russo",
+      "role": "Administrator",
+      "clientId": "client_03"
+    },
+    {
+      "id": "user_admin_nor",
+      "name": "Jorge Campos",
+      "role": "Administrator",
+      "clientId": "client_04"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task_entry_v5_001",
+      "taskIdRef": "task_cosecha_h",
+      "createdByUserId": "user_admin_vin",
+      "clientId": "client_03",
+      "status": "Bloqueada",
+      "resultDescription": "Bloqueada: Cosecha de Hortalizas."
+    },
+    {
+      "id": "task_entry_v5_002",
+      "taskIdRef": "task_labranza_s",
+      "createdByUserId": "user_admin_ama",
+      "clientId": "client_01",
+      "status": "Finalizada",
+      "resultDescription": "Finalizada: Labranza Secundaria."
+    },
+    {
+      "id": "task_entry_v5_003",
+      "taskIdRef": "task_fumigacion_h",
+      "createdByUserId": "user_admin_nor",
+      "clientId": "client_04",
+      "status": "Cancelada",
+      "resultDescription": "Cancelada: Fumigación Herbicida."
+    },
+    {
+      "id": "task_entry_v5_004",
+      "taskIdRef": "task_control_parasitos",
+      "createdByUserId": "user_admin_pam",
+      "clientId": "client_05",
+      "status": "Demorada",
+      "resultDescription": "Demorada: Control de Parásitos Externos."
+    }
+  ]
+}
