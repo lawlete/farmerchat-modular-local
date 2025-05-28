@@ -136,6 +136,7 @@ export const DataPanel: React.FC<DataPanelProps> = ({ database, groupedResults, 
     printFrame.style.width = '0';
     printFrame.style.height = '0';
     printFrame.style.border = '0';
+    printFrame.style.zIndex = '99999'; // Ensure iframe is on top
     printFrame.setAttribute('title', 'Contenido de Impresión');
     printFrame.setAttribute('aria-hidden', 'true');
     document.body.appendChild(printFrame);

@@ -34,7 +34,7 @@ export const WelcomeBanner: React.FC<WelcomeBannerProps> = ({
         <div className="flex items-center justify-center mb-6">
             {/* Logo removed from here */}
             <h1 id="welcome-banner-title" className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white">
-              ¡Bienvenido a FarmerChat AI! <span role="img" aria-label="rocket">🚀</span>
+              ¡Bienvenido a FarmerChat AI v10.0! <span role="img" aria-label="rocket">🚀</span>
             </h1>
         </div>
         
