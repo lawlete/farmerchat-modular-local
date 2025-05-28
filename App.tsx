@@ -12,6 +12,7 @@ import { MultipleCsvUploadModal } from './components/MultipleCsvUploadModal';
 import { ConfirmModal } from './components/ConfirmModal';
 import { WelcomeBanner } from './components/WelcomeBanner'; 
 import { FullScreenDataViewModal, FullScreenDataModalContent, getColumnOrderForDisplay } from './components/FullScreenDataViewModal';
+import { LoadingIcon } from './components/icons/ChatIcons';
 
 
 export type Theme = 'light' | 'dark';
@@ -266,7 +267,7 @@ const App: React.FC = () => {
     });
   };
   
-  const processSpeechQueue = () => {
+  const processSpeechQueue = useCallback(() => {
     if (isSpeakingRef.current || speechQueueRef.current.length === 0 || !isInteractiveVoiceMode) {
       if (speechQueueRef.current.length === 0 && !isSpeakingRef.current && isInteractiveVoiceMode && chatPanelRef.current) {
           const lastMessage = chatMessages[chatMessages.length -1];
@@ -313,9 +314,9 @@ const App: React.FC = () => {
         isSpeakingRef.current = false; 
         processSpeechQueue(); 
     }
-  };
+  }, [addMessageToChat, chatMessages, isInteractiveVoiceMode]);
 
-  const speakText = (text: string, onEndCallback?: () => void) => {
+  const speakText = useCallback((text: string, onEndCallback?: () => void) => {
     if (!isInteractiveVoiceMode || !text) {
       if(onEndCallback) onEndCallback();
       processSpeechQueue(); 
@@ -330,9 +331,9 @@ const App: React.FC = () => {
     
     speechQueueRef.current.push(utterance);
     processSpeechQueue();
-  };
+  }, [isInteractiveVoiceMode, processSpeechQueue]);
 
-  const speakGroupedResults = (results: GroupedResult[], onAllSpoken?: () => void) => {
+  const speakGroupedResults = useCallback((results: GroupedResult[], onAllSpoken?: () => void) => {
     if (!isInteractiveVoiceMode || !results || results.length === 0) {
       if (onAllSpoken) onAllSpoken();
       processSpeechQueue();
@@ -388,7 +389,7 @@ const App: React.FC = () => {
        if (onAllSpoken) onAllSpoken();
        processSpeechQueue();
     }
-  };
+  }, [isInteractiveVoiceMode, processSpeechQueue, speakText]);
 
 
   useEffect(() => {
@@ -738,541 +739,455 @@ const App: React.FC = () => {
 
 
     setCurrentGroupedResults(groupedData || null);
-    if (groupedData && isFullScreenDataModalOpen && 
-        JSON.stringify(fullScreenDataModalContent?.items) !== JSON.stringify(groupedData[0]?.items)) {
-      handleCloseFullScreenDataModal();
+    if (isFullScreenDataModalOpen && groupedData) {
+        const newContent = groupedData.length > 0 ? { title: groupedData[0].groupTitle, items: groupedData[0].items, entityType: groupedData[0].entityType } : null;
+        if (newContent) handleOpenFullScreenDataModal(newContent); else handleCloseFullScreenDataModal();
+    } else if (isFullScreenDataModalOpen && !groupedData) {
+        handleCloseFullScreenDataModal();
     }
 
+
+    const updateDatabase = (newDbState: Database) => {
+        setDatabase(newDbState);
+        localStorage.setItem(LOCAL_STORAGE_DB_KEY, JSON.stringify(newDbState));
+    };
 
     switch (action) {
       case 'CREATE_ENTITY':
         if (entity && data && !Array.isArray(data)) {
-          const newId = data.id || generateUUID(); 
-          const newItem = { ...data, id: newId };
-
+          const newId = data.id || generateUUID();
+          const newEntityData = { ...data, id: newId };
+          
           setDatabase(prevDb => {
-            const currentEntityArray = prevDb[entity] || [];
-            const updatedEntityArray = [...currentEntityArray, newItem];
-            let updatedDb = { ...prevDb, [entity]: updatedEntityArray };
-            
-            if (entity === 'tasks' && (newItem.machineryIds || newItem.personnelIds || newItem.productInsumeDetails)) {
-                const newLinks: Partial<Database> = {
-                    taskMachineryLinks: [...(updatedDb.taskMachineryLinks || [])],
-                    taskPersonnelLinks: [...(updatedDb.taskPersonnelLinks || [])],
-                    taskInsumeLinks: [...(updatedDb.taskInsumeLinks || [])]
-                };
-                (newItem.machineryIds as string[] | undefined)?.forEach(machId => {
-                    newLinks.taskMachineryLinks!.push({ id: generateUUID(), taskId: newId, machineryId: machId });
-                });
-                (newItem.personnelIds as string[] | undefined)?.forEach(persId => {
-                     newLinks.taskPersonnelLinks!.push({ id: generateUUID(), taskId: newId, personnelId: persId });
-                });
-                (newItem.productInsumeDetails as {id: string, quantityUsed: number, unitUsed: string}[] | undefined)?.forEach(insumeDetail => {
-                    newLinks.taskInsumeLinks!.push({
-                        id: generateUUID(), taskId: newId, productInsumeId: insumeDetail.id,
-                        quantityUsed: insumeDetail.quantityUsed, unitUsed: insumeDetail.unitUsed
+            const entityArray = prevDb[entity] as any[];
+            const updatedDb = {
+              ...prevDb,
+              [entity]: [...entityArray, newEntityData]
+            };
+            // Handle linked entities for Tasks
+            if (entity === 'tasks') {
+                const task = newEntityData as Task;
+                if (task.machineryIds && task.machineryIds.length > 0) {
+                    task.machineryIds.forEach(machId => {
+                        updatedDb.taskMachineryLinks.push({
+                            id: generateUUID(),
+                            taskId: newId,
+                            machineryId: machId,
+                            // hoursUsed: undefined, // Can be added later or by AI
+                            // notes: ''
+                        });
                     });
-                });
-                updatedDb = {...updatedDb, ...newLinks};
+                }
+                if (task.personnelIds && task.personnelIds.length > 0) {
+                    task.personnelIds.forEach(persId => {
+                        updatedDb.taskPersonnelLinks.push({
+                            id: generateUUID(),
+                            taskId: newId,
+                            personnelId: persId,
+                            // roleInTask: '',
+                            // hoursWorked: undefined
+                        });
+                    });
+                }
+                if (task.productInsumeDetails && task.productInsumeDetails.length > 0) {
+                    task.productInsumeDetails.forEach(detail => {
+                        updatedDb.taskInsumeLinks.push({
+                            id: generateUUID(),
+                            taskId: newId,
+                            productInsumeId: detail.id,
+                            quantityUsed: detail.quantityUsed,
+                            unitUsed: detail.unitUsed,
+                            // applicationDetails: ''
+                        });
+                    });
+                }
             }
             localStorage.setItem(LOCAL_STORAGE_DB_KEY, JSON.stringify(updatedDb));
             return updatedDb;
           });
-          
-          if (followUpAction) {
-            setTimeout(() => {
-                handleLLMAction(followUpAction, relatedOfflineRequestId);
-            }, 100); 
-          }
-
         } else {
-          addMessageToChat(`Error de IA: Datos inválidos para crear entidad ${entity}.`, 'system', true, undefined, undefined, relatedOfflineRequestId);
+            console.error("CREATE_ENTITY: 'entity' o 'data' faltantes o 'data' es un array.", actionResponse);
+            addMessageToChat(`Error interno procesando CREATE_ENTITY: 'entity' o 'data' inválidos.`, 'system', true);
         }
         break;
-      
       case 'UPDATE_ENTITY':
-        if (entity && query && data) {
-          setDatabase(prevDb => {
-            const items = prevDb[entity] || [];
-            const queryKeys = Object.keys(query);
-            const updatedItems = items.map(item => {
-              const match = queryKeys.every(key => item[key] === query[key]);
-              return match ? { ...item, ...data } : item;
-            });
-            const updatedDb = { ...prevDb, [entity]: updatedItems };
-            localStorage.setItem(LOCAL_STORAGE_DB_KEY, JSON.stringify(updatedDb));
-            return updatedDb;
+        if (entity && data && query && query.id && !Array.isArray(data)) {
+          updateDatabase({
+            ...database,
+            [entity]: (database[entity] as any[]).map(e => (e.id === query.id ? { ...e, ...data } : e))
           });
+        } else {
+             console.error("UPDATE_ENTITY: Faltan 'entity', 'data', 'query', o 'query.id', o 'data' es un array.", actionResponse);
+             addMessageToChat(`Error interno procesando UPDATE_ENTITY: Faltan campos requeridos.`, 'system', true);
         }
         break;
-
       case 'DELETE_ENTITY':
-        if (entity && query) {
-           setDatabase(prevDb => {
-            const items = prevDb[entity] || [];
-            const queryKeys = Object.keys(query);
-            const updatedItems = items.filter(item => {
-              return !queryKeys.every(key => item[key] === query[key]);
-            });
-            const updatedDb = { ...prevDb, [entity]: updatedItems };
-            localStorage.setItem(LOCAL_STORAGE_DB_KEY, JSON.stringify(updatedDb));
-            return updatedDb;
+        if (entity && query && query.id) {
+          updateDatabase({
+            ...database,
+            [entity]: (database[entity] as any[]).filter(e => e.id !== query.id)
           });
+        } else {
+            console.error("DELETE_ENTITY: Faltan 'entity', 'query', o 'query.id'.", actionResponse);
+            addMessageToChat(`Error interno procesando DELETE_ENTITY: Faltan campos requeridos.`, 'system', true);
         }
         break;
-
       case 'LIST_ENTITIES':
       case 'GROUPED_QUERY':
-          const resultsWithEntityType = (actionResponse.groupedData || []).map(group => ({
-              ...group,
-              entityType: group.entityType || entity 
-          }));
-          setCurrentGroupedResults(resultsWithEntityType);
-  
-          if (action === 'LIST_ENTITIES' && actionResponse.data && Array.isArray(actionResponse.data) && (!resultsWithEntityType || resultsWithEntityType.length === 0)) {
-               const inferredEntityType = entity;
-               setCurrentGroupedResults([{ 
-                   groupTitle: `Listado: ${ENTITY_DISPLAY_NAMES[inferredEntityType!] || inferredEntityType}`, 
-                   items: actionResponse.data, 
-                   count: actionResponse.data.length,
-                   entityType: inferredEntityType
-               }]);
-          }
-          break;
-        
-      case 'PROMPT_CREATE_MISSING_ENTITY':
+         // Data is already handled by addMessageToChat and setCurrentGroupedResults
         break;
-
+      case 'TOGGLE_VOICE_MODE':
+        if (data && typeof (data as { enable: boolean }).enable === 'boolean') {
+            toggleInteractiveVoiceMode((data as {enable: boolean}).enable);
+        }
+        break;
       case 'ANSWER_QUERY':
       case 'HELP':
       case 'ERROR':
       case 'PROPOSE_OPTIONS':
       case 'CONFIRM_CREATION':
+      case 'PROMPT_CREATE_MISSING_ENTITY':
+        // These actions are primarily informational or conversational, no direct DB op here.
+        // PROMPT_CREATE_MISSING_ENTITY might have pendingTaskData, but it's for the AI's next turn.
         break;
-
-      case 'TOGGLE_VOICE_MODE':
-        if (data && typeof (data as {enable?: boolean}).enable === 'boolean') {
-          const shouldEnable = (data as {enable: boolean}).enable;
-          toggleInteractiveVoiceMode(shouldEnable);
-        }
-        break;
-
       default:
-        console.warn("Unknown LLM action:", action);
-        addMessageToChat(`Acción desconocida recibida de la IA: ${action}`, 'system', true, undefined, undefined, relatedOfflineRequestId);
+        console.warn("Acción LLM desconocida o no manejada:", action);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [addMessageToChat, isInteractiveVoiceMode, speakText, speakGroupedResults, isFullScreenDataModalOpen, fullScreenDataModalContent]);
+    
+    // Handle follow-up action if present (e.g., after creating a missing entity)
+    if (followUpAction && geminiService && chatSession) {
+        addMessageToChat('Procesando siguiente paso...', 'system'); // Indicate something is happening
+        // Simulate the follow-up action being processed by the "AI" (handleLLMAction)
+        // This avoids making another actual API call immediately if the followUpAction is self-contained.
+        // If followUpAction requires new user input or a new LLM turn, that's more complex.
+        // For now, assume followUpAction is a direct action like CONFIRM_CREATION or another PROMPT.
+        
+        // A small delay to make it seem like a new turn for UI updates
+        setTimeout(() => {
+            setIsLoading(true); // Show loading for the follow-up
+            handleLLMAction(followUpAction); // Recursive call, but for a different step
+            setIsLoading(false);
+        }, 500);
 
-
-  const sendMessageToAI = async (messageText: string, audioBase64?: string, audioMimeType?: string, originalUserMessageId?: string) => {
-    if (showWelcomeBanner) setShowWelcomeBanner(false); 
-
-    if (!geminiService) { 
-      const initErrorMessage = "El servicio de IA no está disponible (falló la inicialización). Revisa la configuración de API Key. Puedes guardar tu historial de chat actual.";
-      addMessageToChat(initErrorMessage, 'system', true);
-      if (isInteractiveVoiceMode) speakText(initErrorMessage);
-      return;
+    } else if (!followUpAction && isInteractiveVoiceMode && !groupedData) {
+        // If no follow-up and no data to speak, and voice mode is on, prompt for next command
+        // This check might need refinement.
+        // processSpeechQueue(); // This will trigger mic if conditions are met.
     }
-    if (!chatSession) {
-      const chatErrorMessage = "La sesión de chat con la IA no está disponible. Esto puede ser un problema temporal o de configuración. Intenta recargar la aplicación o contacta al administrador. Puedes guardar su historial de chat actual.";
-      addMessageToChat(chatErrorMessage, 'system', true);
-      if (isInteractiveVoiceMode) speakText(chatErrorMessage);
-      const classifiedIfNoChat = classifyError(new Error("Chat session not available"));
-      if (isQueuableError(classifiedIfNoChat.type)) {
-          const requestPayload: OfflineRequestPayload = { messageText, audioBase64, audioMimeType };
-          const userMsgIdForQueue = originalUserMessageId || generateUUID(); 
-          if (!originalUserMessageId) addMessageToChat(messageText, 'user', false, undefined, undefined, userMsgIdForQueue);
 
-          const queuedRequest = addRequestToQueueUtil(requestPayload, classifiedIfNoChat.type, classifiedIfNoChat.message, setOfflineRequestQueue, userMsgIdForQueue);
-          const queueConfirmMsg = `⚠️ Tu comando '${messageText.substring(0, 30)}...' fue ENCOLADO debido a un problema con la sesión de chat. Se reintentará automáticamente.`;
-          addMessageToChat(queueConfirmMsg, 'system', true, undefined, undefined, queuedRequest.id);
-          if (isInteractiveVoiceMode) speakText(queueConfirmMsg);
-      }
+  }, [addMessageToChat, database, chatSession, isInteractiveVoiceMode, geminiService, processSpeechQueue, speakText, speakGroupedResults, toggleInteractiveVoiceMode, isFullScreenDataModalOpen]);
+
+
+  const sendMessageToAI = async (message: string, audioBase64?: string, audioMimeType?: string) => {
+    if (!geminiService || !chatSession) {
+      addMessageToChat("Error: El servicio de IA no está inicializado. Verifica la configuración de la API Key.", 'system', true);
       return;
     }
     
-    let currentOriginalUserMessageId = originalUserMessageId;
-    if(!currentOriginalUserMessageId) { 
-        const userMsgId = generateUUID();
-        addMessageToChat(messageText, 'user', false, undefined, undefined, userMsgId);
-        currentOriginalUserMessageId = userMsgId; 
-    }
-
-
-    setIsLoading(true); 
-    const loadingAiMessageId = generateUUID();
-    setChatMessages(prev => {
-        const newMessages = [...prev];
-        const loadingAiMessage: ChatMessage = { 
-            id: loadingAiMessageId, 
-            text: 'Procesando...', 
-            sender: 'ai', 
-            timestamp: new Date(), 
-            isLoading: true 
-        };
-        return [...newMessages, loadingAiMessage];
-    });
-
+    const userMessageId = generateUUID();
+    addMessageToChat(message, 'user', false, undefined, undefined, userMessageId);
+    const loadingMessageId = generateUUID();
+    addMessageToChat('', 'ai', false, undefined, undefined, loadingMessageId); // Placeholder for AI loading
+    setIsLoading(true);
 
     const currentDBStateString = JSON.stringify(database);
+
     const partsForThisTurn: Part[] = [];
 
-    // Part 1: Database Context (as expected by SYSTEM_PROMPT_HEADER)
+    // Part 1: Database Context (NO MOSTRAR AL USUARIO)
     partsForThisTurn.push({ text: `Contexto de Base de Datos (NO MOSTRAR AL USUARIO, USAR PARA REFERENCIA INTERNA):\n${currentDBStateString}` });
-
-    // Part 2: User's actual message (audio + text, or just text)
+    
+    // Part 2: User's command (audio + text, or just text)
     if (audioBase64 && audioMimeType) {
         partsForThisTurn.push({ inlineData: { data: audioBase64, mimeType: audioMimeType } });
-        // Add the transcribed text if it's not just a placeholder and is meaningful
-        if (messageText && messageText.trim() !== "" && messageText !== "Comando de voz grabado (procesando...)") {
-           partsForThisTurn.push({ text: `\n\nComando del Usuario (puede ser transcripción de audio o texto directo):\n${messageText}` });
+        if (message && message.trim() !== "" && message !== "Comando de voz grabado (procesando...)") {
+           partsForThisTurn.push({ text: `\n\nComando del Usuario (puede ser transcripción de audio o texto directo):\n${message}` });
         }
     } else { // Text-only message
-        partsForThisTurn.push({ text: `\n\nComando del Usuario:\n${messageText}` });
+        partsForThisTurn.push({ text: `\n\nComando del Usuario:\n${message}` });
     }
-    
+
     try {
-      // The chatSession object will manage and send the actual conversation history.
-      // The SYSTEM_PROMPT_HEADER (in chatSession.config) instructs the AI on its role and how to use the DB context.
       const response: GenerateContentResponse = await chatSession.sendMessage({ message: partsForThisTurn });
-
-      setIsLoading(false);
-      setChatMessages(prev => prev.filter(msg => msg.id !== loadingAiMessageId));
-
+      setChatMessages(prev => prev.filter(msg => msg.id !== loadingMessageId)); // Remove loading message
+      
       const llmResponseText = response.text;
-      const actionResponse = parseLLMResponse(llmResponseText);
+      const parsedAction = parseLLMResponse(llmResponseText);
 
-      if (actionResponse) {
-        handleLLMAction({ ...actionResponse, rawResponse: llmResponseText });
+      if (parsedAction) {
+        handleLLMAction(parsedAction);
       } else {
-        addMessageToChat(
-          `IA (respuesta no estructurada): ${llmResponseText}`,
-          'ai',
-          false,
-          undefined,
-          llmResponseText
-        );
-        if (isInteractiveVoiceMode) speakText(llmResponseText);
+        addMessageToChat(`Respuesta no estructurada de la IA: ${llmResponseText}`, 'ai', false, undefined, llmResponseText);
+        if (isInteractiveVoiceMode) speakText(`Respuesta no estructurada de la IA: ${llmResponseText}`);
       }
     } catch (error) {
       console.error("Error sending message to Gemini:", error);
-      setIsLoading(false); 
-      setChatMessages(prev => prev.filter(msg => msg.id !== loadingAiMessageId));
+      setChatMessages(prev => prev.filter(msg => msg.id !== loadingMessageId)); // Remove loading message
 
-      const classified = classifyError(error);
-      const requestPayload: OfflineRequestPayload = { messageText, audioBase64, audioMimeType };
+      const classifiedError = classifyError(error);
+      const errorMessageForUser = `Error al comunicarse con la IA: ${classifiedError.message}`;
+      
+      if (classifiedError.type === 'API_KEY_INVALID') {
+          addMessageToChat(classifiedError.message, 'system', true); // Shows detailed API key error
+          if (isInteractiveVoiceMode) speakText(classifiedError.message);
 
-      if (classified.type === 'API_KEY_INVALID') {
-          const apiKeyErrorMessage = `Error de Configuración (API Key): ${classified.message}. Por favor, contacta al administrador.`;
-          addMessageToChat(apiKeyErrorMessage, 'system', true);
-          let spokenMessage = apiKeyErrorMessage;
-
-          if (chatSession && isQueuableError(classified.type)) { 
-              const queuedRequest = addRequestToQueueUtil(requestPayload, classified.type, classified.message, setOfflineRequestQueue, currentOriginalUserMessageId);
-              const queueConfirmationMessage = `Tu comando '${messageText.substring(0, 30)}...' ha sido guardado y se intentará procesar automáticamente cuando la configuración de la API Key sea corregida.`;
-              addMessageToChat(queueConfirmationMessage, 'system', false, undefined, undefined, queuedRequest.id); 
-              spokenMessage += ` ${queueConfirmationMessage}`;
-          } else if (!chatSession) {
-              const notQueuedMessage = "El comando no pudo ser encolado porque la sesión de chat no está disponible.";
-              addMessageToChat(notQueuedMessage, "system", true);
-              spokenMessage += ` ${notQueuedMessage}`;
+          // If chatSession exists (meaning initial setup wasn't blocked by API key), try to queue
+          if (chatSession) { 
+              const offlinePayload: OfflineRequestPayload = { messageText: message, audioBase64, audioMimeType };
+              const queuedRequest = addRequestToQueueUtil(offlinePayload, classifiedError.type, classifiedError.message, setOfflineRequestQueue, userMessageId);
+              
+              const queueConfirmMsg = `Tu comando "${message.substring(0,30)}..." ha sido guardado. Se intentará procesar automáticamente cuando la configuración de la API Key sea corregida.`;
+              addMessageToChat(queueConfirmMsg, 'system', false, undefined, undefined, queuedRequest.id); // Not an error, but system info
+              if (isInteractiveVoiceMode) speakText(queueConfirmMsg);
+          } else {
+              addMessageToChat("El comando no pudo ser encolado porque el chat no está inicializado debido al error de API Key.", 'system', true);
+              if (isInteractiveVoiceMode) speakText("El comando no pudo ser encolado.");
           }
-          if (isInteractiveVoiceMode) speakText(spokenMessage);
-
-      } else if (isQueuableError(classified.type) && chatSession) {
-          const specificErrorMsg = `Error al comunicarse con la IA: ${classified.message}.`;
-          addMessageToChat(specificErrorMsg, 'system', true); 
-
-          const queuedRequest = addRequestToQueueUtil(requestPayload, classified.type, classified.message, setOfflineRequestQueue, currentOriginalUserMessageId);
-          const enqueuedMessage = `⚠️ Tu mensaje "${messageText.substring(0,30)}..." fue ENCOLADO. Se reintentará automáticamente.`;
-          addMessageToChat(enqueuedMessage, 'system', true, undefined, undefined, queuedRequest.id ); 
+      } else if (isQueuableError(classifiedError.type) && chatSession) {
+          addMessageToChat(errorMessageForUser, 'system', true); // Show generic error
+          if (isInteractiveVoiceMode) speakText(errorMessageForUser);
           
-          if (isInteractiveVoiceMode) speakText(specificErrorMsg + " " + enqueuedMessage.replace("⚠️ ", ""));
+          const offlinePayload: OfflineRequestPayload = { messageText: message, audioBase64, audioMimeType };
+          const queuedRequest = addRequestToQueueUtil(offlinePayload, classifiedError.type, classifiedError.message, setOfflineRequestQueue, userMessageId);
+          
+          const queueConfirmMsg = `⚠️ Tu mensaje "${message.substring(0, 30)}..." fue ENCOLADO. Razón: ${classifiedError.message.substring(0,50)}. Se reintentará automáticamente.`;
+          addMessageToChat(queueConfirmMsg, 'system', true, undefined, undefined, queuedRequest.id); // Mark as error to be noticeable
+          if (isInteractiveVoiceMode) speakText(`Tu mensaje fue encolado. ${classifiedError.message}`);
 
-      } else { 
-          let userErrorMessage = `Error al comunicarse con la IA: ${classified.message}.`;
-          if (!chatSession && isQueuableError(classified.type)) { 
-               userErrorMessage = `Error: La sesión de chat con la IA no está inicializada. Tu comando no pudo ser encolado. Razón: ${classified.message}`;
-          } else if (!chatSession) { 
-              userErrorMessage = "Error: La sesión de chat con la IA no está inicializada. Intenta recargar la aplicación.";
-          }
-          addMessageToChat(userErrorMessage, 'system', true);
-          if (isInteractiveVoiceMode) speakText(userErrorMessage);
+      } else {
+          addMessageToChat(errorMessageForUser, 'system', true);
+          if (isInteractiveVoiceMode) speakText(errorMessageForUser);
       }
+    } finally {
+      setIsLoading(false);
     }
   };
-  
+
+  // Offline Queue Processing Logic
   const processQueue = useCallback(async () => {
-    if (processingRequestIdRef.current) return;
-
-    const currentQueue = offlineRequestQueueRef.current;
-    const requestToProcess = currentQueue.find(req => req.status === 'pending');
-
-    if (!requestToProcess) {
+    if (processingRequestIdRef.current || !navigator.onLine || !chatSession || !geminiService) {
+      if (!navigator.onLine) console.log("Offline Queue: Paused, no connection.");
+      if (!chatSession || !geminiService) console.log("Offline Queue: Paused, AI service not ready.");
       return;
     }
 
-    if (!navigator.onLine) {
-      console.log("Offline queue processing paused: No internet connection.");
+    const pendingRequest = offlineRequestQueueRef.current.find(r => r.status === 'pending' || (r.status === 'processing' && r.id !== processingRequestIdRef.current));
+    if (!pendingRequest) {
+      // console.log("Offline Queue: No pending requests to process.");
       return;
     }
-    if (!chatSession) {
-      addMessageToChat("Intentando procesar cola, pero la sesión de IA no está lista.", "system", true, undefined, undefined, requestToProcess.id);
-      return;
-    }
-
-    processingRequestIdRef.current = requestToProcess.id;
     
-    setOfflineRequestQueue(prev => prev.map(r => r.id === requestToProcess.id ? {...r, status: 'processing', lastAttemptTimestamp: new Date()} : r));
+    processingRequestIdRef.current = pendingRequest.id;
+    setOfflineRequestQueue(prev => prev.map(r => r.id === pendingRequest.id ? { ...r, status: 'processing', lastAttemptTimestamp: new Date() } : r));
     
-    addMessageToChat(`🔄 Intentando procesar solicitud encolada: "${requestToProcess.payload.messageText.substring(0, 30)}..." (Intento ${requestToProcess.attempts + 1})`, 'system', false, undefined, undefined, requestToProcess.id);
-    if (isInteractiveVoiceMode) speakText(`Intentando procesar una solicitud encolada.`);
+    addMessageToChat(`🔄 Reintentando solicitud encolada: "${pendingRequest.payload.messageText.substring(0, 30)}..." (Intento ${pendingRequest.attempts + 1})`, 'system', false, undefined, undefined, pendingRequest.id);
 
     await attemptProcessRequestUtil(
-      requestToProcess,
-      chatSession,
-      database,
-      // currentChatMessages, // Pass current chat messages for context - No longer needed here due to `attemptProcessRequestUtil` simplification
-      (requestId, responseText, llmResponseObject) => { // onSuccess
-        addMessageToChat(`✅ Solicitud encolada "${requestToProcess.payload.messageText.substring(0,30)}..." procesada con éxito.`, 'system', false, undefined, undefined, requestId);
-        if (isInteractiveVoiceMode) speakText(`Solicitud encolada procesada con éxito.`);
-        
-        const actionResponse = parseLLMResponse(responseText);
-        if (actionResponse) {
-          handleLLMAction({ ...actionResponse, rawResponse: responseText }, requestId);
-        } else {
-          addMessageToChat(`IA (respuesta de cola): ${responseText}`, 'ai', false, undefined, responseText, requestId);
-          if (isInteractiveVoiceMode) speakText(responseText);
+        pendingRequest,
+        chatSession,
+        database,
+        (requestId, responseText, llmResponse) => { // onSuccess
+            setOfflineRequestQueue(prev => prev.map(r => r.id === requestId ? { ...r, status: 'processed' } : r));
+            const parsedAction = parseLLMResponse(responseText);
+            if (parsedAction) {
+                handleLLMAction(parsedAction, requestId); // Pass requestId to link AI response to original offline item
+            } else {
+                addMessageToChat(`Respuesta (de cola) no estructurada: ${responseText}`, 'ai', false, undefined, llmResponse.text, requestId);
+                if (isInteractiveVoiceMode) speakText(`Respuesta de solicitud encolada: ${responseText}`);
+            }
+            processingRequestIdRef.current = null;
+            addMessageToChat(`✅ Solicitud encolada "${pendingRequest.payload.messageText.substring(0, 30)}..." procesada con éxito.`, 'system', false, undefined, undefined, requestId);
+            if (isInteractiveVoiceMode) speakText("Solicitud encolada procesada con éxito.");
+            setTimeout(processQueue, 1000); // Check for next item quickly
+        },
+        (requestId, errorInfo) => { // onFailure (retryable)
+            setOfflineRequestQueue(prev => prev.map(r => r.id === requestId ? { 
+                ...r, 
+                status: 'pending', 
+                attempts: r.attempts + 1,
+                errorInfo: { 
+                    type: errorInfo.type, 
+                    message: errorInfo.message, 
+                    history: [...(r.errorInfo?.history || []), { timestamp: new Date(), type: errorInfo.type, message: errorInfo.message }]
+                }
+            } : r));
+            processingRequestIdRef.current = null;
+            addMessageToChat(`⚠️ Reintento ${pendingRequest.attempts + 1} falló para "${pendingRequest.payload.messageText.substring(0, 30)}...". Razón: ${errorInfo.message}. Se reintentará más tarde.`, 'system', true, undefined, undefined, requestId);
+            // No need to speak this every time it fails and retries automatically, could be noisy.
+            setTimeout(processQueue, 1000); // Try next item in queue even if this one failed to avoid blocking
+        },
+        (requestId, errorInfo) => { // onPermanentFailure
+            setOfflineRequestQueue(prev => prev.map(r => r.id === requestId ? { 
+                ...r, 
+                status: 'failed',
+                errorInfo: {
+                    type: errorInfo.type, 
+                    message: errorInfo.message,
+                    history: [...(r.errorInfo?.history || []), { timestamp: new Date(), type: errorInfo.type, message: errorInfo.message }]
+                }
+            } : r));
+            processingRequestIdRef.current = null;
+            addMessageToChat(`❌ Solicitud encolada "${pendingRequest.payload.messageText.substring(0, 30)}..." falló permanentemente después de ${MAX_OFFLINE_REQUEST_ATTEMPTS} intentos. Razón: ${errorInfo.message}`, 'system', true, undefined, undefined, requestId);
+            if (isInteractiveVoiceMode) speakText("Una solicitud encolada falló permanentemente.");
+            setTimeout(processQueue, 1000); // Check for next item
         }
-
-        setOfflineRequestQueue(prev => prev.map(r => r.id === requestId ? {...r, status: 'processed'} : r));
-        processingRequestIdRef.current = null;
-        setTimeout(processQueue, 1000); 
-      },
-      (requestId, errorInfo) => { // onFailure (retryable)
-        const req = offlineRequestQueueRef.current.find(r => r.id === requestId);
-        const currentAttempts = req ? req.attempts : requestToProcess.attempts; 
-        const nextAttemptDelay = Math.min(INITIAL_RETRY_DELAY_MS * Math.pow(2, currentAttempts + 1), MAX_RETRY_DELAY_MS);
-        
-        addMessageToChat(
-          `⚠️ Falló el reintento para "${requestToProcess.payload.messageText.substring(0,30)}...". Razón: ${errorInfo.message}. Se reintentará en ${Math.round(nextAttemptDelay/1000)}s. (Intento ${currentAttempts + 1}/${MAX_OFFLINE_REQUEST_ATTEMPTS})`,
-          'system', true, undefined, undefined, requestId
-        );
-        if (isInteractiveVoiceMode) speakText(`Falló el reintento. Se intentará más tarde.`);
-
-        setOfflineRequestQueue(prev => prev.map(r => r.id === requestId ? {
-            ...r,
-            status: 'pending', 
-            attempts: r.attempts + 1,
-            errorInfo: {
-                type: errorInfo.type,
-                message: errorInfo.message,
-                history: [...(r.errorInfo?.history || []), {timestamp: new Date(), type: errorInfo.type, message: errorInfo.message}]
-            }
-        } : r));
-        processingRequestIdRef.current = null;
-        setTimeout(processQueue, 1000); 
-      },
-      (requestId, errorInfo) => { // onPermanentFailure
-         addMessageToChat(
-          `❌ Falló permanentemente la solicitud encolada "${requestToProcess.payload.messageText.substring(0,30)}..." después de ${MAX_OFFLINE_REQUEST_ATTEMPTS} intentos. Error final: ${errorInfo.message}`,
-          'system', true, undefined, undefined, requestId
-        );
-        if (isInteractiveVoiceMode) speakText(`Una solicitud encolada falló permanentemente.`);
-
-        setOfflineRequestQueue(prev => prev.map(r => r.id === requestId ? {
-            ...r,
-            status: 'failed',
-            errorInfo: {
-                type: errorInfo.type,
-                message: errorInfo.message,
-                history: [...(r.errorInfo?.history || []), {timestamp: new Date(), type: errorInfo.type, message: errorInfo.message}]
-            }
-        } : r));
-        processingRequestIdRef.current = null;
-        setTimeout(processQueue, 1000); 
-      }
     );
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chatSession, database, isInteractiveVoiceMode, addMessageToChat, handleLLMAction, parseLLMResponse]); 
-
+  }, [chatSession, database, handleLLMAction, addMessageToChat, isInteractiveVoiceMode, speakText, geminiService, parseLLMResponse]);
 
   useEffect(() => {
-    const loadedQueue = getOfflineQueueFromStorage();
-    setOfflineRequestQueue(loadedQueue);
-    offlineRequestQueueRef.current = loadedQueue;
-
+    const storedQueue = getOfflineQueueFromStorage();
+    setOfflineRequestQueue(storedQueue);
+    
     const handleOnline = () => {
-      addMessageToChat("Conexión a internet restablecida. Intentando procesar solicitudes pendientes...", "system");
-      if (offlineRequestQueueRef.current.some(req => req.status === 'pending')) {
-          processQueue();
-      }
+      addMessageToChat('Conexión a internet restablecida. Intentando procesar solicitudes pendientes...', 'system');
+      if (isInteractiveVoiceMode) speakText('Conexión a internet restablecida.');
+      processQueue();
     };
     const handleOffline = () => {
-      addMessageToChat("Se ha perdido la conexión a internet. Las nuevas solicitudes se guardarán para procesar más tarde.", "system", true);
+      addMessageToChat('Se ha perdido la conexión a internet. Las nuevas solicitudes se guardarán para procesar más tarde.', 'system', true);
+      if (isInteractiveVoiceMode) speakText('Se ha perdido la conexión a internet.');
     };
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-    
-    if (navigator.onLine && loadedQueue.some(req => req.status === 'pending')) {
-        addMessageToChat("Detectadas solicitudes pendientes. Intentando procesar...", "system");
-        processQueue();
-    }
 
-    const intervalId = setInterval(() => {
-      if (navigator.onLine && offlineRequestQueueRef.current.some(req => req.status === 'pending' && !processingRequestIdRef.current)) {
-          processQueue();
-      }
-    }, OFFLINE_PROCESSING_INTERVAL_MS);
+    const intervalId = setInterval(processQueue, OFFLINE_PROCESSING_INTERVAL_MS);
 
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
       clearInterval(intervalId);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [processQueue]); 
+  }, [processQueue, addMessageToChat, isInteractiveVoiceMode, speakText]);
 
 
   const startResizing = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-    if (!isMdScreen) return; 
     e.preventDefault();
     setIsResizing(true);
-  }, [isMdScreen]);
+  }, []);
 
   const stopResizing = useCallback(() => {
     setIsResizing(false);
   }, []);
 
   const resizePanel = useCallback((e: MouseEvent | TouchEvent) => {
-    if (isResizing && resizableContainerRef.current && isMdScreen) {
-      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-      const containerRect = resizableContainerRef.current.getBoundingClientRect();
-      const newChatPanelWidth = clientX - containerRect.left;
-      let newChatPanelWidthPercent = (newChatPanelWidth / containerRect.width) * 100;
-      
-      newChatPanelWidthPercent = Math.max(25, Math.min(newChatPanelWidthPercent, 75));
-      
-      setChatPanelWidthPercent(newChatPanelWidthPercent);
-    }
+    if (!isResizing || !resizableContainerRef.current || !isMdScreen) return;
+
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const containerRect = resizableContainerRef.current.getBoundingClientRect();
+    let newWidthPercent = ((clientX - containerRect.left) / containerRect.width) * 100;
+    
+    // Clamp width between 20% and 80%
+    newWidthPercent = Math.max(20, Math.min(80, newWidthPercent));
+    setChatPanelWidthPercent(newWidthPercent);
   }, [isResizing, isMdScreen]);
 
   useEffect(() => {
     if (isMdScreen) {
-        window.addEventListener('mousemove', resizePanel as EventListener);
-        window.addEventListener('touchmove', resizePanel as EventListener);
-        window.addEventListener('mouseup', stopResizing);
-        window.addEventListener('touchend', stopResizing);
+        document.addEventListener('mousemove', resizePanel);
+        document.addEventListener('mouseup', stopResizing);
+        document.addEventListener('touchmove', resizePanel);
+        document.addEventListener('touchend', stopResizing);
     }
     return () => {
-      if (isMdScreen) {
-        window.removeEventListener('mousemove', resizePanel as EventListener);
-        window.removeEventListener('touchmove', resizePanel as EventListener);
-        window.removeEventListener('mouseup', stopResizing);
-        window.removeEventListener('touchend', stopResizing);
-      }
+        document.removeEventListener('mousemove', resizePanel);
+        document.removeEventListener('mouseup', stopResizing);
+        document.removeEventListener('touchmove', resizePanel);
+        document.removeEventListener('touchend', stopResizing);
     };
   }, [resizePanel, stopResizing, isMdScreen]);
 
 
+  if (!geminiService && !chatSession && !localStorage.getItem(LOCAL_STORAGE_DB_KEY)) {
+    return ( 
+      <div className="flex items-center justify-center h-screen bg-gray-100 dark:bg-gray-900">
+        <div className="text-center">
+            <LoadingIcon className="h-12 w-12 text-green-500 animate-spin mx-auto mb-4" />
+            <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">Cargando Aplicación...</p>
+        </div>
+      </div>
+    );
+  }
+
+
   return (
     <div className="flex flex-col h-screen overflow-hidden">
-      {showWelcomeBanner && (
-        <WelcomeBanner
-          isVoiceModeActive={isInteractiveVoiceMode}
-          onToggleVoiceMode={() => {
-            const newMode = !isInteractiveVoiceMode;
-            toggleInteractiveVoiceMode(newMode);
-            addMessageToChat(
-              `Modo Voz Interactiva ${newMode ? 'Activado' : 'Desactivado'}.`,
-              'system'
-            );
-          }}
-          onDismiss={() => setShowWelcomeBanner(false)} 
-        />
-      )}
-      {!showWelcomeBanner && (
-        <>
-          <TopBar
-            ref={topBarRef}
-            onFileUpload={handleFileUpload}
-            onFileExport={handleFileExport}
-            onExportToCsvs={handleExportToCsvs}
-            entityTypes={ALL_ENTITY_TYPES}
-            currentTheme={theme}
-            onToggleTheme={toggleTheme}
-            isInteractiveVoiceMode={isInteractiveVoiceMode}
-            onToggleInteractiveVoiceMode={() => {
-                const newMode = !isInteractiveVoiceMode;
-                toggleInteractiveVoiceMode(newMode);
-                addMessageToChat( 
-                    `Modo Voz Interactiva ${newMode ? 'Activado' : 'Desactivado'}.`,
-                    'system'
-                );
-            }}
-            onMultipleFileUploadRequest={handleMultipleFileUploadRequest}
-            onDeleteDatabaseRequest={handleRequestDeleteDb}
-            onSaveChatHistory={handleSaveChatHistory}
-            onLoadChatHistoryFile={handleLoadChatHistoryFile}
-            pendingOfflineRequestCount={offlineRequestQueue.filter(r => r.status === 'pending').length}
-          />
-          <div ref={resizableContainerRef} className="flex-1 flex flex-col md:flex-row min-h-0">
-            {isMdScreen ? (
-              <>
-                <div style={{ width: `${chatPanelWidthPercent}%` }} className="h-1/2 md:h-full md:min-w-[300px] md:max-w-[calc(100%-300px)]">
-                  <ChatPanel
-                    ref={chatPanelRef}
-                    messages={chatMessages}
-                    onSendMessage={sendMessageToAI}
-                    isLoading={isLoading}
-                    currentDb={database}
-                    onBeforeStartRecording={handleBeforeStartRecording}
-                    onViewFullScreen={handleOpenFullScreenDataModal}
-                  />
-                </div>
-                <div
-                  className="w-full md:w-auto h-[8px] md:h-full md:w-[8px] bg-gray-300 dark:bg-gray-700 cursor-col-resize flex-shrink-0 hover:bg-green-500 dark:hover:bg-green-600 transition-colors"
-                  onMouseDown={startResizing}
-                  onTouchStart={startResizing}
-                  role="separator"
-                  aria-label="Resize panels"
-                />
-                <div style={{ width: `${100 - chatPanelWidthPercent}%`}} className="h-1/2 md:h-full md:min-w-[300px] md:max-w-[calc(100%-300px)]">
-                  <DataPanel 
-                    database={database} 
-                    groupedResults={currentGroupedResults} 
-                    onViewFullScreen={handleOpenFullScreenDataModal}
-                  />
-                </div>
-              </>
-            ) : (
-              chatPanelWidthPercent > 0 ? ( 
-                 <div className="h-full w-full">
-                    <ChatPanel
-                        ref={chatPanelRef}
-                        messages={chatMessages}
-                        onSendMessage={sendMessageToAI}
-                        isLoading={isLoading}
-                        currentDb={database}
-                        onBeforeStartRecording={handleBeforeStartRecording}
-                        onViewFullScreen={handleOpenFullScreenDataModal}
-                    />
-                 </div>
-              ) : (
-                <div className="h-full w-full">
-                    <DataPanel 
-                        database={database} 
-                        groupedResults={currentGroupedResults} 
-                        onViewFullScreen={handleOpenFullScreenDataModal}
-                    />
-                </div>
-              )
-            )}
-          </div>
-        </>
-      )}
+       {showWelcomeBanner && (
+            <WelcomeBanner 
+                isVoiceModeActive={isInteractiveVoiceMode}
+                onToggleVoiceMode={() => {
+                    const newMode = !isInteractiveVoiceMode;
+                    toggleInteractiveVoiceMode(newMode);
+                    if (chatSession && geminiService) { 
+                        addMessageToChat(`Modo voz interactiva ${newMode ? 'activado' : 'desactivado'}.`, 'ai');
+                        if(isInteractiveVoiceMode) speakText(`Modo voz interactiva ${newMode ? 'activado' : 'desactivado'}.`);
+                    }
+                }}
+                onDismiss={() => setShowWelcomeBanner(false)}
+            />
+        )}
+      <TopBar
+        ref={topBarRef}
+        onFileUpload={handleFileUpload}
+        onFileExport={handleFileExport}
+        onExportToCsvs={handleExportToCsvs}
+        entityTypes={ALL_ENTITY_TYPES}
+        currentTheme={theme}
+        onToggleTheme={toggleTheme}
+        isInteractiveVoiceMode={isInteractiveVoiceMode}
+        onToggleInteractiveVoiceMode={() => {
+          const newMode = !isInteractiveVoiceMode;
+          toggleInteractiveVoiceMode(newMode);
+          if (chatSession && geminiService) {
+            addMessageToChat(`Modo voz interactiva ${newMode ? 'activado' : 'desactivado'}.`, 'ai');
+            if(isInteractiveVoiceMode) speakText(`Modo voz interactiva ${newMode ? 'activado' : 'desactivado'}.`);
+          }
+        }}
+        onMultipleFileUploadRequest={handleMultipleFileUploadRequest}
+        onDeleteDatabaseRequest={handleRequestDeleteDb}
+        onSaveChatHistory={handleSaveChatHistory}
+        onLoadChatHistoryFile={handleLoadChatHistoryFile}
+        pendingOfflineRequestCount={offlineRequestQueue.filter(r => r.status === 'pending' || r.status === 'processing').length}
+      />
+      
+      <div ref={resizableContainerRef} className={`flex-grow flex ${!isMdScreen ? 'flex-col' : 'flex-row'} overflow-hidden min-h-0`}>
+        <div 
+            className={`${isMdScreen ? 'overflow-hidden' : 'h-3/5 pb-1'} flex flex-col bg-transition`}
+            style={isMdScreen ? { width: `${chatPanelWidthPercent}%` } : {}}
+        >
+            <ChatPanel
+                ref={chatPanelRef}
+                messages={chatMessages}
+                onSendMessage={sendMessageToAI}
+                isLoading={isLoading || processingRequestIdRef.current !== null}
+                currentDb={database}
+                onBeforeStartRecording={handleBeforeStartRecording}
+                onViewFullScreen={handleOpenFullScreenDataModal}
+            />
+        </div>
+
+        {isMdScreen && (
+            <div 
+                className="w-2 cursor-col-resize bg-gray-300 dark:bg-gray-700 hover:bg-green-500 dark:hover:bg-green-600 transition-colors duration-150 ease-in-out flex-shrink-0"
+                onMouseDown={startResizing}
+                onTouchStart={startResizing}
+                role="separator"
+                aria-label="Redimensionar paneles"
+            />
+        )}
+        
+        <div 
+            className={`${isMdScreen ? 'overflow-hidden' : 'h-2/5 pt-1'} flex flex-col bg-transition`}
+            style={isMdScreen ? { width: `${100 - chatPanelWidthPercent - (SPLITTER_WIDTH_PX / (resizableContainerRef.current?.offsetWidth || 1) * 100)}%` } : {}}
+        >
+            <DataPanel 
+                database={database} 
+                groupedResults={currentGroupedResults}
+                onViewFullScreen={handleOpenFullScreenDataModal}
+            />
+        </div>
+      </div>
+
       {isMultiCsvModalOpen && (
         <MultipleCsvUploadModal
           files={filesForMultiUpload}
@@ -1287,25 +1202,24 @@ const App: React.FC = () => {
           title="Confirmar Borrado de Base de Datos"
           message={
             <>
-              <p className="mb-2">Está a punto de borrar COMPLETAMENTE la base de datos actual de la aplicación.</p>
-              <p className="mb-2 font-semibold text-red-600 dark:text-red-400">¡TODOS LOS DATOS almacenados en la aplicación y en su navegador SE PERDERÁN PERMANENTEMENTE!</p>
-              <p>Esta acción no se puede deshacer. Asegúrese de haber respaldado sus datos si son importantes (botón 'Exportar BD').</p>
-              <p className="mt-3">¿Está seguro de que desea borrar toda la base de datos?</p>
+                <p className="mb-2">¿Estás seguro de que quieres borrar TODA la base de datos local?</p>
+                <p className="font-semibold text-red-500">Esta acción es irreversible y eliminará todos los clientes, campos, tareas y demás registros.</p>
+                <p className="mt-2">Se recomienda <strong className="text-yellow-500">Guardar BD</strong> como respaldo antes de continuar.</p>
             </>
           }
           onConfirm={handleConfirmDeleteDb}
           onCancel={handleCancelDeleteDb}
           confirmText="Sí, Borrar Todo"
-          cancelText="Cancelar"
+          cancelText="No, Cancelar"
         />
       )}
-      {isFullScreenDataModalOpen && fullScreenDataModalContent && (
+       {isFullScreenDataModalOpen && fullScreenDataModalContent && (
         <FullScreenDataViewModal
-            isOpen={isFullScreenDataModalOpen}
-            onClose={handleCloseFullScreenDataModal}
-            title={fullScreenDataModalContent.title}
-            items={fullScreenDataModalContent.items}
-            entityTypeForHeaders={fullScreenDataModalContent.entityType}
+          isOpen={isFullScreenDataModalOpen}
+          onClose={handleCloseFullScreenDataModal}
+          title={fullScreenDataModalContent.title}
+          items={fullScreenDataModalContent.items}
+          entityTypeForHeaders={fullScreenDataModalContent.entityType}
         />
       )}
     </div>
