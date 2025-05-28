@@ -868,21 +868,20 @@ const App: React.FC = () => {
   const sendMessageToAI = async (messageText: string, audioBase64?: string, audioMimeType?: string, originalUserMessageId?: string) => {
     if (showWelcomeBanner) setShowWelcomeBanner(false); 
 
-    if (!geminiService) { // Check geminiService first, as chatSession depends on it.
+    if (!geminiService) { 
       const initErrorMessage = "El servicio de IA no está disponible (falló la inicialización). Revisa la configuración de API Key. Puedes guardar tu historial de chat actual.";
       addMessageToChat(initErrorMessage, 'system', true);
       if (isInteractiveVoiceMode) speakText(initErrorMessage);
       return;
     }
     if (!chatSession) {
-      const chatErrorMessage = "La sesión de chat con la IA no está disponible. Esto puede ser un problema temporal o de configuración. Intenta recargar la aplicación o contacta al administrador. Puedes guardar tu historial de chat actual.";
+      const chatErrorMessage = "La sesión de chat con la IA no está disponible. Esto puede ser un problema temporal o de configuración. Intenta recargar la aplicación o contacta al administrador. Puedes guardar su historial de chat actual.";
       addMessageToChat(chatErrorMessage, 'system', true);
       if (isInteractiveVoiceMode) speakText(chatErrorMessage);
-      // Attempt to queue if chatSession is the only issue but geminiService exists (though less likely path for API Key error)
       const classifiedIfNoChat = classifyError(new Error("Chat session not available"));
       if (isQueuableError(classifiedIfNoChat.type)) {
           const requestPayload: OfflineRequestPayload = { messageText, audioBase64, audioMimeType };
-          const userMsgIdForQueue = originalUserMessageId || generateUUID(); // Use existing or generate one if this is the first pass
+          const userMsgIdForQueue = originalUserMessageId || generateUUID(); 
           if (!originalUserMessageId) addMessageToChat(messageText, 'user', false, undefined, undefined, userMsgIdForQueue);
 
           const queuedRequest = addRequestToQueueUtil(requestPayload, classifiedIfNoChat.type, classifiedIfNoChat.message, setOfflineRequestQueue, userMsgIdForQueue);
@@ -917,23 +916,26 @@ const App: React.FC = () => {
 
 
     const currentDBStateString = JSON.stringify(database);
-    const parts: Part[] = [
-        { text: `Contexto de Base de Datos (NO MOSTRAR AL USUARIO, USAR PARA REFERENCIA INTERNA):\n${currentDBStateString}\n\nHistorial de Conversación Reciente (últimos mensajes, para referencia contextual, NO MOSTRAR AL USUARIO):\n${chatMessages.slice(-6).map(m => `${m.sender}: ${m.text}`).join('\n')}\n\nComando del Usuario:` },
-    ];
-    
+    const partsForThisTurn: Part[] = [];
+
+    // Part 1: Database Context (as expected by SYSTEM_PROMPT_HEADER)
+    partsForThisTurn.push({ text: `Contexto de Base de Datos (NO MOSTRAR AL USUARIO, USAR PARA REFERENCIA INTERNA):\n${currentDBStateString}` });
+
+    // Part 2: User's actual message (audio + text, or just text)
     if (audioBase64 && audioMimeType) {
-        parts.push({ inlineData: { data: audioBase64, mimeType: audioMimeType } });
-        if (messageText === "Comando de voz grabado (procesando...)") {
-          // Don't add empty text part.
-        } else {
-           parts.push({ text: messageText }); 
+        partsForThisTurn.push({ inlineData: { data: audioBase64, mimeType: audioMimeType } });
+        // Add the transcribed text if it's not just a placeholder and is meaningful
+        if (messageText && messageText.trim() !== "" && messageText !== "Comando de voz grabado (procesando...)") {
+           partsForThisTurn.push({ text: `\n\nComando del Usuario (puede ser transcripción de audio o texto directo):\n${messageText}` });
         }
-    } else {
-        parts.push({ text: messageText });
+    } else { // Text-only message
+        partsForThisTurn.push({ text: `\n\nComando del Usuario:\n${messageText}` });
     }
     
     try {
-      const response: GenerateContentResponse = await chatSession.sendMessage({ message: parts });
+      // The chatSession object will manage and send the actual conversation history.
+      // The SYSTEM_PROMPT_HEADER (in chatSession.config) instructs the AI on its role and how to use the DB context.
+      const response: GenerateContentResponse = await chatSession.sendMessage({ message: partsForThisTurn });
 
       setIsLoading(false);
       setChatMessages(prev => prev.filter(msg => msg.id !== loadingAiMessageId));
@@ -966,7 +968,7 @@ const App: React.FC = () => {
           addMessageToChat(apiKeyErrorMessage, 'system', true);
           let spokenMessage = apiKeyErrorMessage;
 
-          if (chatSession && isQueuableError(classified.type)) { // API_KEY_INVALID is queuable
+          if (chatSession && isQueuableError(classified.type)) { 
               const queuedRequest = addRequestToQueueUtil(requestPayload, classified.type, classified.message, setOfflineRequestQueue, currentOriginalUserMessageId);
               const queueConfirmationMessage = `Tu comando '${messageText.substring(0, 30)}...' ha sido guardado y se intentará procesar automáticamente cuando la configuración de la API Key sea corregida.`;
               addMessageToChat(queueConfirmationMessage, 'system', false, undefined, undefined, queuedRequest.id); 
@@ -979,21 +981,20 @@ const App: React.FC = () => {
           if (isInteractiveVoiceMode) speakText(spokenMessage);
 
       } else if (isQueuableError(classified.type) && chatSession) {
-          // Handle other queuable errors
           const specificErrorMsg = `Error al comunicarse con la IA: ${classified.message}.`;
-          addMessageToChat(specificErrorMsg, 'system', true); // Show specific error first
+          addMessageToChat(specificErrorMsg, 'system', true); 
 
           const queuedRequest = addRequestToQueueUtil(requestPayload, classified.type, classified.message, setOfflineRequestQueue, currentOriginalUserMessageId);
           const enqueuedMessage = `⚠️ Tu mensaje "${messageText.substring(0,30)}..." fue ENCOLADO. Se reintentará automáticamente.`;
-          addMessageToChat(enqueuedMessage, 'system', true, undefined, undefined, queuedRequest.id ); // isError: true to make it stand out
+          addMessageToChat(enqueuedMessage, 'system', true, undefined, undefined, queuedRequest.id ); 
           
           if (isInteractiveVoiceMode) speakText(specificErrorMsg + " " + enqueuedMessage.replace("⚠️ ", ""));
 
-      } else { // Non-queuable errors or chatSession is null for other queuable ones
+      } else { 
           let userErrorMessage = `Error al comunicarse con la IA: ${classified.message}.`;
-          if (!chatSession && isQueuableError(classified.type)) { // Should not happen for API_KEY_INVALID as it's handled above
+          if (!chatSession && isQueuableError(classified.type)) { 
                userErrorMessage = `Error: La sesión de chat con la IA no está inicializada. Tu comando no pudo ser encolado. Razón: ${classified.message}`;
-          } else if (!chatSession) { // General case if chatSession is null
+          } else if (!chatSession) { 
               userErrorMessage = "Error: La sesión de chat con la IA no está inicializada. Intenta recargar la aplicación.";
           }
           addMessageToChat(userErrorMessage, 'system', true);
@@ -1013,7 +1014,6 @@ const App: React.FC = () => {
     }
 
     if (!navigator.onLine) {
-      // Log locally or briefly mention if needed, but primary feedback is via online/offline events
       console.log("Offline queue processing paused: No internet connection.");
       return;
     }
@@ -1033,7 +1033,7 @@ const App: React.FC = () => {
       requestToProcess,
       chatSession,
       database,
-      chatMessages, // Pass current chat messages
+      // currentChatMessages, // Pass current chat messages for context - No longer needed here due to `attemptProcessRequestUtil` simplification
       (requestId, responseText, llmResponseObject) => { // onSuccess
         addMessageToChat(`✅ Solicitud encolada "${requestToProcess.payload.messageText.substring(0,30)}..." procesada con éxito.`, 'system', false, undefined, undefined, requestId);
         if (isInteractiveVoiceMode) speakText(`Solicitud encolada procesada con éxito.`);
@@ -1048,11 +1048,11 @@ const App: React.FC = () => {
 
         setOfflineRequestQueue(prev => prev.map(r => r.id === requestId ? {...r, status: 'processed'} : r));
         processingRequestIdRef.current = null;
-        setTimeout(processQueue, 1000); // Check for next
+        setTimeout(processQueue, 1000); 
       },
       (requestId, errorInfo) => { // onFailure (retryable)
         const req = offlineRequestQueueRef.current.find(r => r.id === requestId);
-        const currentAttempts = req ? req.attempts : requestToProcess.attempts; // Use fresh attempt count
+        const currentAttempts = req ? req.attempts : requestToProcess.attempts; 
         const nextAttemptDelay = Math.min(INITIAL_RETRY_DELAY_MS * Math.pow(2, currentAttempts + 1), MAX_RETRY_DELAY_MS);
         
         addMessageToChat(
@@ -1063,7 +1063,7 @@ const App: React.FC = () => {
 
         setOfflineRequestQueue(prev => prev.map(r => r.id === requestId ? {
             ...r,
-            status: 'pending',
+            status: 'pending', 
             attempts: r.attempts + 1,
             errorInfo: {
                 type: errorInfo.type,
@@ -1072,7 +1072,7 @@ const App: React.FC = () => {
             }
         } : r));
         processingRequestIdRef.current = null;
-        // Rely on interval for next attempt with implicit backoff due to not processing immediately
+        setTimeout(processQueue, 1000); 
       },
       (requestId, errorInfo) => { // onPermanentFailure
          addMessageToChat(
@@ -1091,11 +1091,11 @@ const App: React.FC = () => {
             }
         } : r));
         processingRequestIdRef.current = null;
-        setTimeout(processQueue, 1000); // Check for next
+        setTimeout(processQueue, 1000); 
       }
     );
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chatSession, database, chatMessages, isInteractiveVoiceMode, addMessageToChat, handleLLMAction, parseLLMResponse]); 
+  }, [chatSession, database, isInteractiveVoiceMode, addMessageToChat, handleLLMAction, parseLLMResponse]); 
 
 
   useEffect(() => {
@@ -1133,7 +1133,7 @@ const App: React.FC = () => {
       clearInterval(intervalId);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [processQueue]); // processQueue is now a dependency
+  }, [processQueue]); 
 
 
   const startResizing = useCallback((e: React.MouseEvent | React.TouchEvent) => {

@@ -104,7 +104,7 @@ export const attemptProcessRequest = async (
     request: OfflineRequest,
     chatSession: Chat | null,
     currentDB: Database,
-    currentChatMessages: ChatMessage[], // For context construction
+    // currentChatMessages: ChatMessage[], // No longer needed directly here
     onSuccess: (requestId: string, responseText: string, llmResponse: GenerateContentResponse) => void,
     onFailure: (requestId: string, errorInfo: { type: ErrorClassification, message: string }) => void,
     onPermanentFailure: (requestId: string, errorInfo: { type: ErrorClassification, message: string }) => void
@@ -122,32 +122,26 @@ export const attemptProcessRequest = async (
     const { messageText, audioBase64, audioMimeType } = request.payload;
     const currentDBStateString = JSON.stringify(currentDB); 
     
-    // Reconstruct parts for the API call
-    // It's important that this logic matches the one in App.tsx's sendMessageToAI
-    const parts: Part[] = [
-        { text: `${SYSTEM_PROMPT_HEADER}\n\nContexto de Base de Datos (NO MOSTRAR AL USUARIO, USAR PARA REFERENCIA INTERNA):\n${currentDBStateString}\n\nHistorial de Conversación Reciente (últimos mensajes, para referencia contextual, NO MOSTRAR AL USUARIO):\n${currentChatMessages.slice(-10).map(m => `${m.sender}: ${m.text}`).join('\n')}\n\nComando del Usuario (Reintentando solicitud en cola):` },
-        // Note: SYSTEM_PROMPT_HEADER is included here again in the parts, which might be redundant if chatSession was created with it.
-        // However, for a stateless retry, it's safer. If chatSession is long-lived and maintains systemInstruction, this could be simplified.
-        // For now, including it to ensure context.
-    ];
+    const partsForThisTurn: Part[] = [];
+
+    // Part 1: Database Context
+    // The SYSTEM_PROMPT_HEADER (configured in chatSession) tells the AI it will get this.
+    partsForThisTurn.push({ text: `Contexto de Base de Datos (NO MOSTRAR AL USUARIO, USAR PARA REFERENCIA INTERNA):\n${currentDBStateString}` });
     
+    // Part 2: User's enqueued command (audio + text, or just text)
     if (audioBase64 && audioMimeType) {
-        parts.push({ inlineData: { data: audioBase64, mimeType: audioMimeType } });
-        if (messageText !== "Comando de voz grabado (procesando...)") { 
-           parts.push({ text: messageText }); 
+        partsForThisTurn.push({ inlineData: { data: audioBase64, mimeType: audioMimeType } });
+        // Add the transcribed text if it's not just a placeholder and is meaningful
+        if (messageText && messageText.trim() !== "" && messageText !== "Comando de voz grabado (procesando...)") {
+           partsForThisTurn.push({ text: `\n\nComando del Usuario (puede ser transcripción de audio o texto directo):\n${messageText}` });
         }
-    } else {
-        parts.push({ text: messageText });
+    } else { // Text-only message
+        partsForThisTurn.push({ text: `\n\nComando del Usuario:\n${messageText}` });
     }
 
     try {
-        // Use ai.models.generateContent directly for retries to ensure fresh context application,
-        // instead of chatSession.sendMessage which relies on internal history that might be stale or complex for retries.
-        // This requires GeminiService instance to be available or passed.
-        // For simplicity with current structure, we'll try with chatSession.sendMessage, assuming it's robust enough or re-initialized.
-        // If chatSession proves problematic for retries, this is where direct ai.models.generateContent would be better.
-        
-        const response: GenerateContentResponse = await chatSession.sendMessage({ message: parts }); 
+        // The chatSession handles history. SYSTEM_PROMPT_HEADER (in session config) and DB context are provided in partsForThisTurn.
+        const response: GenerateContentResponse = await chatSession.sendMessage({ message: partsForThisTurn }); 
         onSuccess(request.id, response.text, response);
 
     } catch (error) {
