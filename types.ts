@@ -187,6 +187,7 @@ export interface ChatMessage {
   groupedData?: GroupedResult[];
   rawLLMResponse?: string;
   relatedOfflineRequestId?: string; // Link to an offline request
+  actionType?: LLMResponseAction['action']; // Added to identify AI action type
 }
 
 export interface GroupedResult {

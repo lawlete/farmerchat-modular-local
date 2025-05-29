@@ -70,3 +70,10 @@ export const OfflineQueueIcon: React.FC<IconProps> = ({ className }) => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l3 3" />
   </svg>
 );
+
+// Example: ShareIcon - Not used in current TopBar, but was part of thought process
+export const ShareIcon: React.FC<IconProps> = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className || "w-6 h-6"}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.54.152 1.072.324 1.603.523m0-2.186A2.25 2.25 0 115.166 9.763m11.18 3.073A2.25 2.25 0 1015.536 15.536m0-2.186c.54.152 1.072.324 1.603.523m0-2.186A2.25 2.25 0 1113.464 9.763m-4.893 3.073a6.75 6.75 0 01-1.087 1.087M8.25 10.5l4.893 3.073m0 0l4.893 3.073M15.536 15.536V12m6.363 0a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" />
+  </svg>
+);

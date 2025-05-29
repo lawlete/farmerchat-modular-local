@@ -102,8 +102,27 @@ const App: React.FC = () => {
     }
   }, []);
 
-  const addMessageToChat = useCallback((text: string, sender: ChatMessage['sender'], isError: boolean = false, groupedData?: GroupedResult[], rawLLMResponse?: string, relatedOfflineRequestId?: string) => {
-    const newMessage: ChatMessage = { id: generateUUID(), text, sender, timestamp: new Date(), isError, groupedData, rawLLMResponse, isLoading: sender === 'ai' && !text, relatedOfflineRequestId };
+  const addMessageToChat = useCallback((
+    text: string, 
+    sender: ChatMessage['sender'], 
+    isError: boolean = false, 
+    groupedData?: GroupedResult[], 
+    rawLLMResponse?: string, 
+    relatedOfflineRequestId?: string,
+    actionType?: LLMResponseAction['action'] // Added actionType
+  ) => {
+    const newMessage: ChatMessage = { 
+      id: generateUUID(), 
+      text, 
+      sender, 
+      timestamp: new Date(), 
+      isError, 
+      groupedData, 
+      rawLLMResponse, 
+      isLoading: sender === 'ai' && !text, 
+      relatedOfflineRequestId,
+      actionType // Store actionType
+    };
     setChatMessages(prev => [...prev, newMessage]);
     
     if (groupedData) {
@@ -679,6 +698,7 @@ const App: React.FC = () => {
             groupedData: msg.groupedData || undefined,
             rawLLMResponse: msg.rawLLMResponse || undefined,
             relatedOfflineRequestId: msg.relatedOfflineRequestId || undefined,
+            actionType: msg.actionType || undefined, // Include actionType
           }));
 
           setChatMessages(typedHistory);
@@ -728,21 +748,38 @@ const App: React.FC = () => {
   const handleLLMAction = useCallback((actionResponse: LLMResponseAction, relatedOfflineRequestId?: string) => {
     const { action, entity, data, query, messageForUser, groupedData, rawResponse, followUpAction } = actionResponse;
 
-    addMessageToChat(messageForUser, 'ai', false, groupedData, rawResponse, relatedOfflineRequestId);
+    let displayableGroupedData = groupedData;
+
+    // Fallback: If action is LIST_ENTITIES and groupedData is missing/empty,
+    // but actionResponse.data is present and is an array, construct groupedData from it.
+    if (action === 'LIST_ENTITIES' && 
+        (!displayableGroupedData || displayableGroupedData.length === 0) && 
+        entity && 
+        Array.isArray(data) && 
+        data.length > 0) {
+        console.warn("LIST_ENTITIES: LLM response used 'data' field or 'groupedData' was empty. Adapting to 'groupedData' structure.");
+        displayableGroupedData = [{
+            groupTitle: ENTITY_DISPLAY_NAMES[entity] || `Listado: ${entity}`,
+            items: data,
+            count: data.length,
+            entityType: entity
+        }];
+    }
+    
+    addMessageToChat(messageForUser, 'ai', false, displayableGroupedData, rawResponse, relatedOfflineRequestId, action);
     if (isInteractiveVoiceMode) {
       speakText(messageForUser, () => {
-        if (groupedData && groupedData.length > 0) {
-            speakGroupedResults(groupedData);
+        if (displayableGroupedData && displayableGroupedData.length > 0) {
+            speakGroupedResults(displayableGroupedData);
         }
       });
     }
 
-
-    setCurrentGroupedResults(groupedData || null);
-    if (isFullScreenDataModalOpen && groupedData) {
-        const newContent = groupedData.length > 0 ? { title: groupedData[0].groupTitle, items: groupedData[0].items, entityType: groupedData[0].entityType } : null;
+    setCurrentGroupedResults(displayableGroupedData || null);
+    if (isFullScreenDataModalOpen && displayableGroupedData) {
+        const newContent = displayableGroupedData.length > 0 ? { title: displayableGroupedData[0].groupTitle, items: displayableGroupedData[0].items, entityType: displayableGroupedData[0].entityType } : null;
         if (newContent) handleOpenFullScreenDataModal(newContent); else handleCloseFullScreenDataModal();
-    } else if (isFullScreenDataModalOpen && !groupedData) {
+    } else if (isFullScreenDataModalOpen && !displayableGroupedData) {
         handleCloseFullScreenDataModal();
     }
 
@@ -834,7 +871,7 @@ const App: React.FC = () => {
         break;
       case 'LIST_ENTITIES':
       case 'GROUPED_QUERY':
-         // Data is already handled by addMessageToChat and setCurrentGroupedResults
+         // Data is already handled by addMessageToChat and setCurrentGroupedResults via displayableGroupedData
         break;
       case 'TOGGLE_VOICE_MODE':
         if (data && typeof (data as { enable: boolean }).enable === 'boolean') {
@@ -869,7 +906,7 @@ const App: React.FC = () => {
             setIsLoading(false);
         }, 500);
 
-    } else if (!followUpAction && isInteractiveVoiceMode && !groupedData) {
+    } else if (!followUpAction && isInteractiveVoiceMode && !displayableGroupedData) { // Check displayableGroupedData
         // If no follow-up and no data to speak, and voice mode is on, prompt for next command
         // This check might need refinement.
         // processSpeechQueue(); // This will trigger mic if conditions are met.

@@ -7,6 +7,7 @@ import { PrintIcon, CsvDownloadIcon } from './icons/ActionIcons';
 import { triggerCsvDownload } from '../services/dbService';
 import { FullScreenDataModalContent } from './FullScreenDataViewModal';
 import { FIELD_DISPLAY_NAMES_ES } from '../constants'; // Import the new mapping
+import { MarkdownRenderer } from './MarkdownRenderer'; // Import the new MarkdownRenderer
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -128,6 +129,20 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onViewFul
         .dark\\:text-gray-100, .dark\\:text-gray-200, .dark\\:text-gray-300, .dark\\:text-gray-400, .dark\\:text-yellow-300, .dark\\:text-yellow-600 { color: black !important; }
         .dark\\:border-gray-500, .dark\\:border-gray-400 { border-color: #ccc !important; }
         .dark\\:bg-gray-100 { background-color: #f0f0f0 !important; } /* For li items in dark mode */
+
+        /* Markdown specific print styles */
+        .markdown-content h1, .markdown-content h2, .markdown-content h3 { color: black !important; margin-top: 0.5em; margin-bottom: 0.25em; }
+        .markdown-content h1 { font-size: 14pt; }
+        .markdown-content h2 { font-size: 12pt; }
+        .markdown-content h3 { font-size: 10pt; }
+        .markdown-content p { margin-bottom: 0.5em; font-size: 9pt; line-height: 1.4; color: black !important;}
+        .markdown-content ul, .markdown-content ol { margin-left: 20px; margin-bottom: 0.5em; font-size: 9pt; color: black !important;}
+        .markdown-content li { margin-bottom: 0.2em; border: none; background-color: transparent; padding: 0; color: black !important;}
+        .markdown-content code { font-family: monospace; background-color: #f0f0f0; padding: 1px 3px; border-radius: 3px; font-size: 8.5pt; color: black !important;}
+        .markdown-content pre { background-color: #f0f0f0; padding: 0.5em; border-radius: 3px; overflow-x: auto; font-size: 8.5pt; color: black !important; page-break-inside: avoid; }
+        .markdown-content pre code { background-color: transparent; padding: 0; }
+        .markdown-content strong { font-weight: bold; color: black !important;}
+        .markdown-content em { font-style: italic; color: black !important;}
       </style>
     `;
     return `
@@ -140,7 +155,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onViewFul
         </head>
         <body>
           <h1 class="print-page-title">${title}</h1>
-          ${contentHTML}
+          <div class="markdown-content">
+             ${contentHTML}
+          </div>
         </body>
       </html>
     `;
@@ -256,7 +273,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onViewFul
           )}
           {!message.isLoading && !message.isError && (
             <>
-              <p className="whitespace-pre-wrap break-words text-sm">{message.text}</p>
+              {isAi && message.actionType === 'HELP' ? (
+                <MarkdownRenderer markdownText={message.text} />
+              ) : (
+                <p className="whitespace-pre-wrap break-words text-sm">{message.text}</p>
+              )}
               {isAi && message.groupedData && message.groupedData.length > 0 && (
                 <div className="mt-3 pt-2 border-t border-gray-400 dark:border-gray-500 space-y-2">
                   {message.groupedData.map((group: GroupedResult, groupIndex: number) => (
